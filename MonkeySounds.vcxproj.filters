@@ -66,12 +66,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="assets\small.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="assets\MonkeySounds.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="assets\Icon.ico">
       <Filter>Resource Files</Filter>
     </Image>

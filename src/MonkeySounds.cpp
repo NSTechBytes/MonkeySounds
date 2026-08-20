@@ -117,18 +117,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     // Load App Icon
     g_hAppIcon = (HICON)LoadImageW(hInstance, MAKEINTRESOURCEW(IDI_APP_ICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
     if (!g_hAppIcon) {
-        if (fs::exists(L"assets\\Icon.ico")) {
-            g_hAppIcon = (HICON)LoadImageW(NULL, L"assets\\Icon.ico", IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
-        } else if (fs::exists(L"Icon.ico")) {
-            g_hAppIcon = (HICON)LoadImageW(NULL, L"Icon.ico", IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
-        }
+        g_hAppIcon = (HICON)LoadImageW(NULL, L"assets\\Icon.ico", IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
     }
 
     // Load PNG logo
     if (fs::exists(L"assets\\MonkeySounds.png")) {
         g_pMonkeySoundsImage = Gdiplus::Image::FromFile(L"assets\\MonkeySounds.png");
-    } else if (fs::exists(L"MonkeySounds.png")) {
-        g_pMonkeySoundsImage = Gdiplus::Image::FromFile(L"MonkeySounds.png");
     } else if (fs::exists(L"D:\\Novadesk-Project\\MonkeySounds\\assets\\MonkeySounds.png")) {
         g_pMonkeySoundsImage = Gdiplus::Image::FromFile(L"D:\\Novadesk-Project\\MonkeySounds\\assets\\MonkeySounds.png");
     }
@@ -674,7 +668,7 @@ void DrawCustomHeader(HWND hWnd, HDC hdc) {
     // Draw speaker icon
     HICON hSmallIcon = (HICON)LoadImageW(g_hInstance, MAKEINTRESOURCEW(IDI_SMALL), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
     if (!hSmallIcon) {
-        hSmallIcon = (HICON)LoadImageW(NULL, L"Icon.ico", IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
+        hSmallIcon = (HICON)LoadImageW(NULL, L"assets\\Icon.ico", IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
     }
     if (hSmallIcon) {
         DrawIconEx(hdc, 8, 7, hSmallIcon, 16, 16, 0, NULL, DI_NORMAL);
@@ -685,7 +679,7 @@ void DrawCustomHeader(HWND hWnd, HDC hdc) {
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, RGB(255, 255, 255));
     HFONT hOldFont = (HFONT)SelectObject(hdc, g_hFontTitle);
-    TextOutW(hdc, 28, 6, L"MokeySounds", 11);
+    TextOutW(hdc, 28, 6, L"MonkeySounds", 12);
 
     // Min / Max / Close Buttons on right
     // Close button (x: 452, y: 5, w: 22, h: 20)
