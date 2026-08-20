@@ -63,10 +63,8 @@ HWND g_hCheckUpdatesBtn = NULL;
 HWND g_hSeparator = NULL;
 HWND g_hAutoStartChk = NULL;
 
-// Action Buttons
-HWND g_hApplyBtn = NULL;
-HWND g_hOkBtn = NULL;
-HWND g_hCancelBtn = NULL;
+// Control HWNDs - About Tab
+HWND g_hAboutPanel = NULL;
 
 // Profiles lists
 std::vector<SoundProfileInfo> g_kbProfiles;
@@ -82,15 +80,16 @@ static ULONGLONG g_lastKernelTime = 0;
 static ULONGLONG g_lastUserTime = 0;
 
 // Header buttons state
-static int g_hoverHeaderBtn = 0; // 0=none, 1=min, 2=max, 3=close
+static int g_hoverHeaderBtn = 0; // 0=none, 1=close
 static int g_activeTab = 0;
 
 // Forward declarations
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK AboutPanelProc(HWND, UINT, WPARAM, LPARAM);
 void CreateControls(HWND hWnd);
 void UpdateTabVisibility(int tabIndex);
 void PopulatePresets();
-void ApplySettingsFromUI();
+void SaveCurrentSettings();
 void LoadSettingsToUI();
 void UpdateCpuUsage();
 void ShowTrayMenu(HWND hWnd);
@@ -187,6 +186,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     wcex.hIconSm = g_hAppIcon;
     RegisterClassExW(&wcex);
 
+    // Register About Panel Window Class
+    WNDCLASSEXW wcexAbout = {};
+    wcexAbout.cbSize = sizeof(WNDCLASSEX);
+    wcexAbout.style = CS_HREDRAW | CS_VREDRAW;
+    wcexAbout.lpfnWndProc = AboutPanelProc;
+    wcexAbout.hInstance = hInstance;
+    wcexAbout.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcexAbout.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wcexAbout.lpszClassName = L"MonkeySoundsAboutPanel";
+    RegisterClassExW(&wcexAbout);
+
     // Calculate window rectangle centered on screen
     int screenW = GetSystemMetrics(SM_CXSCREEN);
     int screenH = GetSystemMetrics(SM_CYSCREEN);
@@ -196,8 +206,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     HWND hWnd = CreateWindowExW(
         WS_EX_APPWINDOW,
         L"MonkeySoundsMainWindow",
-        L"MokeySounds",
-        WS_POPUP | WS_CLIPCHILDREN | WS_BORDER | WS_MINIMIZEBOX,
+        L"MonkeySounds",
+        WS_POPUP | WS_CLIPCHILDREN | WS_BORDER,
         posX, posY, WINDOW_WIDTH, WINDOW_HEIGHT,
         nullptr, nullptr, hInstance, nullptr
     );
@@ -423,30 +433,13 @@ void CreateControls(HWND hWnd) {
     );
     SetControlFont(g_hAutoStartChk, g_hFontNormal);
 
-    // --- Action Buttons (Bottom) ---
-    g_hApplyBtn = CreateWindowExW(
-        0, L"BUTTON", L"Apply",
-        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        WINDOW_WIDTH - 216, HEADER_HEIGHT + 280, 62, 26,
-        hWnd, (HMENU)IDC_BTN_APPLY, g_hInstance, NULL
+    // --- TAB 3: ABOUT ---
+    g_hAboutPanel = CreateWindowExW(
+        0, L"MonkeySoundsAboutPanel", L"",
+        WS_CHILD | WS_CLIPSIBLINGS,
+        16, HEADER_HEIGHT + 36, WINDOW_WIDTH - 32, 245,
+        hWnd, (HMENU)1305, g_hInstance, NULL
     );
-    SetControlFont(g_hApplyBtn, g_hFontNormal);
-
-    g_hOkBtn = CreateWindowExW(
-        0, L"BUTTON", L"OK",
-        WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
-        WINDOW_WIDTH - 146, HEADER_HEIGHT + 280, 62, 26,
-        hWnd, (HMENU)IDC_BTN_OK, g_hInstance, NULL
-    );
-    SetControlFont(g_hOkBtn, g_hFontNormal);
-
-    g_hCancelBtn = CreateWindowExW(
-        0, L"BUTTON", L"Cancel",
-        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        WINDOW_WIDTH - 76, HEADER_HEIGHT + 280, 62, 26,
-        hWnd, (HMENU)IDC_BTN_CANCEL, g_hInstance, NULL
-    );
-    SetControlFont(g_hCancelBtn, g_hFontNormal);
 
     // --- Status Bar ---
     g_hStatusBar = CreateWindowExW(
@@ -492,13 +485,14 @@ void UpdateTabVisibility(int tabIndex) {
     ShowWindow(g_hSeparator, showSettings);
     ShowWindow(g_hAutoStartChk, showSettings);
 
-    // Action buttons visible on tab 0 & 1
-    int showButtons = (tabIndex == 0 || tabIndex == 1) ? SW_SHOW : SW_HIDE;
-    ShowWindow(g_hApplyBtn, showButtons);
-    ShowWindow(g_hOkBtn, showButtons);
-    ShowWindow(g_hCancelBtn, showButtons);
+    // Tab 2: About
+    int showAbout = (tabIndex == 2) ? SW_SHOW : SW_HIDE;
+    ShowWindow(g_hAboutPanel, showAbout);
+    if (showAbout == SW_SHOW) {
+        InvalidateRect(g_hAboutPanel, NULL, TRUE);
+    }
 
-    // Trigger repaint (especially for About tab custom drawing)
+    // Trigger repaint
     InvalidateRect(g_hMainWnd, NULL, TRUE);
 }
 
@@ -549,37 +543,15 @@ void LoadSettingsToUI() {
     PopulatePresets();
 }
 
-void ApplySettingsFromUI() {
-    bool kbEnabled = (Button_GetCheck(g_hKbEnable) == BST_CHECKED);
-    bool mouseEnabled = (Button_GetCheck(g_hMouseEnable) == BST_CHECKED);
-    int kbVol = (int)SendMessageW(g_hKbVolSlider, TBM_GETPOS, 0, 0);
-    int mouseVol = (int)SendMessageW(g_hMouseVolSlider, TBM_GETPOS, 0, 0);
-    bool autoStart = (Button_GetCheck(g_hAutoStartChk) == BST_CHECKED);
-
-    AudioEngine::GetInstance().SetKeyboardEnabled(kbEnabled);
-    AudioEngine::GetInstance().SetMouseEnabled(mouseEnabled);
-    AudioEngine::GetInstance().SetKeyboardVolume((float)kbVol / 100.0f);
-    AudioEngine::GetInstance().SetMouseVolume((float)mouseVol / 100.0f);
-
-    int selKb = (int)SendMessageW(g_hKbPresetCombo, CB_GETCURSEL, 0, 0);
-    if (selKb >= 0 && selKb < (int)g_kbProfiles.size()) {
-        AudioEngine::GetInstance().LoadKeyboardProfile(g_kbProfiles[selKb].profileJsonPath);
-    }
-
-    int selMouse = (int)SendMessageW(g_hMousePresetCombo, CB_GETCURSEL, 0, 0);
-    if (selMouse >= 0 && selMouse < (int)g_mouseProfiles.size()) {
-        AudioEngine::GetInstance().LoadMouseProfile(g_mouseProfiles[selMouse].profileJsonPath);
-    }
-
+void SaveCurrentSettings() {
     auto& cfg = AppSettings::GetInstance().GetConfig();
-    cfg.keyboardEnabled = kbEnabled;
-    cfg.mouseEnabled = mouseEnabled;
-    cfg.keyboardVolume = (float)kbVol / 100.0f;
-    cfg.mouseVolume = (float)mouseVol / 100.0f;
+    cfg.keyboardEnabled = (Button_GetCheck(g_hKbEnable) == BST_CHECKED);
+    cfg.mouseEnabled = (Button_GetCheck(g_hMouseEnable) == BST_CHECKED);
+    cfg.keyboardVolume = (float)SendMessageW(g_hKbVolSlider, TBM_GETPOS, 0, 0) / 100.0f;
+    cfg.mouseVolume = (float)SendMessageW(g_hMouseVolSlider, TBM_GETPOS, 0, 0) / 100.0f;
     cfg.keyboardProfilePath = AudioEngine::GetInstance().GetCurrentKeyboardProfilePath();
     cfg.mouseProfilePath = AudioEngine::GetInstance().GetCurrentMouseProfilePath();
-    cfg.autoStart = autoStart;
-
+    cfg.autoStart = (Button_GetCheck(g_hAutoStartChk) == BST_CHECKED);
     AppSettings::GetInstance().Save();
 }
 
@@ -600,12 +572,14 @@ void ChooseCustomProfile(bool isKeyboard) {
                 g_kbProfiles = AudioEngine::GetInstance().ScanKeyboardProfiles();
                 PopulatePresets();
                 AudioEngine::GetInstance().PlayKey(VK_SPACE, true);
+                SaveCurrentSettings();
             }
         } else {
             if (AudioEngine::GetInstance().LoadMouseProfile(szFile)) {
                 g_mouseProfiles = AudioEngine::GetInstance().ScanMouseProfiles();
                 PopulatePresets();
                 AudioEngine::GetInstance().PlayMouse("left", true);
+                SaveCurrentSettings();
             }
         }
     }
@@ -681,102 +655,96 @@ void DrawCustomHeader(HWND hWnd, HDC hdc) {
     HFONT hOldFont = (HFONT)SelectObject(hdc, g_hFontTitle);
     TextOutW(hdc, 28, 6, L"MonkeySounds", 12);
 
-    // Min / Max / Close Buttons on right
-    // Close button (x: 452, y: 5, w: 22, h: 20)
-    // Max button (x: 428, y: 5, w: 22, h: 20)
-    // Min button (x: 404, y: 5, w: 22, h: 20)
+    // Close Button only (on right side of header)
     int btnY = 5;
     int btnH = 20;
-    int btnW = 20;
-
-    // Min Button
-    RECT rcMin = { WINDOW_WIDTH - 66, btnY, WINDOW_WIDTH - 46, btnY + btnH };
-    HBRUSH hMinBrush = CreateSolidBrush((g_hoverHeaderBtn == 1) ? RGB(30, 115, 185) : RGB(220, 220, 220));
-    FillRect(hdc, &rcMin, hMinBrush);
-    DeleteObject(hMinBrush);
-    FrameRect(hdc, &rcMin, (HBRUSH)GetStockObject(GRAY_BRUSH));
-    HPEN hBlackPen = CreatePen(PS_SOLID, 2, RGB(40, 40, 40));
-    HPEN hOldPen = (HPEN)SelectObject(hdc, hBlackPen);
-    MoveToEx(hdc, rcMin.left + 5, rcMin.bottom - 6, NULL);
-    LineTo(hdc, rcMin.right - 5, rcMin.bottom - 6);
-
-    // Max / Restore Button (disabled style)
-    RECT rcMax = { WINDOW_WIDTH - 44, btnY, WINDOW_WIDTH - 24, btnY + btnH };
-    HBRUSH hMaxBrush = CreateSolidBrush(RGB(220, 220, 220));
-    FillRect(hdc, &rcMax, hMaxBrush);
-    DeleteObject(hMaxBrush);
-    FrameRect(hdc, &rcMax, (HBRUSH)GetStockObject(GRAY_BRUSH));
-    Rectangle(hdc, rcMax.left + 4, rcMax.top + 4, rcMax.right - 4, rcMax.bottom - 4);
 
     // Close Button (Red on hover)
     RECT rcClose = { WINDOW_WIDTH - 22, btnY, WINDOW_WIDTH - 2, btnY + btnH };
-    HBRUSH hCloseBrush = CreateSolidBrush((g_hoverHeaderBtn == 3) ? RGB(232, 17, 35) : RGB(220, 220, 220));
+    HBRUSH hCloseBrush = CreateSolidBrush((g_hoverHeaderBtn == 1) ? RGB(232, 17, 35) : RGB(220, 220, 220));
     FillRect(hdc, &rcClose, hCloseBrush);
     DeleteObject(hCloseBrush);
     FrameRect(hdc, &rcClose, (HBRUSH)GetStockObject(GRAY_BRUSH));
 
-    COLORREF closeColor = (g_hoverHeaderBtn == 3) ? RGB(255, 255, 255) : RGB(180, 0, 0);
+    COLORREF closeColor = (g_hoverHeaderBtn == 1) ? RGB(255, 255, 255) : RGB(180, 0, 0);
     HPEN hClosePen = CreatePen(PS_SOLID, 2, closeColor);
-    SelectObject(hdc, hClosePen);
+    HPEN hOldPen = (HPEN)SelectObject(hdc, hClosePen);
     MoveToEx(hdc, rcClose.left + 5, rcClose.top + 5, NULL);
     LineTo(hdc, rcClose.right - 5, rcClose.bottom - 5);
     MoveToEx(hdc, rcClose.right - 5, rcClose.top + 5, NULL);
     LineTo(hdc, rcClose.left + 5, rcClose.bottom - 5);
 
     SelectObject(hdc, hOldPen);
-    DeleteObject(hBlackPen);
     DeleteObject(hClosePen);
 
     SelectObject(hdc, hOldFont);
 }
 
-void DrawAboutTab(HWND hWnd, HDC hdc) {
-    if (g_activeTab != 2) return;
+LRESULT CALLBACK AboutPanelProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    switch (message) {
+    case WM_PAINT: {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hWnd, &ps);
 
-    // Centered Badge Container for Image
-    int badgeX = (WINDOW_WIDTH - 76) / 2;
-    int badgeY = HEADER_HEIGHT + 45;
-    int badgeW = 76;
-    int badgeH = 76;
+        RECT rcClient;
+        GetClientRect(hWnd, &rcClient);
+        int clientW = rcClient.right - rcClient.left;
 
-    // Rounded rectangle / Card border
-    RECT rcCard = { badgeX - 4, badgeY - 4, badgeX + badgeW + 4, badgeY + badgeH + 4 };
-    HBRUSH hCardBg = CreateSolidBrush(RGB(255, 255, 255));
-    FillRect(hdc, &rcCard, hCardBg);
-    DeleteObject(hCardBg);
-    FrameRect(hdc, &rcCard, (HBRUSH)GetStockObject(GRAY_BRUSH));
+        // Background - fill with COLOR_BTNFACE
+        FillRect(hdc, &rcClient, (HBRUSH)(COLOR_BTNFACE + 1));
 
-    if (g_pMonkeySoundsImage) {
-        Gdiplus::Graphics graphics(hdc);
-        graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
-        graphics.DrawImage(g_pMonkeySoundsImage, badgeX, badgeY, badgeW, badgeH);
-    } else if (g_hAppIcon) {
-        DrawIconEx(hdc, badgeX + (badgeW - 48) / 2, badgeY + (badgeH - 48) / 2, g_hAppIcon, 48, 48, 0, NULL, DI_NORMAL);
+        // Centered Badge Container for Image
+        int badgeW = 76;
+        int badgeH = 76;
+        int badgeX = (clientW - badgeW) / 2;
+        int badgeY = 20;
+
+        // Rounded rectangle / Card border
+        RECT rcCard = { badgeX - 4, badgeY - 4, badgeX + badgeW + 4, badgeY + badgeH + 4 };
+        HBRUSH hCardBg = CreateSolidBrush(RGB(255, 255, 255));
+        FillRect(hdc, &rcCard, hCardBg);
+        DeleteObject(hCardBg);
+        FrameRect(hdc, &rcCard, (HBRUSH)GetStockObject(GRAY_BRUSH));
+
+        if (g_pMonkeySoundsImage) {
+            Gdiplus::Graphics graphics(hdc);
+            graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
+            graphics.DrawImage(g_pMonkeySoundsImage, badgeX, badgeY, badgeW, badgeH);
+        } else if (g_hAppIcon) {
+            DrawIconEx(hdc, badgeX + (badgeW - 48) / 2, badgeY + (badgeH - 48) / 2, g_hAppIcon, 48, 48, 0, NULL, DI_NORMAL);
+        }
+
+        SetBkMode(hdc, TRANSPARENT);
+
+        // Title: MonkeySounds
+        HFONT hOldFont = (HFONT)SelectObject(hdc, g_hFontTitle);
+        SetTextColor(hdc, RGB(20, 20, 20));
+        RECT rcTitle = { 0, badgeY + badgeH + 12, clientW, badgeY + badgeH + 30 };
+        DrawTextW(hdc, L"MonkeySounds", -1, &rcTitle, DT_CENTER | DT_SINGLELINE);
+
+        // Description
+        SelectObject(hdc, g_hFontNormal);
+        SetTextColor(hdc, RGB(60, 60, 60));
+        RECT rcDesc1 = { 0, badgeY + badgeH + 32, clientW, badgeY + badgeH + 48 };
+        DrawTextW(hdc, L"Professional system sound", -1, &rcDesc1, DT_CENTER | DT_SINGLELINE);
+        RECT rcDesc2 = { 0, badgeY + badgeH + 48, clientW, badgeY + badgeH + 64 };
+        DrawTextW(hdc, L"customization utility.", -1, &rcDesc2, DT_CENTER | DT_SINGLELINE);
+
+        // Copyright
+        SelectObject(hdc, g_hFontMono);
+        SetTextColor(hdc, RGB(90, 90, 90));
+        RECT rcCopy = { 0, badgeY + badgeH + 80, clientW, badgeY + badgeH + 100 };
+        DrawTextW(hdc, L"© 2024 MonkeySounds. All rights reserved.", -1, &rcCopy, DT_CENTER | DT_SINGLELINE);
+
+        SelectObject(hdc, hOldFont);
+        EndPaint(hWnd, &ps);
+        return 0;
     }
-
-    SetBkMode(hdc, TRANSPARENT);
-
-    // Title: MonkeySounds
-    HFONT hOldFont = (HFONT)SelectObject(hdc, g_hFontTitle);
-    SetTextColor(hdc, RGB(20, 20, 20));
-    RECT rcTitle = { 0, badgeY + badgeH + 12, WINDOW_WIDTH, badgeY + badgeH + 30 };
-    DrawTextW(hdc, L"MonkeySounds", -1, &rcTitle, DT_CENTER | DT_SINGLELINE);
-
-    // Description
-    SelectObject(hdc, g_hFontNormal);
-    SetTextColor(hdc, RGB(60, 60, 60));
-    RECT rcDesc1 = { 0, badgeY + badgeH + 32, WINDOW_WIDTH, badgeY + badgeH + 48 };
-    DrawTextW(hdc, L"Professional system sound", -1, &rcDesc1, DT_CENTER | DT_SINGLELINE);
-    RECT rcDesc2 = { 0, badgeY + badgeH + 48, WINDOW_WIDTH, badgeY + badgeH + 64 };
-    DrawTextW(hdc, L"customization utility.", -1, &rcDesc2, DT_CENTER | DT_SINGLELINE);
-
-    // Copyright
-    SelectObject(hdc, g_hFontMono);
-    SetTextColor(hdc, RGB(90, 90, 90));
-    RECT rcCopy = { 0, badgeY + badgeH + 80, WINDOW_WIDTH, badgeY + badgeH + 100 };
-    DrawTextW(hdc, L"© 2024 MonkeySounds. All rights reserved.", -1, &rcCopy, DT_CENTER | DT_SINGLELINE);
-
-    SelectObject(hdc, hOldFont);
+    case WM_ERASEBKGND:
+        return 1;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -809,7 +777,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         ScreenToClient(hWnd, &pt);
         if (pt.y >= 0 && pt.y < HEADER_HEIGHT) {
             // Check header buttons area
-            if (pt.x >= WINDOW_WIDTH - 66) {
+            if (pt.x >= WINDOW_WIDTH - 22) {
                 return HTCLIENT;
             }
             return HTCAPTION; // Allows moving the window by dragging the blue header
@@ -823,16 +791,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         int prevHover = g_hoverHeaderBtn;
         g_hoverHeaderBtn = 0;
         if (y >= 5 && y <= 25) {
-            if (x >= WINDOW_WIDTH - 66 && x < WINDOW_WIDTH - 46) {
-                g_hoverHeaderBtn = 1; // Min
-            } else if (x >= WINDOW_WIDTH - 44 && x < WINDOW_WIDTH - 24) {
-                g_hoverHeaderBtn = 2; // Max
-            } else if (x >= WINDOW_WIDTH - 22 && x < WINDOW_WIDTH - 2) {
-                g_hoverHeaderBtn = 3; // Close
+            if (x >= WINDOW_WIDTH - 22 && x < WINDOW_WIDTH - 2) {
+                g_hoverHeaderBtn = 1; // Close
             }
         }
         if (prevHover != g_hoverHeaderBtn) {
-            RECT rcBtnArea = { WINDOW_WIDTH - 70, 0, WINDOW_WIDTH, HEADER_HEIGHT };
+            RECT rcBtnArea = { WINDOW_WIDTH - 24, 0, WINDOW_WIDTH, HEADER_HEIGHT };
             InvalidateRect(hWnd, &rcBtnArea, FALSE);
         }
         break;
@@ -842,10 +806,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         int x = GET_X_LPARAM(lParam);
         int y = GET_Y_LPARAM(lParam);
         if (y >= 5 && y <= 25) {
-            if (x >= WINDOW_WIDTH - 66 && x < WINDOW_WIDTH - 46) {
-                // Minimize to tray
-                ShowWindow(hWnd, SW_HIDE);
-            } else if (x >= WINDOW_WIDTH - 22 && x < WINDOW_WIDTH - 2) {
+            if (x >= WINDOW_WIDTH - 22 && x < WINDOW_WIDTH - 2) {
                 // Close / Minimize to tray
                 ShowWindow(hWnd, SW_HIDE);
             }
@@ -867,9 +828,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         if (hScrollBar == g_hKbVolSlider) {
             int pos = (int)SendMessageW(g_hKbVolSlider, TBM_GETPOS, 0, 0);
             AudioEngine::GetInstance().SetKeyboardVolume((float)pos / 100.0f);
+            SaveCurrentSettings();
         } else if (hScrollBar == g_hMouseVolSlider) {
             int pos = (int)SendMessageW(g_hMouseVolSlider, TBM_GETPOS, 0, 0);
             AudioEngine::GetInstance().SetMouseVolume((float)pos / 100.0f);
+            SaveCurrentSettings();
         }
         break;
     }
@@ -881,10 +844,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         switch (wmId) {
         case IDC_CHK_KB_ENABLE:
             AudioEngine::GetInstance().SetKeyboardEnabled(Button_GetCheck(g_hKbEnable) == BST_CHECKED);
+            SaveCurrentSettings();
             break;
 
         case IDC_CHK_MOUSE_ENABLE:
             AudioEngine::GetInstance().SetMouseEnabled(Button_GetCheck(g_hMouseEnable) == BST_CHECKED);
+            SaveCurrentSettings();
             break;
 
         case IDC_COMBO_KB_PRESET:
@@ -893,6 +858,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                 if (sel >= 0 && sel < (int)g_kbProfiles.size()) {
                     AudioEngine::GetInstance().LoadKeyboardProfile(g_kbProfiles[sel].profileJsonPath);
                     AudioEngine::GetInstance().PlayKey(VK_SPACE, true);
+                    SaveCurrentSettings();
                 }
             }
             break;
@@ -903,6 +869,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                 if (sel >= 0 && sel < (int)g_mouseProfiles.size()) {
                     AudioEngine::GetInstance().LoadMouseProfile(g_mouseProfiles[sel].profileJsonPath);
                     AudioEngine::GetInstance().PlayMouse("left", true);
+                    SaveCurrentSettings();
                 }
             }
             break;
@@ -919,18 +886,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             MessageBoxW(hWnd, L"MonkeySounds is up to date!\n\nCurrent Version: 1.0.4", L"Check for Updates", MB_OK | MB_ICONINFORMATION);
             break;
 
-        case IDC_BTN_APPLY:
-            ApplySettingsFromUI();
-            break;
-
-        case IDC_BTN_OK:
-            ApplySettingsFromUI();
-            ShowWindow(hWnd, SW_HIDE);
-            break;
-
-        case IDC_BTN_CANCEL:
-            LoadSettingsToUI();
-            ShowWindow(hWnd, SW_HIDE);
+        case IDC_CHK_AUTOSTART:
+            SaveCurrentSettings();
             break;
 
         // Tray menu commands
@@ -943,6 +900,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             bool nextState = !AudioEngine::GetInstance().IsKeyboardEnabled();
             AudioEngine::GetInstance().SetKeyboardEnabled(nextState);
             Button_SetCheck(g_hKbEnable, nextState ? BST_CHECKED : BST_UNCHECKED);
+            SaveCurrentSettings();
             break;
         }
 
@@ -950,6 +908,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             bool nextState = !AudioEngine::GetInstance().IsMouseEnabled();
             AudioEngine::GetInstance().SetMouseEnabled(nextState);
             Button_SetCheck(g_hMouseEnable, nextState ? BST_CHECKED : BST_UNCHECKED);
+            SaveCurrentSettings();
             break;
         }
 
@@ -967,7 +926,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
         DrawCustomHeader(hWnd, hdc);
-        DrawAboutTab(hWnd, hdc);
         EndPaint(hWnd, &ps);
         break;
     }

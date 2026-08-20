@@ -86,10 +86,6 @@
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>xcopy /Y /I /E "$(ProjectDir)assets" "$(OutDir)assets\"</Command>
-      <Message>Copying assets to output directory...</Message>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -109,10 +105,6 @@
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>xcopy /Y /I /E "$(ProjectDir)assets" "$(OutDir)assets\"</Command>
-      <Message>Copying assets to output directory...</Message>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -130,10 +122,6 @@
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>xcopy /Y /I /E "$(ProjectDir)assets" "$(OutDir)assets\"</Command>
-      <Message>Copying assets to output directory...</Message>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -153,10 +141,6 @@
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>xcopy /Y /I /E "$(ProjectDir)assets" "$(OutDir)assets\"</Command>
-      <Message>Copying assets to output directory...</Message>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\framework.h" />

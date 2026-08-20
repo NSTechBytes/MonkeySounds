@@ -40,10 +40,5 @@
 #define IDC_BTN_CHECK_UPDATES       1303
 #define IDC_CHK_AUTOSTART           1304
 
-// Bottom action buttons
-#define IDC_BTN_APPLY               1401
-#define IDC_BTN_OK                  1402
-#define IDC_BTN_CANCEL              1403
-
 // Custom window messages
 #define WM_TRAYICON                 (WM_USER + 1)
