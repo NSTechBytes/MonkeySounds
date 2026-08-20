@@ -77,11 +77,15 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\third_party;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -92,11 +96,15 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\third_party;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -105,11 +113,15 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\third_party;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -120,37 +132,41 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\third_party;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)assets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h" />
-    <ClInclude Include="MonkeySounds.h" />
-    <ClInclude Include="Resource.h" />
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="AudioEngine.h" />
-    <ClInclude Include="InputHook.h" />
-    <ClInclude Include="AppSettings.h" />
-    <ClInclude Include="miniaudio.h" />
-    <ClInclude Include="json.hpp" />
+    <ClInclude Include="src\framework.h" />
+    <ClInclude Include="src\MonkeySounds.h" />
+    <ClInclude Include="src\Resource.h" />
+    <ClInclude Include="src\targetver.h" />
+    <ClInclude Include="src\AudioEngine.h" />
+    <ClInclude Include="src\InputHook.h" />
+    <ClInclude Include="src\AppSettings.h" />
+    <ClInclude Include="src\third_party\miniaudio.h" />
+    <ClInclude Include="src\third_party\json.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MonkeySounds.cpp" />
-    <ClCompile Include="AudioEngine.cpp" />
-    <ClCompile Include="InputHook.cpp" />
-    <ClCompile Include="AppSettings.cpp" />
+    <ClCompile Include="src\MonkeySounds.cpp" />
+    <ClCompile Include="src\AudioEngine.cpp" />
+    <ClCompile Include="src\InputHook.cpp" />
+    <ClCompile Include="src\AppSettings.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="MonkeySounds.rc" />
+    <ResourceCompile Include="src\MonkeySounds.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Icon.ico" />
-    <Image Include="MonkeyCode.png" />
-    <Image Include="MonkeySounds.ico" />
-    <Image Include="small.ico" />
+    <Image Include="assets\Icon.ico" />
+    <Image Include="assets\MonkeyCode.png" />
+    <Image Include="assets\MonkeySounds.ico" />
+    <Image Include="assets\small.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

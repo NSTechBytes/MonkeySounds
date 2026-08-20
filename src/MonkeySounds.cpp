@@ -117,14 +117,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     // Load App Icon
     g_hAppIcon = (HICON)LoadImageW(hInstance, MAKEINTRESOURCEW(IDI_APP_ICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
     if (!g_hAppIcon) {
-        g_hAppIcon = (HICON)LoadImageW(NULL, L"Icon.ico", IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
+        if (fs::exists(L"assets\\Icon.ico")) {
+            g_hAppIcon = (HICON)LoadImageW(NULL, L"assets\\Icon.ico", IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
+        } else if (fs::exists(L"Icon.ico")) {
+            g_hAppIcon = (HICON)LoadImageW(NULL, L"Icon.ico", IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
+        }
     }
 
     // Load PNG logo
-    if (fs::exists(L"MonkeyCode.png")) {
+    if (fs::exists(L"assets\\MonkeyCode.png")) {
+        g_pMonkeyCodeImage = Gdiplus::Image::FromFile(L"assets\\MonkeyCode.png");
+    } else if (fs::exists(L"MonkeyCode.png")) {
         g_pMonkeyCodeImage = Gdiplus::Image::FromFile(L"MonkeyCode.png");
-    } else if (fs::exists(L"D:\\Novadesk-Project\\MonkeySounds\\MonkeyCode.png")) {
-        g_pMonkeyCodeImage = Gdiplus::Image::FromFile(L"D:\\Novadesk-Project\\MonkeySounds\\MonkeyCode.png");
+    } else if (fs::exists(L"D:\\Novadesk-Project\\MonkeySounds\\assets\\MonkeyCode.png")) {
+        g_pMonkeyCodeImage = Gdiplus::Image::FromFile(L"D:\\Novadesk-Project\\MonkeySounds\\assets\\MonkeyCode.png");
     }
 
     // Initialize Audio Engine

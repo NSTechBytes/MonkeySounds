@@ -1,9 +1,9 @@
 #include "Resource.h"
 #include <windows.h>
 
-IDI_APP_ICON    ICON    "Icon.ico"
-IDI_SMALL       ICON    "Icon.ico"
-IDR_MAINFRAME   ICON    "Icon.ico"
+IDI_APP_ICON    ICON    "../assets/Icon.ico"
+IDI_SMALL       ICON    "../assets/Icon.ico"
+IDR_MAINFRAME   ICON    "../assets/Icon.ico"
 
 STRINGTABLE
 BEGIN
