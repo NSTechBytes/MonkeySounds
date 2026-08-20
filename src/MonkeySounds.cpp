@@ -104,6 +104,20 @@ static ULONGLONG FileTimeToULL(const FILETIME& ft) {
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow) {
+    // Ensure only a single instance of the application runs
+    HANDLE hSingleInstanceMutex = CreateMutexW(NULL, TRUE, L"Local\\MonkeySounds_SingleInstance_Mutex_9A8B");
+    if (GetLastError() == ERROR_ALREADY_EXISTS || hSingleInstanceMutex == NULL) {
+        HWND hExistingWnd = FindWindowW(L"MonkeySoundsMainWindow", NULL);
+        if (hExistingWnd) {
+            ShowWindow(hExistingWnd, SW_SHOW);
+            SetForegroundWindow(hExistingWnd);
+        }
+        if (hSingleInstanceMutex) {
+            CloseHandle(hSingleInstanceMutex);
+        }
+        return 0;
+    }
+
     g_hInstance = hInstance;
 
     // Common Controls v6 initialization
@@ -260,6 +274,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     if (g_hFontTitle) DeleteObject(g_hFontTitle);
     if (g_hFontMono) DeleteObject(g_hFontMono);
     if (g_hTabBgBrush) DeleteObject(g_hTabBgBrush);
+
+    if (hSingleInstanceMutex) {
+        ReleaseMutex(hSingleInstanceMutex);
+        CloseHandle(hSingleInstanceMutex);
+    }
 
     Gdiplus::GdiplusShutdown(gdiplusToken);
     return (int)msg.wParam;
