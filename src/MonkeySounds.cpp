@@ -38,6 +38,7 @@ HFONT g_hFontNormal = NULL;
 HFONT g_hFontBold = NULL;
 HFONT g_hFontTitle = NULL;
 HFONT g_hFontMono = NULL;
+HBRUSH g_hTabBgBrush = NULL;
 
 // Control HWNDs - Sounds Tab
 HWND g_hKbGroup = NULL;
@@ -192,6 +193,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     g_hFontMono = CreateFontW(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, L"Consolas");
 
+    g_hTabBgBrush = CreateSolidBrush(RGB(255,255,255));
+
     // Register Window Class
     WNDCLASSEXW wcex = {};
     wcex.cbSize = sizeof(WNDCLASSEX);
@@ -200,7 +203,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     wcex.hInstance = hInstance;
     wcex.hIcon = g_hAppIcon;
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wcex.hbrBackground = g_hTabBgBrush;
     wcex.lpszClassName = L"MonkeySoundsMainWindow";
     wcex.hIconSm = g_hAppIcon;
     RegisterClassExW(&wcex);
@@ -256,6 +259,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     if (g_hFontBold) DeleteObject(g_hFontBold);
     if (g_hFontTitle) DeleteObject(g_hFontTitle);
     if (g_hFontMono) DeleteObject(g_hFontMono);
+    if (g_hTabBgBrush) DeleteObject(g_hTabBgBrush);
 
     Gdiplus::GdiplusShutdown(gdiplusToken);
     return (int)msg.wParam;
@@ -752,8 +756,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             int w = rc.right - rc.left;
             int h = rc.bottom - rc.top;
 
-            // Fill background with dialog color
-            FillRect(hdc, &rc, (HBRUSH)(COLOR_BTNFACE + 1));
+            // Fill background with tab color
+            FillRect(hdc, &rc, g_hTabBgBrush);
 
             int badgeW = 76;
             int badgeH = 76;
@@ -777,21 +781,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         HWND hwndStatic = (HWND)lParam;
         if (hwndStatic == g_hAboutTitle) {
             SetTextColor(hdcStatic, RGB(20, 20, 20));
-            SetBkMode(hdcStatic, TRANSPARENT);
-            return (INT_PTR)GetSysColorBrush(COLOR_BTNFACE);
-        }
-        if (hwndStatic == g_hAboutDesc1 || hwndStatic == g_hAboutDesc2) {
+        } else if (hwndStatic == g_hAboutDesc1 || hwndStatic == g_hAboutDesc2) {
             SetTextColor(hdcStatic, RGB(60, 60, 60));
-            SetBkMode(hdcStatic, TRANSPARENT);
-            return (INT_PTR)GetSysColorBrush(COLOR_BTNFACE);
-        }
-        if (hwndStatic == g_hAboutCopy) {
+        } else if (hwndStatic == g_hAboutCopy) {
             SetTextColor(hdcStatic, RGB(90, 90, 90));
-            SetBkMode(hdcStatic, TRANSPARENT);
-            return (INT_PTR)GetSysColorBrush(COLOR_BTNFACE);
         }
+        SetBkColor(hdcStatic, RGB(240, 240, 240));
         SetBkMode(hdcStatic, TRANSPARENT);
-        return (INT_PTR)GetSysColorBrush(COLOR_BTNFACE);
+        return (INT_PTR)g_hTabBgBrush;
+    }
+
+    case WM_CTLCOLORBTN:
+    case WM_CTLCOLORDLG: {
+        HDC hdcDlg = (HDC)wParam;
+        SetBkColor(hdcDlg, RGB(240, 240, 240));
+        SetBkMode(hdcDlg, TRANSPARENT);
+        return (INT_PTR)g_hTabBgBrush;
     }
 
     case WM_TIMER:
