@@ -760,12 +760,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             int badgeX = (w - badgeW) / 2;
             int badgeY = (h - badgeH) / 2;
 
-            RECT rcCard = { badgeX - 4, badgeY - 4, badgeX + badgeW + 4, badgeY + badgeH + 4 };
-            HBRUSH hCardBg = CreateSolidBrush(RGB(255, 255, 255));
-            FillRect(hdc, &rcCard, hCardBg);
-            DeleteObject(hCardBg);
-            FrameRect(hdc, &rcCard, (HBRUSH)GetStockObject(GRAY_BRUSH));
-
             if (g_pMonkeySoundsImage) {
                 Gdiplus::Graphics graphics(hdc);
                 graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
@@ -955,9 +949,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             break;
         }
 
-        case IDM_TRAY_EXIT:
+        case IDM_TRAY_EXIT: {
+            NOTIFYICONDATA nid = {};
+            nid.cbSize = sizeof(NOTIFYICONDATA);
+            nid.hWnd = hWnd;
+            nid.uID = 1;
+            Shell_NotifyIconW(NIM_DELETE, &nid);
+            InputHook::GetInstance().UninstallHooks();
+            AudioEngine::GetInstance().Shutdown();
             DestroyWindow(hWnd);
+            PostQuitMessage(0);
+            ExitProcess(0);
             break;
+        }
 
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
@@ -973,10 +977,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         break;
     }
 
-    case WM_DESTROY:
+    case WM_DESTROY: {
+        NOTIFYICONDATA nid = {};
+        nid.cbSize = sizeof(NOTIFYICONDATA);
+        nid.hWnd = hWnd;
+        nid.uID = 1;
+        Shell_NotifyIconW(NIM_DELETE, &nid);
+        InputHook::GetInstance().UninstallHooks();
+        AudioEngine::GetInstance().Shutdown();
         KillTimer(hWnd, TIMER_CPU_ID);
         PostQuitMessage(0);
+        ExitProcess(0);
         break;
+    }
 
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
