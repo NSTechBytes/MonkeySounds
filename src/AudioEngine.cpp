@@ -46,13 +46,6 @@ static std::wstring GetAppDataSoundsPath() {
     return L"C:\\Users\\nasirshahbaz\\AppData\\Roaming\\MonkeySounds\\Sounds";
 }
 
-static void SoundEndCallback(void* pUserData, ma_sound* pSound) {
-    if (pSound) {
-        ma_sound_uninit(pSound);
-        free(pSound);
-    }
-}
-
 AudioEngine& AudioEngine::GetInstance() {
     static AudioEngine instance;
     return instance;
@@ -92,12 +85,11 @@ bool AudioEngine::Initialize() {
 
 void AudioEngine::Shutdown() {
     if (!m_initialized) return;
-    std::lock_guard<std::mutex> lock(m_audioMutex);
     g_engineReady = false;
+    m_initialized = false;
     ma_sound_group_uninit(&g_kbSoundGroup);
     ma_sound_group_uninit(&g_mouseSoundGroup);
     ma_engine_uninit(&g_maEngine);
-    m_initialized = false;
 }
 
 void AudioEngine::SetKeyboardVolume(float vol) {
@@ -123,18 +115,8 @@ void AudioEngine::PlaySoundInternal(const std::wstring& filePath, bool isKeyboar
     if (!fs::exists(filePath)) return;
 
     std::string utf8Path = WideToUtf8(filePath);
-
-    ma_sound* sound = (ma_sound*)malloc(sizeof(ma_sound));
-    if (!sound) return;
-
     ma_sound_group* parentGroup = isKeyboard ? &g_kbSoundGroup : &g_mouseSoundGroup;
-    ma_result result = ma_sound_init_from_file(&g_maEngine, utf8Path.c_str(), MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_ASYNC, parentGroup, NULL, sound);
-    if (result == MA_SUCCESS) {
-        ma_sound_set_end_callback(sound, SoundEndCallback, sound);
-        ma_sound_start(sound);
-    } else {
-        free(sound);
-    }
+    ma_engine_play_sound(&g_maEngine, utf8Path.c_str(), parentGroup);
 }
 
 void AudioEngine::ScanProfilesInDirectory(const std::wstring& dir, const std::string& expectedDevice, std::vector<SoundProfileInfo>& outList) {

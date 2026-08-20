@@ -686,8 +686,26 @@ void ShowTrayMenu(HWND hWnd) {
         CheckMenuItem(hSubMenu, IDM_TRAY_MUTE_KB, AudioEngine::GetInstance().IsKeyboardEnabled() ? MF_UNCHECKED : MF_CHECKED);
         CheckMenuItem(hSubMenu, IDM_TRAY_MUTE_MOUSE, AudioEngine::GetInstance().IsMouseEnabled() ? MF_UNCHECKED : MF_CHECKED);
 
-        TrackPopupMenu(hSubMenu, TPM_RIGHTBUTTON | TPM_LEFTALIGN, pt.x, pt.y, 0, hWnd, NULL);
+        UINT cmd = TrackPopupMenu(hSubMenu, TPM_RIGHTBUTTON | TPM_LEFTALIGN | TPM_RETURNCMD, pt.x, pt.y, 0, hWnd, NULL);
+        PostMessage(hWnd, WM_NULL, 0, 0);
         DestroyMenu(hMenu);
+
+        if (cmd == IDM_TRAY_SHOW) {
+            ShowWindow(hWnd, SW_SHOW);
+            SetForegroundWindow(hWnd);
+        } else if (cmd == IDM_TRAY_MUTE_KB) {
+            bool nextState = !AudioEngine::GetInstance().IsKeyboardEnabled();
+            AudioEngine::GetInstance().SetKeyboardEnabled(nextState);
+            Button_SetCheck(g_hKbEnable, nextState ? BST_CHECKED : BST_UNCHECKED);
+            SaveCurrentSettings();
+        } else if (cmd == IDM_TRAY_MUTE_MOUSE) {
+            bool nextState = !AudioEngine::GetInstance().IsMouseEnabled();
+            AudioEngine::GetInstance().SetMouseEnabled(nextState);
+            Button_SetCheck(g_hMouseEnable, nextState ? BST_CHECKED : BST_UNCHECKED);
+            SaveCurrentSettings();
+        } else if (cmd == IDM_TRAY_EXIT) {
+            DestroyWindow(hWnd);
+        }
     }
 }
 
@@ -954,19 +972,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             break;
         }
 
-        case IDM_TRAY_EXIT: {
-            NOTIFYICONDATA nid = {};
-            nid.cbSize = sizeof(NOTIFYICONDATA);
-            nid.hWnd = hWnd;
-            nid.uID = 1;
-            Shell_NotifyIconW(NIM_DELETE, &nid);
-            InputHook::GetInstance().UninstallHooks();
-            AudioEngine::GetInstance().Shutdown();
+        case IDM_TRAY_EXIT:
             DestroyWindow(hWnd);
-            PostQuitMessage(0);
-            ExitProcess(0);
             break;
-        }
 
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
