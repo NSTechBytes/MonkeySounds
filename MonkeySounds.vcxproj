@@ -164,7 +164,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\Icon.ico" />
-    <Image Include="assets\MonkeyCode.png" />
+    <Image Include="assets\MonkeySounds.png" />
     <Image Include="assets\MonkeySounds.ico" />
     <Image Include="assets\small.ico" />
   </ItemGroup>

@@ -73,7 +73,7 @@ std::vector<SoundProfileInfo> g_kbProfiles;
 std::vector<SoundProfileInfo> g_mouseProfiles;
 
 // GDI+ Image for About page
-Gdiplus::Image* g_pMonkeyCodeImage = NULL;
+Gdiplus::Image* g_pMonkeySoundsImage = NULL;
 HICON g_hAppIcon = NULL;
 
 // CPU Calculation globals
@@ -125,12 +125,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     }
 
     // Load PNG logo
-    if (fs::exists(L"assets\\MonkeyCode.png")) {
-        g_pMonkeyCodeImage = Gdiplus::Image::FromFile(L"assets\\MonkeyCode.png");
-    } else if (fs::exists(L"MonkeyCode.png")) {
-        g_pMonkeyCodeImage = Gdiplus::Image::FromFile(L"MonkeyCode.png");
-    } else if (fs::exists(L"D:\\Novadesk-Project\\MonkeySounds\\assets\\MonkeyCode.png")) {
-        g_pMonkeyCodeImage = Gdiplus::Image::FromFile(L"D:\\Novadesk-Project\\MonkeySounds\\assets\\MonkeyCode.png");
+    if (fs::exists(L"assets\\MonkeySounds.png")) {
+        g_pMonkeySoundsImage = Gdiplus::Image::FromFile(L"assets\\MonkeySounds.png");
+    } else if (fs::exists(L"MonkeySounds.png")) {
+        g_pMonkeySoundsImage = Gdiplus::Image::FromFile(L"MonkeySounds.png");
+    } else if (fs::exists(L"D:\\Novadesk-Project\\MonkeySounds\\assets\\MonkeySounds.png")) {
+        g_pMonkeySoundsImage = Gdiplus::Image::FromFile(L"D:\\Novadesk-Project\\MonkeySounds\\assets\\MonkeySounds.png");
     }
 
     // Initialize Audio Engine
@@ -239,7 +239,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     InputHook::GetInstance().UninstallHooks();
     AudioEngine::GetInstance().Shutdown();
 
-    if (g_pMonkeyCodeImage) delete g_pMonkeyCodeImage;
+    if (g_pMonkeySoundsImage) delete g_pMonkeySoundsImage;
     if (g_hFontNormal) DeleteObject(g_hFontNormal);
     if (g_hFontBold) DeleteObject(g_hFontBold);
     if (g_hFontTitle) DeleteObject(g_hFontTitle);
@@ -752,10 +752,10 @@ void DrawAboutTab(HWND hWnd, HDC hdc) {
     DeleteObject(hCardBg);
     FrameRect(hdc, &rcCard, (HBRUSH)GetStockObject(GRAY_BRUSH));
 
-    if (g_pMonkeyCodeImage) {
+    if (g_pMonkeySoundsImage) {
         Gdiplus::Graphics graphics(hdc);
         graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
-        graphics.DrawImage(g_pMonkeyCodeImage, badgeX, badgeY, badgeW, badgeH);
+        graphics.DrawImage(g_pMonkeySoundsImage, badgeX, badgeY, badgeW, badgeH);
     } else if (g_hAppIcon) {
         DrawIconEx(hdc, badgeX + (badgeW - 48) / 2, badgeY + (badgeH - 48) / 2, g_hAppIcon, 48, 48, 0, NULL, DI_NORMAL);
     }
