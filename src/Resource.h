@@ -40,5 +40,12 @@
 #define IDC_BTN_CHECK_UPDATES       1303
 #define IDC_CHK_AUTOSTART           1304
 
+// About tab controls
+#define IDC_STATIC_ABOUT_LOGO       1310
+#define IDC_STATIC_ABOUT_TITLE      1311
+#define IDC_STATIC_ABOUT_DESC1      1312
+#define IDC_STATIC_ABOUT_DESC2      1313
+#define IDC_STATIC_ABOUT_COPY       1314
+
 // Custom window messages
 #define WM_TRAYICON                 (WM_USER + 1)

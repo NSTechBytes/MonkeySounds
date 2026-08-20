@@ -64,7 +64,11 @@ HWND g_hSeparator = NULL;
 HWND g_hAutoStartChk = NULL;
 
 // Control HWNDs - About Tab
-HWND g_hAboutPanel = NULL;
+HWND g_hAboutLogo = NULL;
+HWND g_hAboutTitle = NULL;
+HWND g_hAboutDesc1 = NULL;
+HWND g_hAboutDesc2 = NULL;
+HWND g_hAboutCopy = NULL;
 
 // Profiles lists
 std::vector<SoundProfileInfo> g_kbProfiles;
@@ -85,7 +89,6 @@ static int g_activeTab = 0;
 
 // Forward declarations
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK AboutPanelProc(HWND, UINT, WPARAM, LPARAM);
 void CreateControls(HWND hWnd);
 void UpdateTabVisibility(int tabIndex);
 void PopulatePresets();
@@ -113,14 +116,30 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     ULONG_PTR gdiplusToken;
     Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+    // Get executable directory
+    WCHAR szExePath[MAX_PATH] = {};
+    GetModuleFileNameW(NULL, szExePath, MAX_PATH);
+    fs::path exeDir = fs::path(szExePath).parent_path();
+
+    fs::path iconPath = exeDir / L"assets" / L"Icon.ico";
+    fs::path logoPath = exeDir / L"assets" / L"MonkeySounds.png";
+
     // Load App Icon
     g_hAppIcon = (HICON)LoadImageW(hInstance, MAKEINTRESOURCEW(IDI_APP_ICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
     if (!g_hAppIcon) {
-        g_hAppIcon = (HICON)LoadImageW(NULL, L"assets\\Icon.ico", IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
+        if (fs::exists(iconPath)) {
+            g_hAppIcon = (HICON)LoadImageW(NULL, iconPath.c_str(), IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
+        } else if (fs::exists(L"assets\\Icon.ico")) {
+            g_hAppIcon = (HICON)LoadImageW(NULL, L"assets\\Icon.ico", IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
+        }
     }
 
     // Load PNG logo
-    if (fs::exists(L"assets\\MonkeySounds.png")) {
+    if (fs::exists(logoPath)) {
+        g_pMonkeySoundsImage = Gdiplus::Image::FromFile(logoPath.c_str());
+    } else if (fs::exists(exeDir / L"MonkeySounds.png")) {
+        g_pMonkeySoundsImage = Gdiplus::Image::FromFile((exeDir / L"MonkeySounds.png").c_str());
+    } else if (fs::exists(L"assets\\MonkeySounds.png")) {
         g_pMonkeySoundsImage = Gdiplus::Image::FromFile(L"assets\\MonkeySounds.png");
     } else if (fs::exists(L"D:\\Novadesk-Project\\MonkeySounds\\assets\\MonkeySounds.png")) {
         g_pMonkeySoundsImage = Gdiplus::Image::FromFile(L"D:\\Novadesk-Project\\MonkeySounds\\assets\\MonkeySounds.png");
@@ -185,17 +204,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     wcex.lpszClassName = L"MonkeySoundsMainWindow";
     wcex.hIconSm = g_hAppIcon;
     RegisterClassExW(&wcex);
-
-    // Register About Panel Window Class
-    WNDCLASSEXW wcexAbout = {};
-    wcexAbout.cbSize = sizeof(WNDCLASSEX);
-    wcexAbout.style = CS_HREDRAW | CS_VREDRAW;
-    wcexAbout.lpfnWndProc = AboutPanelProc;
-    wcexAbout.hInstance = hInstance;
-    wcexAbout.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wcexAbout.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-    wcexAbout.lpszClassName = L"MonkeySoundsAboutPanel";
-    RegisterClassExW(&wcexAbout);
 
     // Calculate window rectangle centered on screen
     int screenW = GetSystemMetrics(SM_CXSCREEN);
@@ -434,12 +442,44 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hAutoStartChk, g_hFontNormal);
 
     // --- TAB 3: ABOUT ---
-    g_hAboutPanel = CreateWindowExW(
-        0, L"MonkeySoundsAboutPanel", L"",
-        WS_CHILD | WS_CLIPSIBLINGS,
-        16, HEADER_HEIGHT + 36, WINDOW_WIDTH - 32, 245,
-        hWnd, (HMENU)1305, g_hInstance, NULL
+    g_hAboutLogo = CreateWindowExW(
+        0, L"STATIC", L"",
+        WS_CHILD | SS_OWNERDRAW,
+        (WINDOW_WIDTH - 88) / 2, HEADER_HEIGHT + 45, 88, 88,
+        hWnd, (HMENU)IDC_STATIC_ABOUT_LOGO, g_hInstance, NULL
     );
+
+    g_hAboutTitle = CreateWindowExW(
+        0, L"STATIC", L"MonkeySounds",
+        WS_CHILD | SS_CENTER,
+        20, HEADER_HEIGHT + 140, WINDOW_WIDTH - 40, 22,
+        hWnd, (HMENU)IDC_STATIC_ABOUT_TITLE, g_hInstance, NULL
+    );
+    SetControlFont(g_hAboutTitle, g_hFontTitle);
+
+    g_hAboutDesc1 = CreateWindowExW(
+        0, L"STATIC", L"Professional system sound",
+        WS_CHILD | SS_CENTER,
+        20, HEADER_HEIGHT + 165, WINDOW_WIDTH - 40, 18,
+        hWnd, (HMENU)IDC_STATIC_ABOUT_DESC1, g_hInstance, NULL
+    );
+    SetControlFont(g_hAboutDesc1, g_hFontNormal);
+
+    g_hAboutDesc2 = CreateWindowExW(
+        0, L"STATIC", L"customization utility.",
+        WS_CHILD | SS_CENTER,
+        20, HEADER_HEIGHT + 183, WINDOW_WIDTH - 40, 18,
+        hWnd, (HMENU)IDC_STATIC_ABOUT_DESC2, g_hInstance, NULL
+    );
+    SetControlFont(g_hAboutDesc2, g_hFontNormal);
+
+    g_hAboutCopy = CreateWindowExW(
+        0, L"STATIC", L"© 2024 MonkeySounds. All rights reserved.",
+        WS_CHILD | SS_CENTER,
+        20, HEADER_HEIGHT + 215, WINDOW_WIDTH - 40, 18,
+        hWnd, (HMENU)IDC_STATIC_ABOUT_COPY, g_hInstance, NULL
+    );
+    SetControlFont(g_hAboutCopy, g_hFontMono);
 
     // --- Status Bar ---
     g_hStatusBar = CreateWindowExW(
@@ -487,9 +527,23 @@ void UpdateTabVisibility(int tabIndex) {
 
     // Tab 2: About
     int showAbout = (tabIndex == 2) ? SW_SHOW : SW_HIDE;
-    ShowWindow(g_hAboutPanel, showAbout);
+    ShowWindow(g_hAboutLogo, showAbout);
+    ShowWindow(g_hAboutTitle, showAbout);
+    ShowWindow(g_hAboutDesc1, showAbout);
+    ShowWindow(g_hAboutDesc2, showAbout);
+    ShowWindow(g_hAboutCopy, showAbout);
+
     if (showAbout == SW_SHOW) {
-        InvalidateRect(g_hAboutPanel, NULL, TRUE);
+        SetWindowPos(g_hAboutLogo, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+        SetWindowPos(g_hAboutTitle, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+        SetWindowPos(g_hAboutDesc1, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+        SetWindowPos(g_hAboutDesc2, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+        SetWindowPos(g_hAboutCopy, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+        InvalidateRect(g_hAboutLogo, NULL, TRUE);
+        InvalidateRect(g_hAboutTitle, NULL, TRUE);
+        InvalidateRect(g_hAboutDesc1, NULL, TRUE);
+        InvalidateRect(g_hAboutDesc2, NULL, TRUE);
+        InvalidateRect(g_hAboutCopy, NULL, TRUE);
     }
 
     // Trigger repaint
@@ -680,73 +734,6 @@ void DrawCustomHeader(HWND hWnd, HDC hdc) {
     SelectObject(hdc, hOldFont);
 }
 
-LRESULT CALLBACK AboutPanelProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-    switch (message) {
-    case WM_PAINT: {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hWnd, &ps);
-
-        RECT rcClient;
-        GetClientRect(hWnd, &rcClient);
-        int clientW = rcClient.right - rcClient.left;
-
-        // Background - fill with COLOR_BTNFACE
-        FillRect(hdc, &rcClient, (HBRUSH)(COLOR_BTNFACE + 1));
-
-        // Centered Badge Container for Image
-        int badgeW = 76;
-        int badgeH = 76;
-        int badgeX = (clientW - badgeW) / 2;
-        int badgeY = 20;
-
-        // Rounded rectangle / Card border
-        RECT rcCard = { badgeX - 4, badgeY - 4, badgeX + badgeW + 4, badgeY + badgeH + 4 };
-        HBRUSH hCardBg = CreateSolidBrush(RGB(255, 255, 255));
-        FillRect(hdc, &rcCard, hCardBg);
-        DeleteObject(hCardBg);
-        FrameRect(hdc, &rcCard, (HBRUSH)GetStockObject(GRAY_BRUSH));
-
-        if (g_pMonkeySoundsImage) {
-            Gdiplus::Graphics graphics(hdc);
-            graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
-            graphics.DrawImage(g_pMonkeySoundsImage, badgeX, badgeY, badgeW, badgeH);
-        } else if (g_hAppIcon) {
-            DrawIconEx(hdc, badgeX + (badgeW - 48) / 2, badgeY + (badgeH - 48) / 2, g_hAppIcon, 48, 48, 0, NULL, DI_NORMAL);
-        }
-
-        SetBkMode(hdc, TRANSPARENT);
-
-        // Title: MonkeySounds
-        HFONT hOldFont = (HFONT)SelectObject(hdc, g_hFontTitle);
-        SetTextColor(hdc, RGB(20, 20, 20));
-        RECT rcTitle = { 0, badgeY + badgeH + 12, clientW, badgeY + badgeH + 30 };
-        DrawTextW(hdc, L"MonkeySounds", -1, &rcTitle, DT_CENTER | DT_SINGLELINE);
-
-        // Description
-        SelectObject(hdc, g_hFontNormal);
-        SetTextColor(hdc, RGB(60, 60, 60));
-        RECT rcDesc1 = { 0, badgeY + badgeH + 32, clientW, badgeY + badgeH + 48 };
-        DrawTextW(hdc, L"Professional system sound", -1, &rcDesc1, DT_CENTER | DT_SINGLELINE);
-        RECT rcDesc2 = { 0, badgeY + badgeH + 48, clientW, badgeY + badgeH + 64 };
-        DrawTextW(hdc, L"customization utility.", -1, &rcDesc2, DT_CENTER | DT_SINGLELINE);
-
-        // Copyright
-        SelectObject(hdc, g_hFontMono);
-        SetTextColor(hdc, RGB(90, 90, 90));
-        RECT rcCopy = { 0, badgeY + badgeH + 80, clientW, badgeY + badgeH + 100 };
-        DrawTextW(hdc, L"© 2024 MonkeySounds. All rights reserved.", -1, &rcCopy, DT_CENTER | DT_SINGLELINE);
-
-        SelectObject(hdc, hOldFont);
-        EndPaint(hWnd, &ps);
-        return 0;
-    }
-    case WM_ERASEBKGND:
-        return 1;
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-}
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
     case WM_CREATE:
@@ -756,6 +743,62 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         SetTimer(hWnd, TIMER_CPU_ID, 1000, NULL);
         UpdateCpuUsage();
         break;
+
+    case WM_DRAWITEM: {
+        LPDRAWITEMSTRUCT pDIS = (LPDRAWITEMSTRUCT)lParam;
+        if (pDIS->CtlID == IDC_STATIC_ABOUT_LOGO) {
+            HDC hdc = pDIS->hDC;
+            RECT rc = pDIS->rcItem;
+            int w = rc.right - rc.left;
+            int h = rc.bottom - rc.top;
+
+            // Fill background with dialog color
+            FillRect(hdc, &rc, (HBRUSH)(COLOR_BTNFACE + 1));
+
+            int badgeW = 76;
+            int badgeH = 76;
+            int badgeX = (w - badgeW) / 2;
+            int badgeY = (h - badgeH) / 2;
+
+            RECT rcCard = { badgeX - 4, badgeY - 4, badgeX + badgeW + 4, badgeY + badgeH + 4 };
+            HBRUSH hCardBg = CreateSolidBrush(RGB(255, 255, 255));
+            FillRect(hdc, &rcCard, hCardBg);
+            DeleteObject(hCardBg);
+            FrameRect(hdc, &rcCard, (HBRUSH)GetStockObject(GRAY_BRUSH));
+
+            if (g_pMonkeySoundsImage) {
+                Gdiplus::Graphics graphics(hdc);
+                graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
+                graphics.DrawImage(g_pMonkeySoundsImage, badgeX, badgeY, badgeW, badgeH);
+            } else if (g_hAppIcon) {
+                DrawIconEx(hdc, badgeX + (badgeW - 48) / 2, badgeY + (badgeH - 48) / 2, g_hAppIcon, 48, 48, 0, NULL, DI_NORMAL);
+            }
+            return TRUE;
+        }
+        break;
+    }
+
+    case WM_CTLCOLORSTATIC: {
+        HDC hdcStatic = (HDC)wParam;
+        HWND hwndStatic = (HWND)lParam;
+        if (hwndStatic == g_hAboutTitle) {
+            SetTextColor(hdcStatic, RGB(20, 20, 20));
+            SetBkMode(hdcStatic, TRANSPARENT);
+            return (INT_PTR)GetSysColorBrush(COLOR_BTNFACE);
+        }
+        if (hwndStatic == g_hAboutDesc1 || hwndStatic == g_hAboutDesc2) {
+            SetTextColor(hdcStatic, RGB(60, 60, 60));
+            SetBkMode(hdcStatic, TRANSPARENT);
+            return (INT_PTR)GetSysColorBrush(COLOR_BTNFACE);
+        }
+        if (hwndStatic == g_hAboutCopy) {
+            SetTextColor(hdcStatic, RGB(90, 90, 90));
+            SetBkMode(hdcStatic, TRANSPARENT);
+            return (INT_PTR)GetSysColorBrush(COLOR_BTNFACE);
+        }
+        SetBkMode(hdcStatic, TRANSPARENT);
+        return (INT_PTR)GetSysColorBrush(COLOR_BTNFACE);
+    }
 
     case WM_TIMER:
         if (wParam == TIMER_CPU_ID) {
