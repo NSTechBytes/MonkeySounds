@@ -4,6 +4,7 @@
 #include "AudioEngine.h"
 #include "InputHook.h"
 #include "AppSettings.h"
+#include "Utils.h"
 #include <commctrl.h>
 #include <gdiplus.h>
 #include <windowsx.h>
@@ -27,11 +28,17 @@ static std::wstring Utf8ToWide(const std::string& str) {
 #define HEADER_HEIGHT 30
 #define TIMER_CPU_ID  1001
 
-// Global variables
+// Global Variables
 HINSTANCE g_hInstance = NULL;
 HWND g_hMainWnd = NULL;
 HWND g_hTabCtrl = NULL;
 HWND g_hStatusBar = NULL;
+int g_activeTab = 0;
+
+// CPU Monitor State
+static ULONGLONG g_lastIdleTime = 0;
+static ULONGLONG g_lastKernelTime = 0;
+static ULONGLONG g_lastUserTime = 0;
 
 // Fonts
 HFONT g_hFontNormal = NULL;
@@ -79,14 +86,8 @@ std::vector<SoundProfileInfo> g_mouseProfiles;
 Gdiplus::Image* g_pMonkeySoundsImage = NULL;
 HICON g_hAppIcon = NULL;
 
-// CPU Calculation globals
-static ULONGLONG g_lastIdleTime = 0;
-static ULONGLONG g_lastKernelTime = 0;
-static ULONGLONG g_lastUserTime = 0;
-
 // Header buttons state
 static int g_hoverHeaderBtn = 0; // 0=none, 1=close
-static int g_activeTab = 0;
 
 // Forward declarations
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -98,10 +99,6 @@ void LoadSettingsToUI();
 void UpdateCpuUsage();
 void ShowTrayMenu(HWND hWnd);
 void ChooseCustomProfile(bool isKeyboard);
-
-static ULONGLONG FileTimeToULL(const FILETIME& ft) {
-    return ((ULONGLONG)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
-}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow) {
     // Ensure only a single instance of the application runs
@@ -131,33 +128,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     ULONG_PTR gdiplusToken;
     Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
-    // Get executable directory
-    WCHAR szExePath[MAX_PATH] = {};
-    GetModuleFileNameW(NULL, szExePath, MAX_PATH);
-    fs::path exeDir = fs::path(szExePath).parent_path();
-
-    fs::path iconPath = exeDir / L"assets" / L"Icon.ico";
-    fs::path logoPath = exeDir / L"assets" / L"MonkeySounds.png";
-
     // Load App Icon
+    std::wstring iconPath = Utils::GetAssetPath(L"Icon.ico");
     g_hAppIcon = (HICON)LoadImageW(hInstance, MAKEINTRESOURCEW(IDI_APP_ICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
-    if (!g_hAppIcon) {
-        if (fs::exists(iconPath)) {
+    if (!g_hAppIcon && fs::exists(iconPath)) {
             g_hAppIcon = (HICON)LoadImageW(NULL, iconPath.c_str(), IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
-        } else if (fs::exists(L"assets\\Icon.ico")) {
-            g_hAppIcon = (HICON)LoadImageW(NULL, L"assets\\Icon.ico", IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
-        }
     }
 
     // Load PNG logo
+    std::wstring logoPath = Utils::GetAssetPath(L"MonkeySounds.png");
     if (fs::exists(logoPath)) {
         g_pMonkeySoundsImage = Gdiplus::Image::FromFile(logoPath.c_str());
-    } else if (fs::exists(exeDir / L"MonkeySounds.png")) {
-        g_pMonkeySoundsImage = Gdiplus::Image::FromFile((exeDir / L"MonkeySounds.png").c_str());
-    } else if (fs::exists(L"assets\\MonkeySounds.png")) {
-        g_pMonkeySoundsImage = Gdiplus::Image::FromFile(L"assets\\MonkeySounds.png");
-    } else if (fs::exists(L"D:\\Novadesk-Project\\MonkeySounds\\assets\\MonkeySounds.png")) {
-        g_pMonkeySoundsImage = Gdiplus::Image::FromFile(L"D:\\Novadesk-Project\\MonkeySounds\\assets\\MonkeySounds.png");
     }
 
     // Initialize Audio Engine
@@ -521,8 +502,8 @@ void CreateControls(HWND hWnd) {
 
     int statwidths[] = { WINDOW_WIDTH - 90, -1 };
     SendMessageW(g_hStatusBar, SB_SETPARTS, 2, (LPARAM)statwidths);
-    SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"Ready");
-    SendMessageW(g_hStatusBar, SB_SETTEXTW, 1, (LPARAM)L"CPU: 0%");
+    SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Ready");
+    SendMessageW(g_hStatusBar, SB_SETTEXTW, 1, (LPARAM)L"  CPU: 0%");
 }
 
 void UpdateTabVisibility(int tabIndex) {
@@ -588,7 +569,7 @@ void PopulatePresets() {
     std::wstring currentKbPath = AudioEngine::GetInstance().GetCurrentKeyboardProfilePath();
 
     for (size_t i = 0; i < g_kbProfiles.size(); ++i) {
-        std::wstring nameW = Utf8ToWide(g_kbProfiles[i].name);
+        std::wstring nameW = Utils::Utf8ToWide(g_kbProfiles[i].name);
         SendMessageW(g_hKbPresetCombo, CB_ADDSTRING, 0, (LPARAM)nameW.c_str());
         if (!currentKbPath.empty() && _wcsicmp(currentKbPath.c_str(), g_kbProfiles[i].profileJsonPath.c_str()) == 0) {
             selKbIndex = (int)i;
@@ -601,7 +582,7 @@ void PopulatePresets() {
     std::wstring currentMousePath = AudioEngine::GetInstance().GetCurrentMouseProfilePath();
 
     for (size_t i = 0; i < g_mouseProfiles.size(); ++i) {
-        std::wstring nameW = Utf8ToWide(g_mouseProfiles[i].name);
+        std::wstring nameW = Utils::Utf8ToWide(g_mouseProfiles[i].name);
         SendMessageW(g_hMousePresetCombo, CB_ADDSTRING, 0, (LPARAM)nameW.c_str());
         if (!currentMousePath.empty() && _wcsicmp(currentMousePath.c_str(), g_mouseProfiles[i].profileJsonPath.c_str()) == 0) {
             selMouseIndex = (int)i;
@@ -671,9 +652,9 @@ void ChooseCustomProfile(bool isKeyboard) {
 void UpdateCpuUsage() {
     FILETIME idleTime, kernelTime, userTime;
     if (GetSystemTimes(&idleTime, &kernelTime, &userTime)) {
-        ULONGLONG idle = FileTimeToULL(idleTime);
-        ULONGLONG kernel = FileTimeToULL(kernelTime);
-        ULONGLONG user = FileTimeToULL(userTime);
+        ULONGLONG idle = Utils::FileTimeToULL(idleTime);
+        ULONGLONG kernel = Utils::FileTimeToULL(kernelTime);
+        ULONGLONG user = Utils::FileTimeToULL(userTime);
 
         if (g_lastKernelTime != 0 || g_lastUserTime != 0) {
             ULONGLONG idleDelta = idle - g_lastIdleTime;
@@ -688,7 +669,7 @@ void UpdateCpuUsage() {
                 if (cpuPercent > 100) cpuPercent = 100;
 
                 WCHAR buf[32];
-                swprintf_s(buf, L"CPU: %d%%", cpuPercent);
+                swprintf_s(buf, L"  CPU: %d%%", cpuPercent);
                 SendMessageW(g_hStatusBar, SB_SETTEXTW, 1, (LPARAM)buf);
             }
         }

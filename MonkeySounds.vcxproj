@@ -154,6 +154,7 @@
     <ClInclude Include="src\AudioEngine.h" />
     <ClInclude Include="src\InputHook.h" />
     <ClInclude Include="src\AppSettings.h" />
+    <ClInclude Include="src\Utils.h" />
     <ClInclude Include="src\third_party\miniaudio.h" />
     <ClInclude Include="src\third_party\json.hpp" />
   </ItemGroup>
@@ -162,6 +163,7 @@
     <ClCompile Include="src\AudioEngine.cpp" />
     <ClCompile Include="src\InputHook.cpp" />
     <ClCompile Include="src\AppSettings.cpp" />
+    <ClCompile Include="src\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\MonkeySounds.rc" />

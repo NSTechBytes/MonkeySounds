@@ -1,5 +1,6 @@
 #include "framework.h"
 #include "AudioEngine.h"
+#include "Utils.h"
 #include "json.hpp"
 #include <fstream>
 #include <sstream>
@@ -7,8 +8,11 @@
 #include <shlwapi.h>
 #include <shlobj.h>
 
+#pragma warning(push)
+#pragma warning(disable: 4244 4267)
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
+#pragma warning(pop)
 
 #pragma comment(lib, "shlwapi.lib")
 
@@ -19,32 +23,6 @@ static ma_engine g_maEngine;
 static ma_sound_group g_kbSoundGroup;
 static ma_sound_group g_mouseSoundGroup;
 static bool g_engineReady = false;
-
-static std::string WideToUtf8(const std::wstring& wstr) {
-    if (wstr.empty()) return "";
-    int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
-    std::string strTo(size_needed, 0);
-    WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
-    return strTo;
-}
-
-static std::wstring Utf8ToWide(const std::string& str) {
-    if (str.empty()) return L"";
-    int size_needed = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
-    std::wstring wstrTo(size_needed, 0);
-    MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &wstrTo[0], size_needed);
-    return wstrTo;
-}
-
-static std::wstring GetAppDataSoundsPath() {
-    PWSTR ppszPath = NULL;
-    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &ppszPath))) {
-        std::wstring path = ppszPath;
-        CoTaskMemFree(ppszPath);
-        return path + L"\\MonkeySounds\\Sounds";
-    }
-    return L"C:\\Users\\nasirshahbaz\\AppData\\Roaming\\MonkeySounds\\Sounds";
-}
 
 AudioEngine& AudioEngine::GetInstance() {
     static AudioEngine instance;
@@ -114,7 +92,7 @@ void AudioEngine::PlaySoundInternal(const std::wstring& filePath, bool isKeyboar
     if (!m_initialized || !g_engineReady || filePath.empty()) return;
     if (!fs::exists(filePath)) return;
 
-    std::string utf8Path = WideToUtf8(filePath);
+    std::string utf8Path = Utils::WideToUtf8(filePath);
     ma_sound_group* parentGroup = isKeyboard ? &g_kbSoundGroup : &g_mouseSoundGroup;
     ma_engine_play_sound(&g_maEngine, utf8Path.c_str(), parentGroup);
 }
@@ -160,22 +138,28 @@ void AudioEngine::ScanProfilesInDirectory(const std::wstring& dir, const std::st
 
 std::vector<SoundProfileInfo> AudioEngine::ScanKeyboardProfiles() {
     std::vector<SoundProfileInfo> list;
-    std::wstring appDataSounds = GetAppDataSoundsPath() + L"\\Keyboard";
-    ScanProfilesInDirectory(appDataSounds, "keyboard", list);
+    std::wstring soundsDir = Utils::GetSoundsDirectory();
+    std::wstring kbSounds = (fs::path(soundsDir) / L"Keyboard").wstring();
+    ScanProfilesInDirectory(kbSounds, "keyboard", list);
 
-    // Also check current folder / Sounds / Keyboard if any
-    ScanProfilesInDirectory(L"Sounds\\Keyboard", "keyboard", list);
+    std::wstring exeSounds = (fs::path(Utils::GetExeDirectory()) / L"Sounds" / L"Keyboard").wstring();
+    if (_wcsicmp(exeSounds.c_str(), kbSounds.c_str()) != 0 && fs::exists(exeSounds)) {
+        ScanProfilesInDirectory(exeSounds, "keyboard", list);
+    }
 
     return list;
 }
 
 std::vector<SoundProfileInfo> AudioEngine::ScanMouseProfiles() {
     std::vector<SoundProfileInfo> list;
-    std::wstring appDataSounds = GetAppDataSoundsPath() + L"\\Mouse";
-    ScanProfilesInDirectory(appDataSounds, "mouse", list);
+    std::wstring soundsDir = Utils::GetSoundsDirectory();
+    std::wstring mouseSounds = (fs::path(soundsDir) / L"Mouse").wstring();
+    ScanProfilesInDirectory(mouseSounds, "mouse", list);
 
-    // Also check current folder / Sounds / Mouse if any
-    ScanProfilesInDirectory(L"Sounds\\Mouse", "mouse", list);
+    std::wstring exeSounds = (fs::path(Utils::GetExeDirectory()) / L"Sounds" / L"Mouse").wstring();
+    if (_wcsicmp(exeSounds.c_str(), mouseSounds.c_str()) != 0 && fs::exists(exeSounds)) {
+        ScanProfilesInDirectory(exeSounds, "mouse", list);
+    }
 
     return list;
 }
@@ -230,12 +214,12 @@ bool AudioEngine::LoadKeyboardProfile(const std::wstring& profileJsonPath) {
                     auto& srcObj = s["source"];
                     if (srcObj.contains("press")) {
                         std::string pressRel = srcObj["press"].get<std::string>();
-                        fs::path fullPath = fs::path(profile.folderPath) / Utf8ToWide(pressRel);
+                        fs::path fullPath = fs::path(profile.folderPath) / Utils::Utf8ToWide(pressRel);
                         src.pressFilePath = fullPath.lexically_normal().wstring();
                     }
                     if (srcObj.contains("release")) {
                         std::string relRel = srcObj["release"].get<std::string>();
-                        fs::path fullPath = fs::path(profile.folderPath) / Utf8ToWide(relRel);
+                        fs::path fullPath = fs::path(profile.folderPath) / Utils::Utf8ToWide(relRel);
                         src.releaseFilePath = fullPath.lexically_normal().wstring();
                     }
                 }
@@ -300,12 +284,12 @@ bool AudioEngine::LoadMouseProfile(const std::wstring& profileJsonPath) {
                     auto& srcObj = s["source"];
                     if (srcObj.contains("press")) {
                         std::string pressRel = srcObj["press"].get<std::string>();
-                        fs::path fullPath = fs::path(profile.folderPath) / Utf8ToWide(pressRel);
+                        fs::path fullPath = fs::path(profile.folderPath) / Utils::Utf8ToWide(pressRel);
                         src.pressFilePath = fullPath.lexically_normal().wstring();
                     }
                     if (srcObj.contains("release")) {
                         std::string relRel = srcObj["release"].get<std::string>();
-                        fs::path fullPath = fs::path(profile.folderPath) / Utf8ToWide(relRel);
+                        fs::path fullPath = fs::path(profile.folderPath) / Utils::Utf8ToWide(relRel);
                         src.releaseFilePath = fullPath.lexically_normal().wstring();
                     }
                 }

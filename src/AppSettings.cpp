@@ -1,5 +1,6 @@
 #include "framework.h"
 #include "AppSettings.h"
+#include "Utils.h"
 #include "json.hpp"
 #include <fstream>
 #include <filesystem>
@@ -10,22 +11,6 @@ using json = nlohmann::json;
 
 #define REG_RUN_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Run"
 #define REG_APP_NAME L"MonkeySounds"
-
-static std::string WideToUtf8(const std::wstring& wstr) {
-    if (wstr.empty()) return "";
-    int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
-    std::string strTo(size_needed, 0);
-    WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
-    return strTo;
-}
-
-static std::wstring Utf8ToWide(const std::string& str) {
-    if (str.empty()) return L"";
-    int size_needed = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
-    std::wstring wstrTo(size_needed, 0);
-    MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &wstrTo[0], size_needed);
-    return wstrTo;
-}
 
 AppSettings& AppSettings::GetInstance() {
     static AppSettings instance;
@@ -40,14 +25,7 @@ AppSettings::~AppSettings() {
 }
 
 std::wstring AppSettings::GetConfigFilePath() const {
-    PWSTR ppszPath = NULL;
-    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &ppszPath))) {
-        std::wstring path = ppszPath;
-        CoTaskMemFree(ppszPath);
-        fs::create_directories(path + L"\\MonkeySounds");
-        return path + L"\\MonkeySounds\\settings.json";
-    }
-    return L"settings.json";
+    return Utils::GetSettingsFilePath();
 }
 
 void AppSettings::Load() {
@@ -63,8 +41,8 @@ void AppSettings::Load() {
         if (j.contains("mouseEnabled")) m_config.mouseEnabled = j["mouseEnabled"].get<bool>();
         if (j.contains("keyboardVolume")) m_config.keyboardVolume = j["keyboardVolume"].get<float>();
         if (j.contains("mouseVolume")) m_config.mouseVolume = j["mouseVolume"].get<float>();
-        if (j.contains("keyboardProfilePath")) m_config.keyboardProfilePath = Utf8ToWide(j["keyboardProfilePath"].get<std::string>());
-        if (j.contains("mouseProfilePath")) m_config.mouseProfilePath = Utf8ToWide(j["mouseProfilePath"].get<std::string>());
+        if (j.contains("keyboardProfilePath")) m_config.keyboardProfilePath = Utils::Utf8ToWide(j["keyboardProfilePath"].get<std::string>());
+        if (j.contains("mouseProfilePath")) m_config.mouseProfilePath = Utils::Utf8ToWide(j["mouseProfilePath"].get<std::string>());
     } catch (...) {}
 
     m_config.autoStart = IsAutoStartEnabled();
@@ -78,8 +56,8 @@ void AppSettings::Save() {
         j["mouseEnabled"] = m_config.mouseEnabled;
         j["keyboardVolume"] = m_config.keyboardVolume;
         j["mouseVolume"] = m_config.mouseVolume;
-        j["keyboardProfilePath"] = WideToUtf8(m_config.keyboardProfilePath);
-        j["mouseProfilePath"] = WideToUtf8(m_config.mouseProfilePath);
+        j["keyboardProfilePath"] = Utils::WideToUtf8(m_config.keyboardProfilePath);
+        j["mouseProfilePath"] = Utils::WideToUtf8(m_config.mouseProfilePath);
 
         std::ofstream file(path);
         if (file.is_open()) {
