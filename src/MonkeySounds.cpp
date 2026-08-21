@@ -201,7 +201,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     g_hFontMono = CreateFontW(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, L"Consolas");
 
-    g_hTabBgBrush = CreateSolidBrush(RGB(255,255,255));
+    g_hTabBgBrush = CreateSolidBrush(RGB(249, 249, 249));
 
     // Register Window Class
     WNDCLASSEXW wcex = {};
@@ -1137,7 +1137,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         } else if (hwndStatic == g_hAboutCopy) {
             SetTextColor(hdcStatic, RGB(90, 90, 90));
         }
-        SetBkColor(hdcStatic, RGB(240, 240, 240));
+        SetBkColor(hdcStatic, RGB(249, 249, 249));
         SetBkMode(hdcStatic, TRANSPARENT);
         return (INT_PTR)g_hTabBgBrush;
     }
@@ -1145,7 +1145,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     case WM_CTLCOLORBTN:
     case WM_CTLCOLORDLG: {
         HDC hdcDlg = (HDC)wParam;
-        SetBkColor(hdcDlg, RGB(240, 240, 240));
+        SetBkColor(hdcDlg, RGB(249, 249, 249));
         SetBkMode(hdcDlg, TRANSPARENT);
         return (INT_PTR)g_hTabBgBrush;
     }
