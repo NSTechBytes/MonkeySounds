@@ -172,10 +172,12 @@ static std::string ToLower(const std::string& str) {
 
 static std::string NormalizeKeyOrId(const std::string& str) {
     std::string s = ToLower(str);
-    // Strip leading/trailing whitespace and asterisks
-    size_t first = s.find_first_not_of(" \t\r\n*");
+    // Remove all asterisks (Mechvibes wildcard notation: *key*1 → key1)
+    s.erase(std::remove(s.begin(), s.end(), '*'), s.end());
+    // Strip leading/trailing whitespace
+    size_t first = s.find_first_not_of(" \t\r\n");
     if (first == std::string::npos) return "";
-    size_t last = s.find_last_not_of(" \t\r\n*");
+    size_t last = s.find_last_not_of(" \t\r\n");
     s = s.substr(first, (last - first + 1));
     return s;
 }
