@@ -28,8 +28,8 @@ struct KeyboardProfile {
     std::string author;
     std::string description;
     std::vector<std::string> defaultKeys;
-    std::unordered_map<std::string, std::string> keyToSoundMap; // keyName -> soundId
-    std::unordered_map<std::string, SoundSource> sources;       // soundId -> SoundSource
+    std::unordered_map<std::string, std::vector<std::string>> keyToSoundsMap; // normalized keyName -> list of soundIds
+    std::unordered_map<std::string, SoundSource> sources;                     // normalized soundId -> SoundSource
 };
 
 struct MouseProfile {
@@ -37,9 +37,9 @@ struct MouseProfile {
     std::string name;
     std::string author;
     std::string description;
-    std::string defaultButton;
-    std::unordered_map<std::string, std::string> buttonToSoundMap; // buttonName -> soundId
-    std::unordered_map<std::string, SoundSource> sources;          // soundId -> SoundSource
+    std::vector<std::string> defaultButtons;
+    std::unordered_map<std::string, std::vector<std::string>> buttonToSoundsMap; // normalized buttonName -> list of soundIds
+    std::unordered_map<std::string, SoundSource> sources;                        // normalized soundId -> SoundSource
 };
 
 class AudioEngine {
