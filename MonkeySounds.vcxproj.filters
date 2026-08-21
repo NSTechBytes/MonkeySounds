@@ -16,6 +16,15 @@
     <Filter Include="Header Files\third_party">
       <UniqueIdentifier>{a214d023-450f-4888-825b-381aefca740b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\zlib">
+      <UniqueIdentifier>{d5e6f7a8-b9c0-4d1e-2f3a-4b5c6d7e8f9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\zlib\minizip">
+      <UniqueIdentifier>{e6f7a8b9-c0d1-4e2f-3a4b-5c6d7e8f9a0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\third_party\zlib\minizip">
+      <UniqueIdentifier>{c4d2f3e5-6b7c-4f8e-9a0b-1c2d3e4f5a6b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\framework.h">
@@ -42,11 +51,29 @@
     <ClInclude Include="src\Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ZipUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="src\third_party\miniaudio.h">
       <Filter>Header Files\third_party</Filter>
     </ClInclude>
     <ClInclude Include="src\third_party\json.hpp">
       <Filter>Header Files\third_party</Filter>
+    </ClInclude>
+    <ClInclude Include="src\third_party\zlib\zlib.h">
+      <Filter>Header Files\third_party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\third_party\zlib\minizip\zip.h">
+      <Filter>Header Files\third_party\zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="src\third_party\zlib\minizip\unzip.h">
+      <Filter>Header Files\third_party\zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="src\third_party\zlib\minizip\iowin32.h">
+      <Filter>Header Files\third_party\zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="src\third_party\zlib\minizip\ioapi.h">
+      <Filter>Header Files\third_party\zlib\minizip</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -64,6 +91,66 @@
     </ClCompile>
     <ClCompile Include="src\Utils.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ZipUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\adler32.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\compress.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\crc32.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\deflate.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\gzclose.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\gzlib.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\gzread.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\gzwrite.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\infback.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\inffast.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\inflate.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\inftrees.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\trees.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\uncompr.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\zutil.c">
+      <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\minizip\ioapi.c">
+      <Filter>Source Files\zlib\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\minizip\iowin32.c">
+      <Filter>Source Files\zlib\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\minizip\zip.c">
+      <Filter>Source Files\zlib\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="src\third_party\zlib\minizip\unzip.c">
+      <Filter>Source Files\zlib\minizip</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

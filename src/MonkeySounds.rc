@@ -28,7 +28,7 @@ BEGIN
             VALUE "FileDescription",  "MonkeySounds - Keyboard & Mouse Sound Simulator"
             VALUE "FileVersion",      "1.0.0.0"
             VALUE "InternalName",     "MonkeySounds"
-            VALUE "LegalCopyright",   "\xA9 2024 MonkeySounds. All rights reserved."
+            VALUE "LegalCopyright",   "\xA9 2026 MonkeySounds. All rights reserved."
             VALUE "OriginalFilename", "MonkeySounds.exe"
             VALUE "ProductName",      "MonkeySounds"
             VALUE "ProductVersion",   "1.0.0.0"

@@ -5,6 +5,7 @@
 #include "InputHook.h"
 #include "AppSettings.h"
 #include "Utils.h"
+#include "ZipUtils.h"
 #include <commctrl.h>
 #include <gdiplus.h>
 #include <windowsx.h>
@@ -54,6 +55,8 @@ HWND g_hKbEnable = NULL;
 HWND g_hKbPresetLbl = NULL;
 HWND g_hKbPresetCombo = NULL;
 HWND g_hKbCustomBtn = NULL;
+HWND g_hKbTestBtn = NULL;
+HWND g_hKbExportBtn = NULL;
 HWND g_hKbVolLbl = NULL;
 HWND g_hKbVolSlider = NULL;
 
@@ -62,6 +65,8 @@ HWND g_hMouseEnable = NULL;
 HWND g_hMousePresetLbl = NULL;
 HWND g_hMousePresetCombo = NULL;
 HWND g_hMouseCustomBtn = NULL;
+HWND g_hMouseTestBtn = NULL;
+HWND g_hMouseExportBtn = NULL;
 HWND g_hMouseVolLbl = NULL;
 HWND g_hMouseVolSlider = NULL;
 
@@ -100,6 +105,8 @@ void LoadSettingsToUI();
 void UpdateCpuUsage();
 void ShowTrayMenu(HWND hWnd);
 void ChooseCustomProfile(bool isKeyboard);
+void ExportCurrentProfile(bool isKeyboard);
+void TestCurrentProfile(bool isKeyboard);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow) {
     // Ensure only a single instance of the application runs
@@ -298,11 +305,11 @@ void CreateControls(HWND hWnd) {
     TabCtrl_InsertItem(g_hTabCtrl, 2, &tie);
 
     // --- TAB 1: SOUNDS ---
-    // Keyboard Group
+    // Keyboard Group  (height 130 to fit extra button row)
     g_hKbGroup = CreateWindowExW(
         0, L"BUTTON", L"Keyboard Sounds",
         WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
-        16, HEADER_HEIGHT + 36, WINDOW_WIDTH - 32, 115,
+        16, HEADER_HEIGHT + 36, WINDOW_WIDTH - 32, 130,
         hWnd, (HMENU)IDC_GB_KEYBOARD, g_hInstance, NULL
     );
     SetControlFont(g_hKbGroup, g_hFontBold);
@@ -318,23 +325,43 @@ void CreateControls(HWND hWnd) {
     g_hKbPresetLbl = CreateWindowExW(
         0, L"STATIC", L"Preset:",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
-        28, HEADER_HEIGHT + 83, 50, 20,
+        28, HEADER_HEIGHT + 83, 44, 20,
         hWnd, (HMENU)IDC_LBL_KB_PRESET, g_hInstance, NULL
     );
     SetControlFont(g_hKbPresetLbl, g_hFontNormal);
 
+    // Combo narrowed to leave room for Test + Export buttons
     g_hKbPresetCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
         WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
-        80, HEADER_HEIGHT + 80, 210, 160,
+        76, HEADER_HEIGHT + 80, 168, 160,
         hWnd, (HMENU)IDC_COMBO_KB_PRESET, g_hInstance, NULL
     );
     SetControlFont(g_hKbPresetCombo, g_hFontNormal);
 
-    g_hKbCustomBtn = CreateWindowExW(
-        0, L"BUTTON", L"Choose Custom Sound...",
+    // Test Sound button
+    g_hKbTestBtn = CreateWindowExW(
+        0, L"BUTTON", L"Test",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        298, HEADER_HEIGHT + 79, 150, 24,
+        250, HEADER_HEIGHT + 79, 50, 24,
+        hWnd, (HMENU)IDC_BTN_KB_TEST, g_hInstance, NULL
+    );
+    SetControlFont(g_hKbTestBtn, g_hFontNormal);
+
+    // Export ZIP button
+    g_hKbExportBtn = CreateWindowExW(
+        0, L"BUTTON", L"Export",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        305, HEADER_HEIGHT + 79, 55, 24,
+        hWnd, (HMENU)IDC_BTN_KB_EXPORT, g_hInstance, NULL
+    );
+    SetControlFont(g_hKbExportBtn, g_hFontNormal);
+
+    // Import ZIP (Custom) button
+    g_hKbCustomBtn = CreateWindowExW(
+        0, L"BUTTON", L"Import ZIP...",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        364, HEADER_HEIGHT + 79, 84, 24,
         hWnd, (HMENU)IDC_BTN_KB_CUSTOM, g_hInstance, NULL
     );
     SetControlFont(g_hKbCustomBtn, g_hFontNormal);
@@ -355,11 +382,11 @@ void CreateControls(HWND hWnd) {
     );
     SendMessageW(g_hKbVolSlider, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
 
-    // Mouse Group
+    // Mouse Group (shifted down 15px for taller keyboard group)
     g_hMouseGroup = CreateWindowExW(
         0, L"BUTTON", L"Mouse Sounds",
         WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
-        16, HEADER_HEIGHT + 158, WINDOW_WIDTH - 32, 115,
+        16, HEADER_HEIGHT + 173, WINDOW_WIDTH - 32, 130,
         hWnd, (HMENU)IDC_GB_MOUSE, g_hInstance, NULL
     );
     SetControlFont(g_hMouseGroup, g_hFontBold);
@@ -367,7 +394,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseEnable = CreateWindowExW(
         0, L"BUTTON", L"Enable Mouse Sounds",
         WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-        28, HEADER_HEIGHT + 178, 180, 20,
+        28, HEADER_HEIGHT + 193, 180, 20,
         hWnd, (HMENU)IDC_CHK_MOUSE_ENABLE, g_hInstance, NULL
     );
     SetControlFont(g_hMouseEnable, g_hFontNormal);
@@ -375,7 +402,7 @@ void CreateControls(HWND hWnd) {
     g_hMousePresetLbl = CreateWindowExW(
         0, L"STATIC", L"Preset:",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
-        28, HEADER_HEIGHT + 205, 50, 20,
+        28, HEADER_HEIGHT + 220, 44, 20,
         hWnd, (HMENU)IDC_LBL_MOUSE_PRESET, g_hInstance, NULL
     );
     SetControlFont(g_hMousePresetLbl, g_hFontNormal);
@@ -383,15 +410,34 @@ void CreateControls(HWND hWnd) {
     g_hMousePresetCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
         WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
-        80, HEADER_HEIGHT + 202, 210, 160,
+        76, HEADER_HEIGHT + 217, 168, 160,
         hWnd, (HMENU)IDC_COMBO_MOUSE_PRESET, g_hInstance, NULL
     );
     SetControlFont(g_hMousePresetCombo, g_hFontNormal);
 
-    g_hMouseCustomBtn = CreateWindowExW(
-        0, L"BUTTON", L"Choose Custom Sound...",
+    // Test Sound button
+    g_hMouseTestBtn = CreateWindowExW(
+        0, L"BUTTON", L"Test",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        298, HEADER_HEIGHT + 201, 150, 24,
+        250, HEADER_HEIGHT + 216, 50, 24,
+        hWnd, (HMENU)IDC_BTN_MOUSE_TEST, g_hInstance, NULL
+    );
+    SetControlFont(g_hMouseTestBtn, g_hFontNormal);
+
+    // Export ZIP button
+    g_hMouseExportBtn = CreateWindowExW(
+        0, L"BUTTON", L"Export",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        305, HEADER_HEIGHT + 216, 55, 24,
+        hWnd, (HMENU)IDC_BTN_MOUSE_EXPORT, g_hInstance, NULL
+    );
+    SetControlFont(g_hMouseExportBtn, g_hFontNormal);
+
+    // Import ZIP (Custom) button
+    g_hMouseCustomBtn = CreateWindowExW(
+        0, L"BUTTON", L"Import ZIP...",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        364, HEADER_HEIGHT + 216, 84, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_CUSTOM, g_hInstance, NULL
     );
     SetControlFont(g_hMouseCustomBtn, g_hFontNormal);
@@ -399,7 +445,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseVolLbl = CreateWindowExW(
         0, L"STATIC", L"Volume:",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
-        28, HEADER_HEIGHT + 238, 50, 20,
+        28, HEADER_HEIGHT + 253, 50, 20,
         hWnd, (HMENU)IDC_LBL_MOUSE_VOLUME, g_hInstance, NULL
     );
     SetControlFont(g_hMouseVolLbl, g_hFontNormal);
@@ -407,7 +453,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseVolSlider = CreateWindowExW(
         0, TRACKBAR_CLASS, L"",
         WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS | WS_TABSTOP,
-        80, HEADER_HEIGHT + 236, 368, 24,
+        80, HEADER_HEIGHT + 251, 368, 24,
         hWnd, (HMENU)IDC_SLIDER_MOUSE_VOLUME, g_hInstance, NULL
     );
     SendMessageW(g_hMouseVolSlider, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
@@ -485,7 +531,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hAboutDesc2, g_hFontNormal);
 
     g_hAboutCopy = CreateWindowExW(
-        0, L"STATIC", L"\u00A9 2024 MonkeySounds. All rights reserved.",
+        0, L"STATIC", L"\u00A9 2026 MonkeySounds. All rights reserved.",
         WS_CHILD | SS_CENTER,
         20, HEADER_HEIGHT + 215, WINDOW_WIDTH - 40, 18,
         hWnd, (HMENU)IDC_STATIC_ABOUT_COPY, g_hInstance, NULL
@@ -516,6 +562,8 @@ void UpdateTabVisibility(int tabIndex) {
     ShowWindow(g_hKbEnable, showSounds);
     ShowWindow(g_hKbPresetLbl, showSounds);
     ShowWindow(g_hKbPresetCombo, showSounds);
+    ShowWindow(g_hKbTestBtn, showSounds);
+    ShowWindow(g_hKbExportBtn, showSounds);
     ShowWindow(g_hKbCustomBtn, showSounds);
     ShowWindow(g_hKbVolLbl, showSounds);
     ShowWindow(g_hKbVolSlider, showSounds);
@@ -524,6 +572,8 @@ void UpdateTabVisibility(int tabIndex) {
     ShowWindow(g_hMouseEnable, showSounds);
     ShowWindow(g_hMousePresetLbl, showSounds);
     ShowWindow(g_hMousePresetCombo, showSounds);
+    ShowWindow(g_hMouseTestBtn, showSounds);
+    ShowWindow(g_hMouseExportBtn, showSounds);
     ShowWindow(g_hMouseCustomBtn, showSounds);
     ShowWindow(g_hMouseVolLbl, showSounds);
     ShowWindow(g_hMouseVolSlider, showSounds);
@@ -625,28 +675,139 @@ void ChooseCustomProfile(bool isKeyboard) {
     OPENFILENAMEW ofn = {};
     ofn.lStructSize = sizeof(OPENFILENAMEW);
     ofn.hwndOwner = g_hMainWnd;
-    ofn.lpstrFilter = L"Profile JSON (profile.json)\0profile.json\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFilter = L"Sound Pack ZIP (*.zip)\0*.zip\0All Files (*.*)\0*.*\0";
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = MAX_PATH;
     ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-    ofn.lpstrTitle = isKeyboard ? L"Select Keyboard profile.json" : L"Select Mouse profile.json";
+    ofn.lpstrTitle = isKeyboard ? L"Import Keyboard Sound Pack (.zip)"
+                                : L"Import Mouse Sound Pack (.zip)";
 
-    if (GetOpenFileNameW(&ofn)) {
-        if (isKeyboard) {
-            if (AudioEngine::GetInstance().LoadKeyboardProfile(szFile)) {
-                g_kbProfiles = AudioEngine::GetInstance().ScanKeyboardProfiles();
-                PopulatePresets();
-                AudioEngine::GetInstance().PlayKey(VK_SPACE, true);
-                SaveCurrentSettings();
-            }
-        } else {
-            if (AudioEngine::GetInstance().LoadMouseProfile(szFile)) {
-                g_mouseProfiles = AudioEngine::GetInstance().ScanMouseProfiles();
-                PopulatePresets();
-                AudioEngine::GetInstance().PlayMouse("left", true);
-                SaveCurrentSettings();
+    if (!GetOpenFileNameW(&ofn)) return;
+
+    // Determine destination: Keyboard or Mouse sounds directory
+    std::wstring soundsRoot = Utils::GetSoundsDirectory();
+    std::wstring subDir     = isKeyboard ? L"Keyboard\\Custom" : L"Mouse\\Custom";
+    std::wstring destBase   = (fs::path(soundsRoot) / subDir).wstring();
+
+    // Use the zip filename (without extension) as the profile folder name
+    std::wstring zipName = fs::path(szFile).stem().wstring();
+    std::wstring destDir = (fs::path(destBase) / zipName).wstring();
+
+    // Extract
+    SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Importing sound pack...");
+    if (!ZipUtils::ExtractZip(szFile, destDir)) {
+        MessageBoxW(g_hMainWnd,
+            L"Failed to extract the ZIP file.\nMake sure it contains a valid profile.json.",
+            L"Import Error", MB_OK | MB_ICONERROR);
+        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Import failed.");
+        return;
+    }
+
+    // Find profile.json inside extracted folder
+    std::wstring profileJson = (fs::path(destDir) / L"profile.json").wstring();
+    if (!fs::exists(profileJson)) {
+        // Try one level deeper (zip might have a subfolder)
+        for (const auto& entry : fs::directory_iterator(destDir)) {
+            if (entry.is_directory()) {
+                std::wstring candidate = (entry.path() / L"profile.json").wstring();
+                if (fs::exists(candidate)) { profileJson = candidate; break; }
             }
         }
+    }
+
+    if (!fs::exists(profileJson)) {
+        MessageBoxW(g_hMainWnd,
+            L"No profile.json found in the extracted ZIP.\n"
+            L"The sound pack must contain a profile.json at its root.",
+            L"Import Error", MB_OK | MB_ICONERROR);
+        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Import failed — no profile.json.");
+        return;
+    }
+
+    // Load the profile
+    bool loaded = false;
+    if (isKeyboard) {
+        loaded = AudioEngine::GetInstance().LoadKeyboardProfile(profileJson);
+        if (loaded) {
+            g_kbProfiles = AudioEngine::GetInstance().ScanKeyboardProfiles();
+            PopulatePresets();
+            AudioEngine::GetInstance().PlayKey(VK_SPACE, true);
+            SaveCurrentSettings();
+        }
+    } else {
+        loaded = AudioEngine::GetInstance().LoadMouseProfile(profileJson);
+        if (loaded) {
+            g_mouseProfiles = AudioEngine::GetInstance().ScanMouseProfiles();
+            PopulatePresets();
+            AudioEngine::GetInstance().PlayMouse("left", true);
+            SaveCurrentSettings();
+        }
+    }
+
+    if (loaded) {
+        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0,
+            (LPARAM)(std::wstring(L"  Imported: ") + zipName).c_str());
+    } else {
+        MessageBoxW(g_hMainWnd,
+            L"The profile.json was found but could not be loaded.\n"
+            L"Please check that the file is valid.",
+            L"Import Error", MB_OK | MB_ICONERROR);
+        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Import failed — invalid profile.");
+    }
+}
+
+void ExportCurrentProfile(bool isKeyboard) {
+    std::wstring profilePath = isKeyboard
+        ? AudioEngine::GetInstance().GetCurrentKeyboardProfilePath()
+        : AudioEngine::GetInstance().GetCurrentMouseProfilePath();
+
+    if (profilePath.empty() || !fs::exists(profilePath)) {
+        MessageBoxW(g_hMainWnd, L"No profile is currently loaded.",
+                    L"Export", MB_OK | MB_ICONWARNING);
+        return;
+    }
+
+    std::wstring profileDir = fs::path(profilePath).parent_path().wstring();
+    std::wstring profileName = fs::path(profileDir).filename().wstring();
+    std::wstring defaultFile = profileName + L".zip";
+
+    WCHAR szFile[MAX_PATH] = {};
+    wcscpy_s(szFile, defaultFile.c_str());
+
+    OPENFILENAMEW ofn = {};
+    ofn.lStructSize  = sizeof(OPENFILENAMEW);
+    ofn.hwndOwner    = g_hMainWnd;
+    ofn.lpstrFilter  = L"ZIP Archive (*.zip)\0*.zip\0";
+    ofn.lpstrFile    = szFile;
+    ofn.nMaxFile     = MAX_PATH;
+    ofn.lpstrDefExt  = L"zip";
+    ofn.Flags        = OFN_EXPLORER | OFN_OVERWRITEPROMPT;
+    ofn.lpstrTitle   = isKeyboard ? L"Export Keyboard Sound Pack"
+                                  : L"Export Mouse Sound Pack";
+
+    if (!GetSaveFileNameW(&ofn)) return;
+
+    SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Exporting sound pack...");
+
+    if (ZipUtils::CreateZipFromDir(profileDir, szFile)) {
+        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0,
+            (LPARAM)(std::wstring(L"  Exported: ") + fs::path(szFile).filename().wstring()).c_str());
+    } else {
+        MessageBoxW(g_hMainWnd, L"Failed to create ZIP archive.",
+                    L"Export Error", MB_OK | MB_ICONERROR);
+        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Export failed.");
+    }
+}
+
+void TestCurrentProfile(bool isKeyboard) {
+    if (isKeyboard) {
+        // Play a few keys so the user hears the variation
+        AudioEngine::GetInstance().PlayKey('A', true);
+        AudioEngine::GetInstance().PlayKey(VK_SPACE, true);
+        AudioEngine::GetInstance().PlayKey(VK_RETURN, true);
+    } else {
+        AudioEngine::GetInstance().PlayMouse("left", true);
+        AudioEngine::GetInstance().PlayMouse("right", true);
     }
 }
 
@@ -947,6 +1108,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
         case IDC_BTN_MOUSE_CUSTOM:
             ChooseCustomProfile(false);
+            break;
+
+        case IDC_BTN_KB_TEST:
+            TestCurrentProfile(true);
+            break;
+
+        case IDC_BTN_MOUSE_TEST:
+            TestCurrentProfile(false);
+            break;
+
+        case IDC_BTN_KB_EXPORT:
+            ExportCurrentProfile(true);
+            break;
+
+        case IDC_BTN_MOUSE_EXPORT:
+            ExportCurrentProfile(false);
             break;
 
         case IDC_BTN_CHECK_UPDATES:

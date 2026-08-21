@@ -25,6 +25,8 @@
 #define IDC_BTN_KB_CUSTOM           1105
 #define IDC_LBL_KB_VOLUME           1106
 #define IDC_SLIDER_KB_VOLUME        1107
+#define IDC_BTN_KB_TEST             1108
+#define IDC_BTN_KB_EXPORT           1109
 
 #define IDC_GB_MOUSE                1201
 #define IDC_CHK_MOUSE_ENABLE        1202
@@ -33,6 +35,8 @@
 #define IDC_BTN_MOUSE_CUSTOM        1205
 #define IDC_LBL_MOUSE_VOLUME        1206
 #define IDC_SLIDER_MOUSE_VOLUME     1207
+#define IDC_BTN_MOUSE_TEST          1208
+#define IDC_BTN_MOUSE_EXPORT        1209
 
 // Settings tab controls
 #define IDC_GB_APPLICATION          1301
