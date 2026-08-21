@@ -14,6 +14,9 @@
 #include <filesystem>
 #include <vector>
 #include <string>
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
 
 namespace fs = std::filesystem;
 
@@ -29,6 +32,15 @@ static std::wstring Utf8ToWide(const std::string& str) {
 #define WINDOW_HEIGHT 380
 #define HEADER_HEIGHT 30
 #define TIMER_CPU_ID  1001
+#define TIMER_VU_ID   1002
+
+// VU visualizer state
+#define NUM_VU_BARS   14
+static float  g_vuLevels[NUM_VU_BARS]  = {};   // 0.0 – 1.0 current bar height
+static float  g_vuPeak[NUM_VU_BARS]    = {};   // peak hold per bar
+static float  g_vuDecay[NUM_VU_BARS]   = {};   // per-bar decay speed
+static HWND   g_hVuWnd   = NULL;               // owner-draw static for the VU
+static HBRUSH g_hVuBgBrush = NULL;
 
 // Global Variables
 HINSTANCE g_hInstance = NULL;
@@ -112,6 +124,9 @@ void ExportCurrentProfile(bool isKeyboard);
 void TestCurrentProfile(bool isKeyboard);
 void ToggleFavorite(bool isKeyboard);
 void UpdateFavoriteButton(bool isKeyboard);
+void VuPulse();      // spike the VU on a keypress/click
+void VuDecay();      // called each timer tick to decay bar levels
+void VuDraw(HDC hdc, const RECT& rc); // paint the VU bars
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow) {
     // Ensure only a single instance of the application runs
@@ -594,10 +609,20 @@ void CreateControls(HWND hWnd) {
     );
     SetControlFont(g_hStatusBar, g_hFontMono);
 
-    int statwidths[] = { WINDOW_WIDTH - 90, -1 };
-    SendMessageW(g_hStatusBar, SB_SETPARTS, 2, (LPARAM)statwidths);
+    // 3 parts: [left text | VU meter | CPU %]
+    int statwidths[] = { 160, WINDOW_WIDTH - 88, -1 };
+    SendMessageW(g_hStatusBar, SB_SETPARTS, 3, (LPARAM)statwidths);
     SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Ready");
-    SendMessageW(g_hStatusBar, SB_SETTEXTW, 1, (LPARAM)L"  CPU: 0%");
+    SendMessageW(g_hStatusBar, SB_SETTEXTW, 2, (LPARAM)L"  CPU: 0%");
+
+    // VU meter — owner-draw static that lives over the middle status bar pane
+    g_hVuBgBrush = CreateSolidBrush(RGB(30,30,30));
+    g_hVuWnd = CreateWindowExW(
+        0, L"STATIC", L"",
+        WS_CHILD | WS_VISIBLE | SS_OWNERDRAW,
+        163, 0, WINDOW_WIDTH - 88 - 163, 20,   // positioned over middle pane; y/h adjusted after SB sizes
+        hWnd, (HMENU)IDC_VU_METER, g_hInstance, NULL
+    );
 }
 
 void UpdateTabVisibility(int tabIndex) {
@@ -966,13 +991,125 @@ void ToggleFavorite(bool isKeyboard) {
 
 void TestCurrentProfile(bool isKeyboard) {
     if (isKeyboard) {
-        // Play a few keys so the user hears the variation
         AudioEngine::GetInstance().PlayKey('A', true);
         AudioEngine::GetInstance().PlayKey(VK_SPACE, true);
         AudioEngine::GetInstance().PlayKey(VK_RETURN, true);
     } else {
         AudioEngine::GetInstance().PlayMouse("left", true);
         AudioEngine::GetInstance().PlayMouse("right", true);
+    }
+    VuPulse();
+}
+
+// ---------------------------------------------------------------------------
+// VU Meter — pulse, decay, draw
+// ---------------------------------------------------------------------------
+
+void VuPulse() {
+    // Spike bars to random heights, weighted towards centre for a bell shape
+    for (int i = 0; i < NUM_VU_BARS; ++i) {
+        // Distance from centre (0–1)
+        float centre = (float)(NUM_VU_BARS - 1) / 2.0f;
+        float dist   = fabsf((float)i - centre) / centre;        // 0 at centre, 1 at edges
+        float weight = 1.0f - dist * 0.55f;                      // centre bars spike higher
+
+        float spike = weight * (0.55f + (rand() % 100) / 220.0f); // 0.55–1.0 range at centre
+        if (spike > 1.0f) spike = 1.0f;
+
+        if (spike > g_vuLevels[i])
+            g_vuLevels[i] = spike;
+
+        // Per-bar decay speed: edge bars decay faster for a natural tail
+        g_vuDecay[i] = 0.032f + dist * 0.018f;
+
+        // Update peak hold
+        if (g_vuLevels[i] > g_vuPeak[i])
+            g_vuPeak[i] = g_vuLevels[i];
+    }
+    if (g_hVuWnd) InvalidateRect(g_hVuWnd, NULL, FALSE);
+}
+
+void VuDecay() {
+    bool changed = false;
+    for (int i = 0; i < NUM_VU_BARS; ++i) {
+        if (g_vuLevels[i] > 0.0f) {
+            g_vuLevels[i] -= g_vuDecay[i];
+            if (g_vuLevels[i] < 0.0f) g_vuLevels[i] = 0.0f;
+            changed = true;
+        }
+        // Peak hold decays slower
+        if (g_vuPeak[i] > 0.0f) {
+            g_vuPeak[i] -= g_vuDecay[i] * 0.35f;
+            if (g_vuPeak[i] < 0.0f) g_vuPeak[i] = 0.0f;
+            changed = true;
+        }
+    }
+    if (changed && g_hVuWnd) InvalidateRect(g_hVuWnd, NULL, FALSE);
+}
+
+void VuDraw(HDC hdc, const RECT& rc) {
+    int w = rc.right  - rc.left;
+    int h = rc.bottom - rc.top;
+
+    // Background — dark panel matching the status bar
+    HBRUSH hBg = CreateSolidBrush(RGB(249, 249, 249));
+    FillRect(hdc, &rc, hBg);
+    DeleteObject(hBg);
+
+    if (w <= 0 || h <= 0) return;
+
+    const int gap     = 2;                          // px between bars
+    int barW = (w - gap * (NUM_VU_BARS + 1)) / NUM_VU_BARS;
+    if (barW < 1) barW = 1;
+    int totalW = NUM_VU_BARS * barW + gap * (NUM_VU_BARS + 1);
+    int offsetX = rc.left + (w - totalW) / 2;       // centre the bar group
+
+    for (int i = 0; i < NUM_VU_BARS; ++i) {
+        float level = g_vuLevels[i];
+        int barH    = (int)(level * (h - 2));
+        int x       = offsetX + gap + i * (barW + gap);
+        int y       = rc.top + (h - barH);
+
+        if (barH > 0) {
+            // Colour: green (low) → yellow (mid) → red (high)
+            int r, g_c, b;
+            if (level < 0.5f) {
+                // green → yellow
+                float t = level / 0.5f;
+                r   = (int)(t * 255);
+                g_c = 200;
+                b   = 0;
+            } else {
+                // yellow → red
+                float t = (level - 0.5f) / 0.5f;
+                r   = 255;
+                g_c = (int)((1.0f - t) * 200);
+                b   = 0;
+            }
+            // Slight brightness boost at the top segment
+            RECT rcBar = { x, y, x + barW, rc.bottom - 1 };
+            HBRUSH hBar = CreateSolidBrush(RGB(r, g_c, b));
+            FillRect(hdc, &rcBar, hBar);
+            DeleteObject(hBar);
+
+            // Bright top pixel on the bar
+            RECT rcTop = { x, y, x + barW, y + 2 };
+            HBRUSH hTop = CreateSolidBrush(RGB(
+                std::min(r + 60, 255),
+                std::min(g_c + 60, 255),
+                std::min(b + 40, 255)));
+            FillRect(hdc, &rcTop, hTop);
+            DeleteObject(hTop);
+        }
+
+        // Peak hold marker — single bright line
+        if (g_vuPeak[i] > 0.02f) {
+            int peakY = rc.top + (h - (int)(g_vuPeak[i] * (h - 2))) - 1;
+            RECT rcPeak = { x, peakY, x + barW, peakY + 2 };
+            HBRUSH hPeak = CreateSolidBrush(RGB(255, 255, 180));
+            FillRect(hdc, &rcPeak, hPeak);
+            DeleteObject(hPeak);
+        }
     }
 }
 
@@ -997,7 +1134,7 @@ void UpdateCpuUsage() {
 
                 WCHAR buf[32];
                 swprintf_s(buf, L"  CPU: %d%%", cpuPercent);
-                SendMessageW(g_hStatusBar, SB_SETTEXTW, 1, (LPARAM)buf);
+                SendMessageW(g_hStatusBar, SB_SETTEXTW, 2, (LPARAM)buf);
             }
         }
 
@@ -1096,11 +1233,32 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         LoadSettingsToUI();
         UpdateTabVisibility(0);
         SetTimer(hWnd, TIMER_CPU_ID, 1000, NULL);
+        SetTimer(hWnd, TIMER_VU_ID,    30, NULL);   // ~33 fps decay
         UpdateCpuUsage();
+        // Reposition VU window to sit over the middle status bar pane
+        {
+            RECT rcSb{};
+            GetWindowRect(g_hStatusBar, &rcSb);
+            POINT pt{ rcSb.left, rcSb.top };
+            ScreenToClient(hWnd, &pt);
+            int sbH = (int)(rcSb.bottom - rcSb.top);
+            RECT paneRect{};
+            SendMessageW(g_hStatusBar, SB_GETRECT, 1, (LPARAM)&paneRect);
+            SetWindowPos(g_hVuWnd, HWND_TOP,
+                pt.x + paneRect.left + 2,
+                pt.y + 2,
+                paneRect.right - paneRect.left - 4,
+                sbH - 4,
+                SWP_NOZORDER);
+        }
         break;
 
     case WM_DRAWITEM: {
         LPDRAWITEMSTRUCT pDIS = (LPDRAWITEMSTRUCT)lParam;
+        if (pDIS->CtlID == IDC_VU_METER) {
+            VuDraw(pDIS->hDC, pDIS->rcItem);
+            return TRUE;
+        }
         if (pDIS->CtlID == IDC_STATIC_ABOUT_LOGO) {
             HDC hdc = pDIS->hDC;
             RECT rc = pDIS->rcItem;
@@ -1153,6 +1311,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     case WM_TIMER:
         if (wParam == TIMER_CPU_ID) {
             UpdateCpuUsage();
+        } else if (wParam == TIMER_VU_ID) {
+            VuDecay();
         }
         break;
 
@@ -1354,6 +1514,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         break;
     }
 
+    case WM_VU_PULSE:
+        VuPulse();
+        break;
+
     case WM_PAINT: {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
@@ -1371,6 +1535,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         InputHook::GetInstance().UninstallHooks();
         AudioEngine::GetInstance().Shutdown();
         KillTimer(hWnd, TIMER_CPU_ID);
+        KillTimer(hWnd, TIMER_VU_ID);
+        if (g_hVuBgBrush) { DeleteObject(g_hVuBgBrush); g_hVuBgBrush = NULL; }
         PostQuitMessage(0);
         ExitProcess(0);
         break;

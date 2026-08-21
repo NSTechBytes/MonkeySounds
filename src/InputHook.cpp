@@ -1,6 +1,10 @@
 #include "framework.h"
 #include "InputHook.h"
 #include "AudioEngine.h"
+#include "Resource.h"
+
+// Forward reference to the main window handle (defined in MonkeySounds.cpp)
+extern HWND g_hMainWnd;
 
 InputHook& InputHook::GetInstance() {
     static InputHook instance;
@@ -39,6 +43,7 @@ LRESULT CALLBACK InputHook::LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARA
         KBDLLHOOKSTRUCT* pKbd = (KBDLLHOOKSTRUCT*)lParam;
         if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
             AudioEngine::GetInstance().PlayKey(pKbd->vkCode, true);
+            if (g_hMainWnd) PostMessageW(g_hMainWnd, WM_VU_PULSE, 0, 0);
         } else if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
             AudioEngine::GetInstance().PlayKey(pKbd->vkCode, false);
         }
@@ -51,18 +56,21 @@ LRESULT CALLBACK InputHook::LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM l
         switch (wParam) {
         case WM_LBUTTONDOWN:
             AudioEngine::GetInstance().PlayMouse("left", true);
+            if (g_hMainWnd) PostMessageW(g_hMainWnd, WM_VU_PULSE, 0, 0);
             break;
         case WM_LBUTTONUP:
             AudioEngine::GetInstance().PlayMouse("left", false);
             break;
         case WM_RBUTTONDOWN:
             AudioEngine::GetInstance().PlayMouse("right", true);
+            if (g_hMainWnd) PostMessageW(g_hMainWnd, WM_VU_PULSE, 0, 0);
             break;
         case WM_RBUTTONUP:
             AudioEngine::GetInstance().PlayMouse("right", false);
             break;
         case WM_MBUTTONDOWN:
             AudioEngine::GetInstance().PlayMouse("middle", true);
+            if (g_hMainWnd) PostMessageW(g_hMainWnd, WM_VU_PULSE, 0, 0);
             break;
         case WM_MBUTTONUP:
             AudioEngine::GetInstance().PlayMouse("middle", false);

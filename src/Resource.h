@@ -16,6 +16,7 @@
 // Control IDs
 #define IDC_TAB_CONTROL             1001
 #define IDC_STATUSBAR               1002
+#define IDC_VU_METER                1003
 
 // Sounds tab controls
 #define IDC_GB_KEYBOARD             1101
@@ -56,3 +57,4 @@
 
 // Custom window messages
 #define WM_TRAYICON                 (WM_USER + 1)
+#define WM_VU_PULSE                 (WM_USER + 2)
