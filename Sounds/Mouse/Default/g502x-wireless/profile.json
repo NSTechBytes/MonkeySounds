@@ -1,0 +1,49 @@
+{
+  "profile": {
+    "author": "Keyboard Sounds",
+    "description": "Mouse clicks from a Logitech G502 X Wireless Mouse",
+    "device": "mouse",
+    "name": "g502x-wireless"
+  },
+  "buttons": {
+    "default": [
+      "click_left"
+    ],
+    "other": [
+      {
+        "buttons": ["left"],
+        "sound": "click_left"
+      },
+      {
+        "buttons": ["right"],
+        "sound": "click_right"
+      },
+      {
+        "buttons": ["middle"],
+        "sound": "click_middle"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "id": "click_left",
+      "source": {
+        "press": "primary_down.wav",
+        "release": "primary_up.wav"
+      }
+    },
+    {
+      "id": "click_right",
+      "source": {
+        "press": "secondary_down.wav",
+        "release": "secondary_up.wav"
+      }
+    },
+    {
+      "id": "click_middle",
+      "source": {
+        "press": "middle.wav"
+      }
+    }
+  ]
+}

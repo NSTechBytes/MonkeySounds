@@ -1,0 +1,101 @@
+{
+  "profile": {
+    "name": "telios-v2",
+    "author": "Mechvibes Community",
+    "description": "Sample audio of Telios V2 linear key switches"
+  },
+  "keys": {
+    "default": [
+      "key1",
+      "key2",
+      "key3",
+      "key4",
+      "key5",
+      "key6"
+    ],
+    "other": [
+      {
+        "keys": ["backspace", "delete"],
+        "sound": "back"
+      },
+      {
+        "keys": ["capslock"],
+        "sound": "caps"
+      },
+      {
+        "keys": ["ctrl_l", "ctrl_r"],
+        "sound": "ctrl"
+      },
+      {
+        "keys": ["enter"],
+        "sound": "enter"
+      },
+      {
+        "keys": ["shift_l", "shift_r"],
+        "sound": "shift"
+      },
+      {
+        "keys": ["space"],
+        "sound": "space"
+      },
+      {
+        "keys": ["tab"],
+        "sound": "tab"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "id": "key1",
+      "source": "key1.wav"
+    },
+    {
+      "id": "key2",
+      "source": "key2.wav"
+    },
+    {
+      "id": "key3",
+      "source": "key3.wav"
+    },
+    {
+      "id": "key4",
+      "source": "key4.wav"
+    },
+    {
+      "id": "key5",
+      "source": "key5.wav"
+    },
+    {
+      "id": "key6",
+      "source": "key6.wav"
+    },
+    {
+      "id": "shift",
+      "source": "shift.wav"
+    },
+    {
+      "id": "space",
+      "source": "space.wav"
+    },
+    {
+      "id": "tab",
+      "source": "tab.wav"
+    },
+    {
+      "id": "enter",
+      "source": "ent.wav"
+    },
+    {
+      "id": "ctrl",
+      "source": "ctrl.wav"
+    },
+    {
+      "id": "caps",
+      "source": "caps.wav"
+    },
+    {
+      "id": "back",
+      "source": "back.wav"
+    }
+  ]
+}
