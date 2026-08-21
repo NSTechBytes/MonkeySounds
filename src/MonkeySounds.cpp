@@ -503,7 +503,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hAboutDesc2, g_hFontNormal);
 
     g_hAboutCopy = CreateWindowExW(
-        0, L"STATIC", L"© 2024 MonkeySounds. All rights reserved.",
+        0, L"STATIC", L"\u00A9 2024 MonkeySounds. All rights reserved.",
         WS_CHILD | SS_CENTER,
         20, HEADER_HEIGHT + 215, WINDOW_WIDTH - 40, 18,
         hWnd, (HMENU)IDC_STATIC_ABOUT_COPY, g_hInstance, NULL
