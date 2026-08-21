@@ -222,11 +222,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     wcex.hIconSm = g_hAppIcon;
     RegisterClassExW(&wcex);
 
-    // Calculate window rectangle centered on screen
-    int screenW = GetSystemMetrics(SM_CXSCREEN);
-    int screenH = GetSystemMetrics(SM_CYSCREEN);
-    int posX = (screenW - WINDOW_WIDTH) / 2;
-    int posY = (screenH - WINDOW_HEIGHT) / 2;
+    // Calculate window rectangle at bottom-right of the usable screen work area
+    RECT rcWorkArea;
+    if (!SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0)) {
+        rcWorkArea.left = 0;
+        rcWorkArea.top = 0;
+        rcWorkArea.right = GetSystemMetrics(SM_CXSCREEN);
+        rcWorkArea.bottom = GetSystemMetrics(SM_CYSCREEN);
+    }
+    int posX = rcWorkArea.right - WINDOW_WIDTH - 12;
+    int posY = rcWorkArea.bottom - WINDOW_HEIGHT - 12;
 
     HWND hWnd = CreateWindowExW(
         WS_EX_APPWINDOW,
@@ -251,7 +256,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     wcscpy_s(nid.szTip, L"MonkeySounds");
     Shell_NotifyIconW(NIM_ADD, &nid);
 
-    ShowWindow(hWnd, (nCmdShow == 0 || nCmdShow == SW_HIDE) ? SW_SHOW : nCmdShow);
+    // Start automatically hidden to tray
+    ShowWindow(hWnd, SW_HIDE);
     UpdateWindow(hWnd);
 
     // Main message loop
