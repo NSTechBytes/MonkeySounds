@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 
 struct AppConfig {
     bool keyboardEnabled = true;
@@ -10,6 +11,8 @@ struct AppConfig {
     std::wstring mouseProfilePath;
     bool autoStart = false;
     bool showStartupNotification = true;
+    std::vector<std::wstring> kbFavorites;    // profile json paths marked as favorite
+    std::vector<std::wstring> mouseFavorites; // profile json paths marked as favorite
 };
 
 class AppSettings {

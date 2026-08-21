@@ -44,6 +44,18 @@ void AppSettings::Load() {
         if (j.contains("keyboardProfilePath")) m_config.keyboardProfilePath = Utils::Utf8ToWide(j["keyboardProfilePath"].get<std::string>());
         if (j.contains("mouseProfilePath")) m_config.mouseProfilePath = Utils::Utf8ToWide(j["mouseProfilePath"].get<std::string>());
         if (j.contains("showStartupNotification")) m_config.showStartupNotification = j["showStartupNotification"].get<bool>();
+
+        // Load favorites lists
+        if (j.contains("kbFavorites") && j["kbFavorites"].is_array()) {
+            for (auto& item : j["kbFavorites"])
+                if (item.is_string())
+                    m_config.kbFavorites.push_back(Utils::Utf8ToWide(item.get<std::string>()));
+        }
+        if (j.contains("mouseFavorites") && j["mouseFavorites"].is_array()) {
+            for (auto& item : j["mouseFavorites"])
+                if (item.is_string())
+                    m_config.mouseFavorites.push_back(Utils::Utf8ToWide(item.get<std::string>()));
+        }
     } catch (...) {}
 
     m_config.autoStart = IsAutoStartEnabled();
@@ -60,6 +72,17 @@ void AppSettings::Save() {
         j["keyboardProfilePath"] = Utils::WideToUtf8(m_config.keyboardProfilePath);
         j["mouseProfilePath"] = Utils::WideToUtf8(m_config.mouseProfilePath);
         j["showStartupNotification"] = m_config.showStartupNotification;
+
+        // Save favorites lists
+        auto kbFavArr = nlohmann::json::array();
+        for (auto& p : m_config.kbFavorites)
+            kbFavArr.push_back(Utils::WideToUtf8(p));
+        j["kbFavorites"] = kbFavArr;
+
+        auto mouseFavArr = nlohmann::json::array();
+        for (auto& p : m_config.mouseFavorites)
+            mouseFavArr.push_back(Utils::WideToUtf8(p));
+        j["mouseFavorites"] = mouseFavArr;
 
         std::ofstream file(path);
         if (file.is_open()) {

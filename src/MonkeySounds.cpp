@@ -57,6 +57,7 @@ HWND g_hKbPresetCombo = NULL;
 HWND g_hKbCustomBtn = NULL;
 HWND g_hKbTestBtn = NULL;
 HWND g_hKbExportBtn = NULL;
+HWND g_hKbFavBtn = NULL;
 HWND g_hKbVolLbl = NULL;
 HWND g_hKbVolSlider = NULL;
 
@@ -67,6 +68,7 @@ HWND g_hMousePresetCombo = NULL;
 HWND g_hMouseCustomBtn = NULL;
 HWND g_hMouseTestBtn = NULL;
 HWND g_hMouseExportBtn = NULL;
+HWND g_hMouseFavBtn = NULL;
 HWND g_hMouseVolLbl = NULL;
 HWND g_hMouseVolSlider = NULL;
 
@@ -108,6 +110,8 @@ void ShowTrayMenu(HWND hWnd);
 void ChooseCustomProfile(bool isKeyboard);
 void ExportCurrentProfile(bool isKeyboard);
 void TestCurrentProfile(bool isKeyboard);
+void ToggleFavorite(bool isKeyboard);
+void UpdateFavoriteButton(bool isKeyboard);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow) {
     // Ensure only a single instance of the application runs
@@ -351,16 +355,25 @@ void CreateControls(HWND hWnd) {
     g_hKbPresetCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
         WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
-        76, HEADER_HEIGHT + 80, 168, 160,
+        76, HEADER_HEIGHT + 80, 145, 160,
         hWnd, (HMENU)IDC_COMBO_KB_PRESET, g_hInstance, NULL
     );
     SetControlFont(g_hKbPresetCombo, g_hFontNormal);
+
+    // Favourite toggle button (★ / ☆)
+    g_hKbFavBtn = CreateWindowExW(
+        0, L"BUTTON", L"\u2606",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        224, HEADER_HEIGHT + 79, 24, 24,
+        hWnd, (HMENU)IDC_BTN_KB_FAVORITE, g_hInstance, NULL
+    );
+    SetControlFont(g_hKbFavBtn, g_hFontNormal);
 
     // Test Sound button
     g_hKbTestBtn = CreateWindowExW(
         0, L"BUTTON", L"Test",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        250, HEADER_HEIGHT + 79, 50, 24,
+        251, HEADER_HEIGHT + 79, 50, 24,
         hWnd, (HMENU)IDC_BTN_KB_TEST, g_hInstance, NULL
     );
     SetControlFont(g_hKbTestBtn, g_hFontNormal);
@@ -427,16 +440,25 @@ void CreateControls(HWND hWnd) {
     g_hMousePresetCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
         WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
-        76, HEADER_HEIGHT + 217, 168, 160,
+        76, HEADER_HEIGHT + 217, 145, 160,
         hWnd, (HMENU)IDC_COMBO_MOUSE_PRESET, g_hInstance, NULL
     );
     SetControlFont(g_hMousePresetCombo, g_hFontNormal);
+
+    // Favourite toggle button (★ / ☆)
+    g_hMouseFavBtn = CreateWindowExW(
+        0, L"BUTTON", L"\u2606",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        224, HEADER_HEIGHT + 216, 24, 24,
+        hWnd, (HMENU)IDC_BTN_MOUSE_FAVORITE, g_hInstance, NULL
+    );
+    SetControlFont(g_hMouseFavBtn, g_hFontNormal);
 
     // Test Sound button
     g_hMouseTestBtn = CreateWindowExW(
         0, L"BUTTON", L"Test",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        250, HEADER_HEIGHT + 216, 50, 24,
+        251, HEADER_HEIGHT + 216, 50, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_TEST, g_hInstance, NULL
     );
     SetControlFont(g_hMouseTestBtn, g_hFontNormal);
@@ -589,6 +611,7 @@ void UpdateTabVisibility(int tabIndex) {
     ShowWindow(g_hKbPresetCombo, showSounds);
     ShowWindow(g_hKbTestBtn, showSounds);
     ShowWindow(g_hKbExportBtn, showSounds);
+    ShowWindow(g_hKbFavBtn, showSounds);
     ShowWindow(g_hKbCustomBtn, showSounds);
     ShowWindow(g_hKbVolLbl, showSounds);
     ShowWindow(g_hKbVolSlider, showSounds);
@@ -599,6 +622,7 @@ void UpdateTabVisibility(int tabIndex) {
     ShowWindow(g_hMousePresetCombo, showSounds);
     ShowWindow(g_hMouseTestBtn, showSounds);
     ShowWindow(g_hMouseExportBtn, showSounds);
+    ShowWindow(g_hMouseFavBtn, showSounds);
     ShowWindow(g_hMouseCustomBtn, showSounds);
     ShowWindow(g_hMouseVolLbl, showSounds);
     ShowWindow(g_hMouseVolSlider, showSounds);
@@ -638,34 +662,92 @@ void UpdateTabVisibility(int tabIndex) {
 }
 
 void PopulatePresets() {
+    const auto& cfg = AppSettings::GetInstance().GetConfig();
+
+    // ---- Keyboard ----
     SendMessageW(g_hKbPresetCombo, CB_RESETCONTENT, 0, 0);
-    SendMessageW(g_hMousePresetCombo, CB_RESETCONTENT, 0, 0);
 
-    // Keyboard presets
-    int selKbIndex = 0;
     std::wstring currentKbPath = AudioEngine::GetInstance().GetCurrentKeyboardProfilePath();
+    int selKbIndex = 0;
+    int comboIdx = 0;
 
+    // Favorites first (★ prefix)
     for (size_t i = 0; i < g_kbProfiles.size(); ++i) {
-        std::wstring nameW = Utils::Utf8ToWide(g_kbProfiles[i].name);
-        SendMessageW(g_hKbPresetCombo, CB_ADDSTRING, 0, (LPARAM)nameW.c_str());
-        if (!currentKbPath.empty() && _wcsicmp(currentKbPath.c_str(), g_kbProfiles[i].profileJsonPath.c_str()) == 0) {
-            selKbIndex = (int)i;
-        }
+        const auto& p = g_kbProfiles[i];
+        bool isFav = false;
+        for (auto& f : cfg.kbFavorites)
+            if (_wcsicmp(f.c_str(), p.profileJsonPath.c_str()) == 0) { isFav = true; break; }
+        if (!isFav) continue;
+
+        std::wstring label = L"\u2605 " + Utils::Utf8ToWide(p.name);
+        SendMessageW(g_hKbPresetCombo, CB_ADDSTRING, 0, (LPARAM)label.c_str());
+        // store original index so we can retrieve the profile later
+        SendMessageW(g_hKbPresetCombo, CB_SETITEMDATA, comboIdx, (LPARAM)i);
+        if (!currentKbPath.empty() && _wcsicmp(currentKbPath.c_str(), p.profileJsonPath.c_str()) == 0)
+            selKbIndex = comboIdx;
+        ++comboIdx;
+    }
+
+    // Rest (non-favorites)
+    for (size_t i = 0; i < g_kbProfiles.size(); ++i) {
+        const auto& p = g_kbProfiles[i];
+        bool isFav = false;
+        for (auto& f : cfg.kbFavorites)
+            if (_wcsicmp(f.c_str(), p.profileJsonPath.c_str()) == 0) { isFav = true; break; }
+        if (isFav) continue;
+
+        std::wstring label = Utils::Utf8ToWide(p.name);
+        SendMessageW(g_hKbPresetCombo, CB_ADDSTRING, 0, (LPARAM)label.c_str());
+        SendMessageW(g_hKbPresetCombo, CB_SETITEMDATA, comboIdx, (LPARAM)i);
+        if (!currentKbPath.empty() && _wcsicmp(currentKbPath.c_str(), p.profileJsonPath.c_str()) == 0)
+            selKbIndex = comboIdx;
+        ++comboIdx;
     }
     SendMessageW(g_hKbPresetCombo, CB_SETCURSEL, selKbIndex, 0);
 
-    // Mouse presets
-    int selMouseIndex = 0;
-    std::wstring currentMousePath = AudioEngine::GetInstance().GetCurrentMouseProfilePath();
+    // ---- Mouse ----
+    SendMessageW(g_hMousePresetCombo, CB_RESETCONTENT, 0, 0);
 
+    std::wstring currentMousePath = AudioEngine::GetInstance().GetCurrentMouseProfilePath();
+    int selMouseIndex = 0;
+    comboIdx = 0;
+
+    // Favorites first
     for (size_t i = 0; i < g_mouseProfiles.size(); ++i) {
-        std::wstring nameW = Utils::Utf8ToWide(g_mouseProfiles[i].name);
-        SendMessageW(g_hMousePresetCombo, CB_ADDSTRING, 0, (LPARAM)nameW.c_str());
-        if (!currentMousePath.empty() && _wcsicmp(currentMousePath.c_str(), g_mouseProfiles[i].profileJsonPath.c_str()) == 0) {
-            selMouseIndex = (int)i;
-        }
+        const auto& p = g_mouseProfiles[i];
+        bool isFav = false;
+        for (auto& f : cfg.mouseFavorites)
+            if (_wcsicmp(f.c_str(), p.profileJsonPath.c_str()) == 0) { isFav = true; break; }
+        if (!isFav) continue;
+
+        std::wstring label = L"\u2605 " + Utils::Utf8ToWide(p.name);
+        SendMessageW(g_hMousePresetCombo, CB_ADDSTRING, 0, (LPARAM)label.c_str());
+        SendMessageW(g_hMousePresetCombo, CB_SETITEMDATA, comboIdx, (LPARAM)i);
+        if (!currentMousePath.empty() && _wcsicmp(currentMousePath.c_str(), p.profileJsonPath.c_str()) == 0)
+            selMouseIndex = comboIdx;
+        ++comboIdx;
+    }
+
+    // Rest
+    for (size_t i = 0; i < g_mouseProfiles.size(); ++i) {
+        const auto& p = g_mouseProfiles[i];
+        bool isFav = false;
+        for (auto& f : cfg.mouseFavorites)
+            if (_wcsicmp(f.c_str(), p.profileJsonPath.c_str()) == 0) { isFav = true; break; }
+        if (isFav) continue;
+
+        std::wstring label = Utils::Utf8ToWide(p.name);
+        SendMessageW(g_hMousePresetCombo, CB_ADDSTRING, 0, (LPARAM)label.c_str());
+        SendMessageW(g_hMousePresetCombo, CB_SETITEMDATA, comboIdx, (LPARAM)i);
+        if (!currentMousePath.empty() && _wcsicmp(currentMousePath.c_str(), p.profileJsonPath.c_str()) == 0)
+            selMouseIndex = comboIdx;
+        ++comboIdx;
     }
     SendMessageW(g_hMousePresetCombo, CB_SETCURSEL, selMouseIndex, 0);
+
+    // Sync the star buttons to reflect current selection
+    UpdateFavoriteButton(true);
+    UpdateFavoriteButton(false);
 }
 
 void LoadSettingsToUI() {
@@ -682,7 +764,7 @@ void LoadSettingsToUI() {
     Button_SetCheck(g_hAutoStartChk, config.autoStart ? BST_CHECKED : BST_UNCHECKED);
     Button_SetCheck(g_hStartupNotifChk, config.showStartupNotification ? BST_CHECKED : BST_UNCHECKED);
 
-    PopulatePresets();
+    PopulatePresets(); // also calls UpdateFavoriteButton for both
 }
 
 void SaveCurrentSettings() {
@@ -825,6 +907,61 @@ void ExportCurrentProfile(bool isKeyboard) {
                     L"Export Error", MB_OK | MB_ICONERROR);
         SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Export failed.");
     }
+}
+
+void UpdateFavoriteButton(bool isKeyboard) {
+    const auto& cfg = AppSettings::GetInstance().GetConfig();
+    const auto& favList = isKeyboard ? cfg.kbFavorites : cfg.mouseFavorites;
+    HWND hBtn = isKeyboard ? g_hKbFavBtn : g_hMouseFavBtn;
+    if (!hBtn) return;
+
+    std::wstring currentPath = isKeyboard
+        ? AudioEngine::GetInstance().GetCurrentKeyboardProfilePath()
+        : AudioEngine::GetInstance().GetCurrentMouseProfilePath();
+
+    bool isFav = false;
+    for (auto& f : favList)
+        if (_wcsicmp(f.c_str(), currentPath.c_str()) == 0) { isFav = true; break; }
+
+    // ★ filled = favorited, ☆ hollow = not favorited
+    SetWindowTextW(hBtn, isFav ? L"\u2605" : L"\u2606");
+}
+
+void ToggleFavorite(bool isKeyboard) {
+    auto& cfg = AppSettings::GetInstance().GetConfig();
+    auto& favList = isKeyboard ? cfg.kbFavorites : cfg.mouseFavorites;
+
+    std::wstring currentPath = isKeyboard
+        ? AudioEngine::GetInstance().GetCurrentKeyboardProfilePath()
+        : AudioEngine::GetInstance().GetCurrentMouseProfilePath();
+
+    if (currentPath.empty()) return;
+
+    // Check if already a favorite
+    auto it = std::find_if(favList.begin(), favList.end(),
+        [&](const std::wstring& f) {
+            return _wcsicmp(f.c_str(), currentPath.c_str()) == 0;
+        });
+
+    if (it != favList.end()) {
+        // Remove from favorites
+        favList.erase(it);
+        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Removed from favorites.");
+    } else {
+        // Add to favorites
+        favList.push_back(currentPath);
+        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Added to favorites! \u2605");
+    }
+
+    AppSettings::GetInstance().Save();
+
+    // Repopulate so the ★ prefix and ordering update immediately
+    if (isKeyboard)
+        g_kbProfiles = AudioEngine::GetInstance().ScanKeyboardProfiles();
+    else
+        g_mouseProfiles = AudioEngine::GetInstance().ScanMouseProfiles();
+
+    PopulatePresets();
 }
 
 void TestCurrentProfile(bool isKeyboard) {
@@ -1111,10 +1248,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         case IDC_COMBO_KB_PRESET:
             if (wmEvent == CBN_SELCHANGE) {
                 int sel = (int)SendMessageW(g_hKbPresetCombo, CB_GETCURSEL, 0, 0);
-                if (sel >= 0 && sel < (int)g_kbProfiles.size()) {
-                    AudioEngine::GetInstance().LoadKeyboardProfile(g_kbProfiles[sel].profileJsonPath);
-                    AudioEngine::GetInstance().PlayKey(VK_SPACE, true);
-                    SaveCurrentSettings();
+                if (sel >= 0) {
+                    // CB_GETITEMDATA holds the original g_kbProfiles index
+                    LRESULT profileIdx = SendMessageW(g_hKbPresetCombo, CB_GETITEMDATA, sel, 0);
+                    if (profileIdx != CB_ERR && profileIdx < (LRESULT)g_kbProfiles.size()) {
+                        AudioEngine::GetInstance().LoadKeyboardProfile(g_kbProfiles[profileIdx].profileJsonPath);
+                        AudioEngine::GetInstance().PlayKey(VK_SPACE, true);
+                        SaveCurrentSettings();
+                        UpdateFavoriteButton(true);
+                    }
                 }
             }
             break;
@@ -1122,10 +1264,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         case IDC_COMBO_MOUSE_PRESET:
             if (wmEvent == CBN_SELCHANGE) {
                 int sel = (int)SendMessageW(g_hMousePresetCombo, CB_GETCURSEL, 0, 0);
-                if (sel >= 0 && sel < (int)g_mouseProfiles.size()) {
-                    AudioEngine::GetInstance().LoadMouseProfile(g_mouseProfiles[sel].profileJsonPath);
-                    AudioEngine::GetInstance().PlayMouse("left", true);
-                    SaveCurrentSettings();
+                if (sel >= 0) {
+                    LRESULT profileIdx = SendMessageW(g_hMousePresetCombo, CB_GETITEMDATA, sel, 0);
+                    if (profileIdx != CB_ERR && profileIdx < (LRESULT)g_mouseProfiles.size()) {
+                        AudioEngine::GetInstance().LoadMouseProfile(g_mouseProfiles[profileIdx].profileJsonPath);
+                        AudioEngine::GetInstance().PlayMouse("left", true);
+                        SaveCurrentSettings();
+                        UpdateFavoriteButton(false);
+                    }
                 }
             }
             break;
@@ -1152,6 +1298,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
         case IDC_BTN_MOUSE_EXPORT:
             ExportCurrentProfile(false);
+            break;
+
+        case IDC_BTN_KB_FAVORITE:
+            ToggleFavorite(true);
+            break;
+
+        case IDC_BTN_MOUSE_FAVORITE:
+            ToggleFavorite(false);
             break;
 
         case IDC_BTN_CHECK_UPDATES:
