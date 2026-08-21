@@ -9,6 +9,7 @@
 #include <gdiplus.h>
 #include <windowsx.h>
 #include <shlobj.h>
+#include <shellapi.h>
 #include <filesystem>
 #include <vector>
 #include <string>
@@ -421,7 +422,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hAppSettingsGroup, g_hFontBold);
 
     g_hVersionLbl = CreateWindowExW(
-        0, L"STATIC", L"Current Version: 1.0.4",
+        0, L"STATIC", (L"Current Version: " + Utils::GetAppVersion()).c_str(),
         WS_CHILD | SS_LEFT,
         28, HEADER_HEIGHT + 60, 200, 20,
         hWnd, (HMENU)IDC_LBL_VERSION, g_hInstance, NULL
@@ -949,7 +950,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             break;
 
         case IDC_BTN_CHECK_UPDATES:
-            MessageBoxW(hWnd, L"MonkeySounds is up to date!\n\nCurrent Version: 1.0.4", L"Check for Updates", MB_OK | MB_ICONINFORMATION);
+            ShellExecuteW(hWnd, L"open",
+                L"https://github.com/NSTechBytes/MonkeySounds/releases/latest",
+                nullptr, nullptr, SW_SHOWNORMAL);
             break;
 
         case IDC_CHK_AUTOSTART:

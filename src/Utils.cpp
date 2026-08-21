@@ -2,6 +2,9 @@
 #include "Utils.h"
 #include <shlobj.h>
 #include <filesystem>
+#include <vector>
+
+#pragma comment(lib, "version.lib")
 
 namespace fs = std::filesystem;
 
@@ -86,6 +89,39 @@ std::wstring GetAssetPath(const std::wstring& filename) {
     if (fs::exists(p3)) return p3.wstring();
 
     return filename;
+}
+
+std::wstring GetAppVersion() {
+    WCHAR szExePath[MAX_PATH] = {};
+    GetModuleFileNameW(NULL, szExePath, MAX_PATH);
+
+    DWORD dwHandle = 0;
+    DWORD dwSize = GetFileVersionInfoSizeW(szExePath, &dwHandle);
+    if (dwSize == 0) return L"1.0.0";
+
+    std::vector<BYTE> data(dwSize);
+    if (!GetFileVersionInfoW(szExePath, dwHandle, dwSize, data.data())) return L"1.0.0";
+
+    // Primary: read binary FILEVERSION from VS_FIXEDFILEINFO
+    VS_FIXEDFILEINFO* pInfo = nullptr;
+    UINT uLen = 0;
+    if (VerQueryValueW(data.data(), L"\\", (LPVOID*)&pInfo, &uLen) && pInfo && uLen > 0) {
+        WORD major = HIWORD(pInfo->dwFileVersionMS);
+        WORD minor = LOWORD(pInfo->dwFileVersionMS);
+        WORD patch = HIWORD(pInfo->dwFileVersionLS);
+        WCHAR buf[32];
+        swprintf_s(buf, L"%u.%u.%u", major, minor, patch);
+        return buf;
+    }
+
+    // Fallback: read "FileVersion" string from StringFileInfo
+    WCHAR* pStrVer = nullptr;
+    UINT strLen = 0;
+    if (VerQueryValueW(data.data(), L"\\StringFileInfo\\040904B0\\FileVersion", (LPVOID*)&pStrVer, &strLen) && pStrVer && strLen > 0) {
+        return pStrVer;
+    }
+
+    return L"1.0.0";
 }
 
 } // namespace Utils

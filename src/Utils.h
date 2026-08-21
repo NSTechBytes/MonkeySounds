@@ -18,4 +18,7 @@ namespace Utils {
     std::wstring GetSettingsFilePath();
     std::wstring GetSoundsDirectory();
     std::wstring GetAssetPath(const std::wstring& filename);
+
+    // Version helpers
+    std::wstring GetAppVersion();
 }
