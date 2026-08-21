@@ -43,6 +43,7 @@
 #define IDC_LBL_VERSION             1302
 #define IDC_BTN_CHECK_UPDATES       1303
 #define IDC_CHK_AUTOSTART           1304
+#define IDC_CHK_STARTUP_NOTIF       1305
 
 // About tab controls
 #define IDC_STATIC_ABOUT_LOGO       1310

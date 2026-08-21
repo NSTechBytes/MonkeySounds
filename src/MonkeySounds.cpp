@@ -76,6 +76,7 @@ HWND g_hVersionLbl = NULL;
 HWND g_hCheckUpdatesBtn = NULL;
 HWND g_hSeparator = NULL;
 HWND g_hAutoStartChk = NULL;
+HWND g_hStartupNotifChk = NULL;
 
 // Control HWNDs - About Tab
 HWND g_hAboutLogo = NULL;
@@ -248,6 +249,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     // Start automatically hidden to tray
     ShowWindow(hWnd, SW_HIDE);
     UpdateWindow(hWnd);
+
+    // Show startup balloon notification if enabled
+    if (AppSettings::GetInstance().GetConfig().showStartupNotification) {
+        NOTIFYICONDATA nidBalloon = {};
+        nidBalloon.cbSize = sizeof(NOTIFYICONDATA);
+        nidBalloon.hWnd = hWnd;
+        nidBalloon.uID = 1;
+        nidBalloon.uFlags = NIF_INFO;
+        nidBalloon.dwInfoFlags = NIIF_INFO | NIIF_NOSOUND;
+        nidBalloon.uTimeout = 4000;
+        wcscpy_s(nidBalloon.szInfoTitle, L"MonkeySounds is running");
+        wcscpy_s(nidBalloon.szInfo,
+            L"Keyboard & mouse sounds are active.\n"
+            L"Right-click the tray icon to mute or open settings.");
+        Shell_NotifyIconW(NIM_MODIFY, &nidBalloon);
+    }
 
     // Main message loop
     MSG msg;
@@ -498,6 +515,14 @@ void CreateControls(HWND hWnd) {
     );
     SetControlFont(g_hAutoStartChk, g_hFontNormal);
 
+    g_hStartupNotifChk = CreateWindowExW(
+        0, L"BUTTON", L"Show notification on startup",
+        WS_CHILD | BS_AUTOCHECKBOX,
+        28, HEADER_HEIGHT + 167, 240, 20,
+        hWnd, (HMENU)IDC_CHK_STARTUP_NOTIF, g_hInstance, NULL
+    );
+    SetControlFont(g_hStartupNotifChk, g_hFontNormal);
+
     // --- TAB 3: ABOUT ---
     g_hAboutLogo = CreateWindowExW(
         0, L"STATIC", L"",
@@ -585,6 +610,7 @@ void UpdateTabVisibility(int tabIndex) {
     ShowWindow(g_hCheckUpdatesBtn, showSettings);
     ShowWindow(g_hSeparator, showSettings);
     ShowWindow(g_hAutoStartChk, showSettings);
+    ShowWindow(g_hStartupNotifChk, showSettings);
 
     // Tab 2: About
     int showAbout = (tabIndex == 2) ? SW_SHOW : SW_HIDE;
@@ -654,6 +680,7 @@ void LoadSettingsToUI() {
     SendMessageW(g_hMouseVolSlider, TBM_SETPOS, TRUE, mouseVolInt);
 
     Button_SetCheck(g_hAutoStartChk, config.autoStart ? BST_CHECKED : BST_UNCHECKED);
+    Button_SetCheck(g_hStartupNotifChk, config.showStartupNotification ? BST_CHECKED : BST_UNCHECKED);
 
     PopulatePresets();
 }
@@ -667,6 +694,7 @@ void SaveCurrentSettings() {
     cfg.keyboardProfilePath = AudioEngine::GetInstance().GetCurrentKeyboardProfilePath();
     cfg.mouseProfilePath = AudioEngine::GetInstance().GetCurrentMouseProfilePath();
     cfg.autoStart = (Button_GetCheck(g_hAutoStartChk) == BST_CHECKED);
+    cfg.showStartupNotification = (Button_GetCheck(g_hStartupNotifChk) == BST_CHECKED);
     AppSettings::GetInstance().Save();
 }
 
@@ -1133,6 +1161,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             break;
 
         case IDC_CHK_AUTOSTART:
+            SaveCurrentSettings();
+            break;
+
+        case IDC_CHK_STARTUP_NOTIF:
             SaveCurrentSettings();
             break;
 

@@ -9,6 +9,7 @@ struct AppConfig {
     std::wstring keyboardProfilePath;
     std::wstring mouseProfilePath;
     bool autoStart = false;
+    bool showStartupNotification = true;
 };
 
 class AppSettings {

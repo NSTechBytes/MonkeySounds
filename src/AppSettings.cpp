@@ -43,6 +43,7 @@ void AppSettings::Load() {
         if (j.contains("mouseVolume")) m_config.mouseVolume = j["mouseVolume"].get<float>();
         if (j.contains("keyboardProfilePath")) m_config.keyboardProfilePath = Utils::Utf8ToWide(j["keyboardProfilePath"].get<std::string>());
         if (j.contains("mouseProfilePath")) m_config.mouseProfilePath = Utils::Utf8ToWide(j["mouseProfilePath"].get<std::string>());
+        if (j.contains("showStartupNotification")) m_config.showStartupNotification = j["showStartupNotification"].get<bool>();
     } catch (...) {}
 
     m_config.autoStart = IsAutoStartEnabled();
@@ -58,6 +59,7 @@ void AppSettings::Save() {
         j["mouseVolume"] = m_config.mouseVolume;
         j["keyboardProfilePath"] = Utils::WideToUtf8(m_config.keyboardProfilePath);
         j["mouseProfilePath"] = Utils::WideToUtf8(m_config.mouseProfilePath);
+        j["showStartupNotification"] = m_config.showStartupNotification;
 
         std::ofstream file(path);
         if (file.is_open()) {
