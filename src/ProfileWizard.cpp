@@ -344,10 +344,38 @@ static void RefreshSummary(WizardDialogState* pWiz) {
         : L"Click the buttons below to test mouse clicks live before creating:");
 }
 
+static void HideAllStepControls(WizardDialogState* pWiz) {
+    HWND allControls[] = {
+        // Step 1
+        pWiz->hGrpType, pWiz->hRadKb, pWiz->hRadMouse, pWiz->hLblName, pWiz->hEditName,
+        pWiz->hLblAuthor, pWiz->hEditAuthor, pWiz->hLblDesc, pWiz->hEditDesc,
+        // Step 2
+        pWiz->hGrpDefPress, pWiz->hListDefPress, pWiz->hBtnAddPress, pWiz->hBtnDelPress,
+        pWiz->hBtnPlayPress, pWiz->hGrpDefRel, pWiz->hEditDefRel, pWiz->hBtnBrowseRel,
+        pWiz->hBtnClearRel, pWiz->hBtnPlayRel, pWiz->hLblDefNote,
+        // Step 3
+        pWiz->hGrpKeySelect, pWiz->hLblQuickKey, pWiz->hComboKeyList, pWiz->hLblCustomKey,
+        pWiz->hEditCustomKey, pWiz->hBtnAddKey, pWiz->hGrpKeySounds, pWiz->hLblKeyPress,
+        pWiz->hEditKeyPress, pWiz->hBtnBrowseKP, pWiz->hBtnClearKP, pWiz->hBtnPlayKP,
+        pWiz->hLblKeyRel, pWiz->hEditKeyRel, pWiz->hBtnBrowseKR, pWiz->hBtnClearKR,
+        pWiz->hBtnPlayKR, pWiz->hLblAssigned, pWiz->hListAssigned, pWiz->hBtnRemoveBind,
+        // Step 4
+        pWiz->hGrpSummary, pWiz->hEditSummary, pWiz->hGrpTest, pWiz->hLblTestNote,
+        pWiz->hEditTestPad, pWiz->hBtnTestLeft, pWiz->hBtnTestRight, pWiz->hBtnTestMid,
+        pWiz->hChkActivate, pWiz->hChkExportZip
+    };
+    for (HWND h : allControls) {
+        if (h) ShowWindow(h, SW_HIDE);
+    }
+}
+
 static void ShowStep(WizardDialogState* pWiz, int step) {
     pWiz->currentStep = step;
 
-    // Update Header
+    // 1. Hide all controls first
+    HideAllStepControls(pWiz);
+
+    // 2. Update Header
     std::wstring stepTitle = L"Step " + std::to_wstring(step + 1) + L" of 4: ";
     std::wstring stepSub = L"";
     switch (step) {
@@ -372,80 +400,112 @@ static void ShowStep(WizardDialogState* pWiz, int step) {
     SetWindowTextW(pWiz->hLblStepTitle, stepTitle.c_str());
     SetWindowTextW(pWiz->hLblStepSub, stepSub.c_str());
 
-    // Nav Buttons
+    // 3. Nav Buttons
     EnableWindow(pWiz->hBtnBack, step > STEP_INFO);
     SetWindowTextW(pWiz->hBtnNext, (step == STEP_TEST_SAVE) ? L"Finish & Create" : L"Next >");
 
-    // Hide / Show Step 1 Controls
-    int s1 = (step == STEP_INFO) ? SW_SHOW : SW_HIDE;
-    ShowWindow(pWiz->hGrpType, s1);
-    ShowWindow(pWiz->hRadKb, s1);
-    ShowWindow(pWiz->hRadMouse, s1);
-    ShowWindow(pWiz->hLblName, s1);
-    ShowWindow(pWiz->hEditName, s1);
-    ShowWindow(pWiz->hLblAuthor, s1);
-    ShowWindow(pWiz->hEditAuthor, s1);
-    ShowWindow(pWiz->hLblDesc, s1);
-    ShowWindow(pWiz->hEditDesc, s1);
+    // 4. Show only current step controls
+    switch (step) {
+    case STEP_INFO:
+        ShowWindow(pWiz->hGrpType, SW_SHOW);
+        ShowWindow(pWiz->hRadKb, SW_SHOW);
+        ShowWindow(pWiz->hRadMouse, SW_SHOW);
+        ShowWindow(pWiz->hLblName, SW_SHOW);
+        ShowWindow(pWiz->hEditName, SW_SHOW);
+        ShowWindow(pWiz->hLblAuthor, SW_SHOW);
+        ShowWindow(pWiz->hEditAuthor, SW_SHOW);
+        ShowWindow(pWiz->hLblDesc, SW_SHOW);
+        ShowWindow(pWiz->hEditDesc, SW_SHOW);
 
-    // Hide / Show Step 2 Controls
-    int s2 = (step == STEP_DEFAULT_SOUNDS) ? SW_SHOW : SW_HIDE;
-    ShowWindow(pWiz->hGrpDefPress, s2);
-    ShowWindow(pWiz->hListDefPress, s2);
-    ShowWindow(pWiz->hBtnAddPress, s2);
-    ShowWindow(pWiz->hBtnDelPress, s2);
-    ShowWindow(pWiz->hBtnPlayPress, s2);
-    ShowWindow(pWiz->hGrpDefRel, s2);
-    ShowWindow(pWiz->hEditDefRel, s2);
-    ShowWindow(pWiz->hBtnBrowseRel, s2);
-    ShowWindow(pWiz->hBtnClearRel, s2);
-    ShowWindow(pWiz->hBtnPlayRel, s2);
-    ShowWindow(pWiz->hLblDefNote, s2);
+        SendMessageW(pWiz->hRadKb, BM_SETCHECK, (pWiz->data.deviceType == "keyboard") ? BST_CHECKED : BST_UNCHECKED, 0);
+        SendMessageW(pWiz->hRadMouse, BM_SETCHECK, (pWiz->data.deviceType == "mouse") ? BST_CHECKED : BST_UNCHECKED, 0);
+        break;
 
-    // Hide / Show Step 3 Controls
-    int s3 = (step == STEP_SPECIFIC_KEYS) ? SW_SHOW : SW_HIDE;
-    ShowWindow(pWiz->hGrpKeySelect, s3);
-    ShowWindow(pWiz->hLblQuickKey, s3);
-    ShowWindow(pWiz->hComboKeyList, s3);
-    ShowWindow(pWiz->hLblCustomKey, s3);
-    ShowWindow(pWiz->hEditCustomKey, s3);
-    ShowWindow(pWiz->hBtnAddKey, s3);
-    ShowWindow(pWiz->hGrpKeySounds, s3);
-    ShowWindow(pWiz->hLblKeyPress, s3);
-    ShowWindow(pWiz->hEditKeyPress, s3);
-    ShowWindow(pWiz->hBtnBrowseKP, s3);
-    ShowWindow(pWiz->hBtnClearKP, s3);
-    ShowWindow(pWiz->hBtnPlayKP, s3);
-    ShowWindow(pWiz->hLblKeyRel, s3);
-    ShowWindow(pWiz->hEditKeyRel, s3);
-    ShowWindow(pWiz->hBtnBrowseKR, s3);
-    ShowWindow(pWiz->hBtnClearKR, s3);
-    ShowWindow(pWiz->hBtnPlayKR, s3);
-    ShowWindow(pWiz->hLblAssigned, s3);
-    ShowWindow(pWiz->hListAssigned, s3);
-    ShowWindow(pWiz->hBtnRemoveBind, s3);
+    case STEP_DEFAULT_SOUNDS:
+        ShowWindow(pWiz->hGrpDefPress, SW_SHOW);
+        ShowWindow(pWiz->hListDefPress, SW_SHOW);
+        ShowWindow(pWiz->hBtnAddPress, SW_SHOW);
+        ShowWindow(pWiz->hBtnDelPress, SW_SHOW);
+        ShowWindow(pWiz->hBtnPlayPress, SW_SHOW);
+        ShowWindow(pWiz->hGrpDefRel, SW_SHOW);
+        ShowWindow(pWiz->hEditDefRel, SW_SHOW);
+        ShowWindow(pWiz->hBtnBrowseRel, SW_SHOW);
+        ShowWindow(pWiz->hBtnClearRel, SW_SHOW);
+        ShowWindow(pWiz->hBtnPlayRel, SW_SHOW);
+        ShowWindow(pWiz->hLblDefNote, SW_SHOW);
 
-    // Hide / Show Step 4 Controls
-    int s4 = (step == STEP_TEST_SAVE) ? SW_SHOW : SW_HIDE;
-    ShowWindow(pWiz->hGrpSummary, s4);
-    ShowWindow(pWiz->hEditSummary, s4);
-    ShowWindow(pWiz->hGrpTest, s4);
-    ShowWindow(pWiz->hChkActivate, s4);
-    ShowWindow(pWiz->hChkExportZip, s4);
-    ShowWindow(pWiz->hLblTestNote, s4);
+        SendMessageW(pWiz->hListDefPress, LB_RESETCONTENT, 0, 0);
+        for (const auto& f : pWiz->data.defaultPressFiles) {
+            SendMessageW(pWiz->hListDefPress, LB_ADDSTRING, 0, (LPARAM)fs::path(f).filename().wstring().c_str());
+        }
+        if (!pWiz->data.defaultPressFiles.empty()) {
+            SendMessageW(pWiz->hListDefPress, LB_SETCURSEL, 0, 0);
+        }
+        if (!pWiz->data.defaultReleaseFiles.empty()) {
+            SetWindowTextW(pWiz->hEditDefRel, pWiz->data.defaultReleaseFiles[0].c_str());
+        } else {
+            SetWindowTextW(pWiz->hEditDefRel, L"");
+        }
+        break;
 
-    if (step == STEP_SPECIFIC_KEYS) {
+    case STEP_SPECIFIC_KEYS:
+        ShowWindow(pWiz->hGrpKeySelect, SW_SHOW);
+        ShowWindow(pWiz->hLblQuickKey, SW_SHOW);
+        ShowWindow(pWiz->hComboKeyList, SW_SHOW);
+        ShowWindow(pWiz->hLblCustomKey, SW_SHOW);
+        ShowWindow(pWiz->hEditCustomKey, SW_SHOW);
+        ShowWindow(pWiz->hBtnAddKey, SW_SHOW);
+        ShowWindow(pWiz->hGrpKeySounds, SW_SHOW);
+        ShowWindow(pWiz->hLblKeyPress, SW_SHOW);
+        ShowWindow(pWiz->hEditKeyPress, SW_SHOW);
+        ShowWindow(pWiz->hBtnBrowseKP, SW_SHOW);
+        ShowWindow(pWiz->hBtnClearKP, SW_SHOW);
+        ShowWindow(pWiz->hBtnPlayKP, SW_SHOW);
+        ShowWindow(pWiz->hLblKeyRel, SW_SHOW);
+        ShowWindow(pWiz->hEditKeyRel, SW_SHOW);
+        ShowWindow(pWiz->hBtnBrowseKR, SW_SHOW);
+        ShowWindow(pWiz->hBtnClearKR, SW_SHOW);
+        ShowWindow(pWiz->hBtnPlayKR, SW_SHOW);
+        ShowWindow(pWiz->hLblAssigned, SW_SHOW);
+        ShowWindow(pWiz->hListAssigned, SW_SHOW);
+        ShowWindow(pWiz->hBtnRemoveBind, SW_SHOW);
+
         PopulateKeyPresets(pWiz);
-        WCHAR curText[128] = {};
-        SendMessageW(pWiz->hComboKeyList, WM_GETTEXT, 128, (LPARAM)curText);
-        pWiz->selectedKeyName = ExtractKeyNameFromCombo(curText);
+        {
+            WCHAR curText[128] = {};
+            SendMessageW(pWiz->hComboKeyList, WM_GETTEXT, 128, (LPARAM)curText);
+            pWiz->selectedKeyName = ExtractKeyNameFromCombo(curText);
+        }
         UpdateKeyEditFields(pWiz);
         RefreshAssignedList(pWiz);
-    } else if (step == STEP_TEST_SAVE) {
+        break;
+
+    case STEP_TEST_SAVE:
+        ShowWindow(pWiz->hGrpSummary, SW_SHOW);
+        ShowWindow(pWiz->hEditSummary, SW_SHOW);
+        ShowWindow(pWiz->hGrpTest, SW_SHOW);
+        ShowWindow(pWiz->hLblTestNote, SW_SHOW);
+        ShowWindow(pWiz->hChkActivate, SW_SHOW);
+        ShowWindow(pWiz->hChkExportZip, SW_SHOW);
+
+        if (pWiz->data.deviceType == "keyboard") {
+            ShowWindow(pWiz->hEditTestPad, SW_SHOW);
+            ShowWindow(pWiz->hBtnTestLeft, SW_HIDE);
+            ShowWindow(pWiz->hBtnTestRight, SW_HIDE);
+            ShowWindow(pWiz->hBtnTestMid, SW_HIDE);
+        } else {
+            ShowWindow(pWiz->hEditTestPad, SW_HIDE);
+            ShowWindow(pWiz->hBtnTestLeft, SW_SHOW);
+            ShowWindow(pWiz->hBtnTestRight, SW_SHOW);
+            ShowWindow(pWiz->hBtnTestMid, SW_SHOW);
+        }
         RefreshSummary(pWiz);
+        break;
     }
 
+    // 5. Invalidate and immediately repaint whole dialog window
     InvalidateRect(pWiz->hWnd, NULL, TRUE);
+    UpdateWindow(pWiz->hWnd);
 }
 
 static bool ValidateAndSaveStep(WizardDialogState* pWiz, int step) {
@@ -1255,28 +1315,45 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         break;
     }
 
+    case WM_ERASEBKGND: {
+        HDC hdc = (HDC)wParam;
+        RECT rcClient;
+        GetClientRect(hWnd, &rcClient);
+        FillRect(hdc, &rcClient, pWiz->hBgBrush);
+        return 1;
+    }
+
     case WM_PAINT: {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
 
+        RECT rcClient;
+        GetClientRect(hWnd, &rcClient);
+
+        // Fill entire window client area
+        FillRect(hdc, &rcClient, pWiz->hBgBrush);
+
         // Header Background
-        RECT rcHeader = { 0, 0, WIZARD_WIDTH, 58 };
+        RECT rcHeader = { 0, 0, rcClient.right, 58 };
         FillRect(hdc, &rcHeader, pWiz->hHeaderBrush);
 
         // Divider under header
         HPEN hPen = CreatePen(PS_SOLID, 1, RGB(215, 220, 225));
         HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
         MoveToEx(hdc, 0, 58, NULL);
-        LineTo(hdc, WIZARD_WIDTH, 58);
+        LineTo(hdc, rcClient.right, 58);
 
         // Divider above footer
-        int footerY = WIZARD_HEIGHT - 85;
+        int footerY = rcClient.bottom - 78;
         MoveToEx(hdc, 0, footerY, NULL);
-        LineTo(hdc, WIZARD_WIDTH, footerY);
+        LineTo(hdc, rcClient.right, footerY);
+
+        SelectObject(hdc, hOldPen);
+        DeleteObject(hPen);
 
         // If on step 1 (Info), fill background for Profile Device Type group with white
         if (pWiz->currentStep == STEP_INFO) {
-            RECT rcGrpType = { 20, 65, WIZARD_WIDTH - 20, 65 + 60 };
+            RECT rcGrpType = { 20, 65, rcClient.right - 20, 65 + 60 };
             FillRect(hdc, &rcGrpType, pWiz->hWhiteBrush);
         }
 
@@ -1366,7 +1443,8 @@ bool ProfileWizard::Show(HWND hParentWnd, bool isKeyboard, std::wstring& outCrea
     wcex.hInstance = GetModuleHandle(NULL);
     wcex.hIcon = (HICON)GetClassLongPtrW(hParentWnd, GCLP_HICON);
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    HBRUSH hClassBgBrush = CreateSolidBrush(RGB(240, 240, 240));
+    wcex.hbrBackground = hClassBgBrush;
     wcex.lpszClassName = L"MonkeySoundsProfileWizard";
 
     RegisterClassExW(&wcex);
@@ -1381,7 +1459,7 @@ bool ProfileWizard::Show(HWND hParentWnd, bool isKeyboard, std::wstring& outCrea
         WS_EX_DLGMODALFRAME | WS_EX_TOPMOST,
         L"MonkeySoundsProfileWizard",
         L"Create Sound Profile Wizard",
-        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN | WS_VISIBLE,
+        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
         x, y, WIZARD_WIDTH, WIZARD_HEIGHT,
         hParentWnd, NULL, GetModuleHandle(NULL), NULL
     );
@@ -1418,6 +1496,7 @@ bool ProfileWizard::Show(HWND hParentWnd, bool isKeyboard, std::wstring& outCrea
     }
 
     UnregisterClassW(L"MonkeySoundsProfileWizard", GetModuleHandle(NULL));
+    DeleteObject(hClassBgBrush);
 
     g_pWiz = nullptr;
     outCreatedProfilePath = wizState.createdProfilePath;
