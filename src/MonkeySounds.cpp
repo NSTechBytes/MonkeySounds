@@ -58,6 +58,7 @@ HFONT g_hFontNormal = NULL;
 HFONT g_hFontBold = NULL;
 HFONT g_hFontTitle = NULL;
 HFONT g_hFontMono = NULL;
+HFONT g_hFontIcon = NULL;
 HBRUSH g_hTabBgBrush = NULL;
 
 // Control HWNDs - Sounds Tab
@@ -213,6 +214,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
     g_hFontMono = CreateFontW(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, L"Consolas");
+    // Segoe UI Symbol — used for icon-only buttons (e.g. play/preview ▶)
+    g_hFontIcon = CreateFontW(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI Symbol");
 
     g_hTabBgBrush = CreateSolidBrush(RGB(249, 249, 249));
 
@@ -302,6 +306,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     if (g_hFontBold) DeleteObject(g_hFontBold);
     if (g_hFontTitle) DeleteObject(g_hFontTitle);
     if (g_hFontMono) DeleteObject(g_hFontMono);
+    if (g_hFontIcon) DeleteObject(g_hFontIcon);
     if (g_hTabBgBrush) DeleteObject(g_hTabBgBrush);
 
     if (hSingleInstanceMutex) {
@@ -382,20 +387,20 @@ void CreateControls(HWND hWnd) {
     );
     SetControlFont(g_hKbFavBtn, g_hFontNormal);
 
-    // Test Sound button
+    // Preview (play) icon button — Segoe UI Symbol U+E102
     g_hKbTestBtn = CreateWindowExW(
-        0, L"BUTTON", L"Test",
+        0, L"BUTTON", L"\uE102",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        251, 79, 50, 24,
+        251, 79, 28, 24,
         hWnd, (HMENU)IDC_BTN_KB_TEST, g_hInstance, NULL
     );
-    SetControlFont(g_hKbTestBtn, g_hFontNormal);
+    SetControlFont(g_hKbTestBtn, g_hFontIcon);
 
     // Export ZIP button
     g_hKbExportBtn = CreateWindowExW(
         0, L"BUTTON", L"Export",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        305, 79, 55, 24,
+        283, 79, 55, 24,
         hWnd, (HMENU)IDC_BTN_KB_EXPORT, g_hInstance, NULL
     );
     SetControlFont(g_hKbExportBtn, g_hFontNormal);
@@ -404,7 +409,7 @@ void CreateControls(HWND hWnd) {
     g_hKbCustomBtn = CreateWindowExW(
         0, L"BUTTON", L"Import ZIP...",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        364, 79, 84, 24,
+        342, 79, 106, 24,
         hWnd, (HMENU)IDC_BTN_KB_CUSTOM, g_hInstance, NULL
     );
     SetControlFont(g_hKbCustomBtn, g_hFontNormal);
@@ -467,20 +472,20 @@ void CreateControls(HWND hWnd) {
     );
     SetControlFont(g_hMouseFavBtn, g_hFontNormal);
 
-    // Test Sound button
+    // Preview (play) icon button — Segoe UI Symbol U+E102
     g_hMouseTestBtn = CreateWindowExW(
-        0, L"BUTTON", L"Test",
+        0, L"BUTTON", L"\uE102",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        251, 216, 50, 24,
+        251, 216, 28, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_TEST, g_hInstance, NULL
     );
-    SetControlFont(g_hMouseTestBtn, g_hFontNormal);
+    SetControlFont(g_hMouseTestBtn, g_hFontIcon);
 
     // Export ZIP button
     g_hMouseExportBtn = CreateWindowExW(
         0, L"BUTTON", L"Export",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        305, 216, 55, 24,
+        283, 216, 55, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_EXPORT, g_hInstance, NULL
     );
     SetControlFont(g_hMouseExportBtn, g_hFontNormal);
@@ -489,7 +494,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseCustomBtn = CreateWindowExW(
         0, L"BUTTON", L"Import ZIP...",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        364, 216, 84, 24,
+        342, 216, 106, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_CUSTOM, g_hInstance, NULL
     );
     SetControlFont(g_hMouseCustomBtn, g_hFontNormal);
