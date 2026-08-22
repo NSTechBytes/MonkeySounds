@@ -103,6 +103,9 @@ HWND g_hAboutTitle = NULL;
 HWND g_hAboutDesc1 = NULL;
 HWND g_hAboutDesc2 = NULL;
 HWND g_hAboutCopy = NULL;
+HWND g_hAboutGithubBtn = NULL;
+HWND g_hAboutDiscordBtn = NULL;
+HWND g_hAboutPatreonBtn = NULL;
 
 // Profiles lists
 std::vector<SoundProfileInfo> g_kbProfiles;
@@ -370,7 +373,7 @@ void CreateControls(HWND hWnd) {
     g_hKbNewBtn = CreateWindowExW(
         0, L"BUTTON", L"+ New Profile...",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        WINDOW_WIDTH - 140, 53, 104, 23,
+        WINDOW_WIDTH - 145, 53, 104, 23,
         hWnd, (HMENU)IDC_BTN_KB_NEW, g_hInstance, NULL
     );
     SetControlFont(g_hKbNewBtn, g_hFontNormal);
@@ -386,7 +389,7 @@ void CreateControls(HWND hWnd) {
     g_hKbPresetCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
         WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
-        76, 80, WINDOW_WIDTH - 346, 160,
+        76, 80, WINDOW_WIDTH - 351, 160,
         hWnd, (HMENU)IDC_COMBO_KB_PRESET, g_hInstance, NULL
     );
     SetControlFont(g_hKbPresetCombo, g_hFontNormal);
@@ -395,7 +398,7 @@ void CreateControls(HWND hWnd) {
     g_hKbFavBtn = CreateWindowExW(
         0, L"BUTTON", L"\u2606",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        WINDOW_WIDTH - 266, 79, 24, 24,
+        WINDOW_WIDTH - 271, 79, 24, 24,
         hWnd, (HMENU)IDC_BTN_KB_FAVORITE, g_hInstance, NULL
     );
     SetControlFont(g_hKbFavBtn, g_hFontNormal);
@@ -404,7 +407,7 @@ void CreateControls(HWND hWnd) {
     g_hKbInfoBtn = CreateWindowExW(
         0, L"BUTTON", L"\uE946",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        WINDOW_WIDTH - 238, 79, 24, 24,
+        WINDOW_WIDTH - 243, 79, 24, 24,
         hWnd, (HMENU)IDC_BTN_KB_INFO, g_hInstance, NULL
     );
     SetControlFont(g_hKbInfoBtn, g_hFontIcon);
@@ -413,7 +416,7 @@ void CreateControls(HWND hWnd) {
     g_hKbTestBtn = CreateWindowExW(
         0, L"BUTTON", L"\u25B6",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        WINDOW_WIDTH - 210, 79, 28, 24,
+        WINDOW_WIDTH - 215, 79, 28, 24,
         hWnd, (HMENU)IDC_BTN_KB_TEST, g_hInstance, NULL
     );
     SetControlFont(g_hKbTestBtn, g_hFontNormal);
@@ -422,7 +425,7 @@ void CreateControls(HWND hWnd) {
     g_hKbExportBtn = CreateWindowExW(
         0, L"BUTTON", L"Export",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        WINDOW_WIDTH - 178, 79, 54, 24,
+        WINDOW_WIDTH - 183, 79, 54, 24,
         hWnd, (HMENU)IDC_BTN_KB_EXPORT, g_hInstance, NULL
     );
     SetControlFont(g_hKbExportBtn, g_hFontNormal);
@@ -431,7 +434,7 @@ void CreateControls(HWND hWnd) {
     g_hKbCustomBtn = CreateWindowExW(
         0, L"BUTTON", L"Import ZIP...",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        WINDOW_WIDTH - 120, 79, 84, 24,
+        WINDOW_WIDTH - 125, 79, 84, 24,
         hWnd, (HMENU)IDC_BTN_KB_CUSTOM, g_hInstance, NULL
     );
     SetControlFont(g_hKbCustomBtn, g_hFontNormal);
@@ -447,7 +450,7 @@ void CreateControls(HWND hWnd) {
     g_hKbVolSlider = CreateWindowExW(
         0, TRACKBAR_CLASS, L"",
         WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS | WS_TABSTOP,
-        80, 114, WINDOW_WIDTH - 126, 24,
+        80, 114, WINDOW_WIDTH - 131, 24,
         hWnd, (HMENU)IDC_SLIDER_KB_VOLUME, g_hInstance, NULL
     );
     SendMessageW(g_hKbVolSlider, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
@@ -472,7 +475,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseNewBtn = CreateWindowExW(
         0, L"BUTTON", L"+ New Profile...",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        WINDOW_WIDTH - 140, 190, 104, 23,
+        WINDOW_WIDTH - 145, 190, 104, 23,
         hWnd, (HMENU)IDC_BTN_MOUSE_NEW, g_hInstance, NULL
     );
     SetControlFont(g_hMouseNewBtn, g_hFontNormal);
@@ -488,7 +491,7 @@ void CreateControls(HWND hWnd) {
     g_hMousePresetCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
         WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
-        76, 217, WINDOW_WIDTH - 346, 160,
+        76, 217, WINDOW_WIDTH - 351, 160,
         hWnd, (HMENU)IDC_COMBO_MOUSE_PRESET, g_hInstance, NULL
     );
     SetControlFont(g_hMousePresetCombo, g_hFontNormal);
@@ -497,7 +500,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseFavBtn = CreateWindowExW(
         0, L"BUTTON", L"\u2606",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        WINDOW_WIDTH - 266, 216, 24, 24,
+        WINDOW_WIDTH - 271, 216, 24, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_FAVORITE, g_hInstance, NULL
     );
     SetControlFont(g_hMouseFavBtn, g_hFontNormal);
@@ -506,7 +509,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseInfoBtn = CreateWindowExW(
         0, L"BUTTON", L"\uE946",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        WINDOW_WIDTH - 238, 216, 24, 24,
+        WINDOW_WIDTH - 243, 216, 24, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_INFO, g_hInstance, NULL
     );
     SetControlFont(g_hMouseInfoBtn, g_hFontIcon);
@@ -515,7 +518,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseTestBtn = CreateWindowExW(
         0, L"BUTTON", L"\u25B6",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        WINDOW_WIDTH - 210, 216, 28, 24,
+        WINDOW_WIDTH - 215, 216, 28, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_TEST, g_hInstance, NULL
     );
     SetControlFont(g_hMouseTestBtn, g_hFontNormal);
@@ -524,7 +527,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseExportBtn = CreateWindowExW(
         0, L"BUTTON", L"Export",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        WINDOW_WIDTH - 178, 216, 54, 24,
+        WINDOW_WIDTH - 183, 216, 54, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_EXPORT, g_hInstance, NULL
     );
     SetControlFont(g_hMouseExportBtn, g_hFontNormal);
@@ -533,7 +536,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseCustomBtn = CreateWindowExW(
         0, L"BUTTON", L"Import ZIP...",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        WINDOW_WIDTH - 120, 216, 84, 24,
+        WINDOW_WIDTH - 125, 216, 84, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_CUSTOM, g_hInstance, NULL
     );
     SetControlFont(g_hMouseCustomBtn, g_hFontNormal);
@@ -549,7 +552,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseVolSlider = CreateWindowExW(
         0, TRACKBAR_CLASS, L"",
         WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS | WS_TABSTOP,
-        80, 251, WINDOW_WIDTH - 126, 24,
+        80, 251, WINDOW_WIDTH - 131, 24,
         hWnd, (HMENU)IDC_SLIDER_MOUSE_VOLUME, g_hInstance, NULL
     );
     SendMessageW(g_hMouseVolSlider, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
@@ -642,6 +645,36 @@ void CreateControls(HWND hWnd) {
     );
     SetControlFont(g_hAboutCopy, g_hFontMono);
 
+    // Social / support buttons — centered row below copyright
+    // Total width: 3 * 130 + 2 * 8 = 406px, start x = (WINDOW_WIDTH - 406) / 2
+    int btnW = 130, btnH = 28, btnGap = 8;
+    int btnY = 243;
+    int btnStartX = (WINDOW_WIDTH - (3 * btnW + 2 * btnGap)) / 2;
+
+    g_hAboutGithubBtn = CreateWindowExW(
+        0, L"BUTTON", L"GitHub",
+        WS_CHILD | BS_PUSHBUTTON,
+        btnStartX, btnY, btnW, btnH,
+        hWnd, (HMENU)IDC_BTN_GITHUB, g_hInstance, NULL
+    );
+    SetControlFont(g_hAboutGithubBtn, g_hFontNormal);
+
+    g_hAboutDiscordBtn = CreateWindowExW(
+        0, L"BUTTON", L"Discord",
+        WS_CHILD | BS_PUSHBUTTON,
+        btnStartX + btnW + btnGap, btnY, btnW, btnH,
+        hWnd, (HMENU)IDC_BTN_DISCORD, g_hInstance, NULL
+    );
+    SetControlFont(g_hAboutDiscordBtn, g_hFontNormal);
+
+    g_hAboutPatreonBtn = CreateWindowExW(
+        0, L"BUTTON", L"Support on Patreon",
+        WS_CHILD | BS_PUSHBUTTON,
+        btnStartX + (btnW + btnGap) * 2, btnY, btnW, btnH,
+        hWnd, (HMENU)IDC_BTN_PATREON, g_hInstance, NULL
+    );
+    SetControlFont(g_hAboutPatreonBtn, g_hFontNormal);
+
     // --- Status Bar ---
     g_hStatusBar = CreateWindowExW(
         0, STATUSCLASSNAME, L"",
@@ -716,6 +749,9 @@ void UpdateTabVisibility(int tabIndex) {
     ShowWindow(g_hAboutDesc1, showAbout);
     ShowWindow(g_hAboutDesc2, showAbout);
     ShowWindow(g_hAboutCopy, showAbout);
+    ShowWindow(g_hAboutGithubBtn, showAbout);
+    ShowWindow(g_hAboutDiscordBtn, showAbout);
+    ShowWindow(g_hAboutPatreonBtn, showAbout);
 
     if (showAbout == SW_SHOW) {
         SetWindowPos(g_hAboutLogo, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
@@ -723,6 +759,9 @@ void UpdateTabVisibility(int tabIndex) {
         SetWindowPos(g_hAboutDesc1, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
         SetWindowPos(g_hAboutDesc2, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
         SetWindowPos(g_hAboutCopy, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+        SetWindowPos(g_hAboutGithubBtn, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+        SetWindowPos(g_hAboutDiscordBtn, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+        SetWindowPos(g_hAboutPatreonBtn, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
         InvalidateRect(g_hAboutLogo, NULL, TRUE);
         InvalidateRect(g_hAboutTitle, NULL, TRUE);
         InvalidateRect(g_hAboutDesc1, NULL, TRUE);
@@ -1525,6 +1564,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         case IDC_BTN_CHECK_UPDATES:
             ShellExecuteW(hWnd, L"open",
                 L"https://github.com/NSTechBytes/MonkeySounds/releases/latest",
+                nullptr, nullptr, SW_SHOWNORMAL);
+            break;
+
+        case IDC_BTN_GITHUB:
+            ShellExecuteW(hWnd, L"open",
+                L"https://github.com/NSTechBytes/MonkeySounds",
+                nullptr, nullptr, SW_SHOWNORMAL);
+            break;
+
+        case IDC_BTN_DISCORD:
+            ShellExecuteW(hWnd, L"open",
+                L"https://discord.gg/fZejMxtMhf",
+                nullptr, nullptr, SW_SHOWNORMAL);
+            break;
+
+        case IDC_BTN_PATREON:
+            ShellExecuteW(hWnd, L"open",
+                L"https://www.patreon.com/c/nstechbytes",
                 nullptr, nullptr, SW_SHOWNORMAL);
             break;
 

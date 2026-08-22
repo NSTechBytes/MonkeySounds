@@ -58,6 +58,9 @@
 #define IDC_STATIC_ABOUT_DESC1      1312
 #define IDC_STATIC_ABOUT_DESC2      1313
 #define IDC_STATIC_ABOUT_COPY       1314
+#define IDC_BTN_GITHUB              1315
+#define IDC_BTN_DISCORD             1316
+#define IDC_BTN_PATREON             1317
 
 // Custom window messages
 #define WM_TRAYICON                 (WM_USER + 1)
