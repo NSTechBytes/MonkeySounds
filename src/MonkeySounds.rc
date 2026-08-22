@@ -5,6 +5,8 @@ IDI_APP_ICON    ICON    "../assets/Icon.ico"
 IDI_SMALL       ICON    "../assets/Icon.ico"
 IDR_MAINFRAME   ICON    "../assets/Icon.ico"
 
+IDR_PNG_LOGO    RCDATA  "../assets/MonkeySounds.png"
+
 // Version resource — update these values for each release
 #define VER_MAJOR       1
 #define VER_MINOR       0

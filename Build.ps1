@@ -50,6 +50,7 @@ Write-Host "[2/3] Located MSBuild: $msbuild" -ForegroundColor Green
 
 # 3. Build Solution
 $slnPath = Join-Path $PSScriptRoot "MonkeySounds.sln"
+$outDir  = Join-Path $PSScriptRoot "$Platform\$Configuration"
 Write-Host "[3/3] Building solution: $slnPath ($Configuration|$Platform)..." -ForegroundColor Yellow
 
 & $msbuild $slnPath /p:Configuration=$Configuration /p:Platform=$Platform /m /verbosity:minimal
@@ -57,19 +58,6 @@ Write-Host "[3/3] Building solution: $slnPath ($Configuration|$Platform)..." -Fo
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Build failed with exit code $LASTEXITCODE"
     exit $LASTEXITCODE
-}
-
-# 4. Copy assets folder into build output directory
-$outDir = Join-Path $PSScriptRoot "$Platform\$Configuration"
-$srcAssets = Join-Path $PSScriptRoot "assets"
-$dstAssets = Join-Path $outDir "assets"
-
-if (Test-Path $srcAssets) {
-    Write-Host "Copying assets from '$srcAssets' to '$dstAssets'..." -ForegroundColor Cyan
-    if (-not (Test-Path $dstAssets)) {
-        New-Item -ItemType Directory -Path $dstAssets -Force | Out-Null
-    }
-    Copy-Item -Path "$srcAssets\*" -Destination $dstAssets -Recurse -Force
 }
 
 Write-Host "`nBuild succeeded! Output is located at: $outDir" -ForegroundColor Green

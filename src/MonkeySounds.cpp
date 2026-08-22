@@ -164,17 +164,27 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     ULONG_PTR gdiplusToken;
     Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
-    // Load App Icon
-    std::wstring iconPath = Utils::GetAssetPath(L"Icon.ico");
+    // Load App Icon — always from embedded PE resource
     g_hAppIcon = (HICON)LoadImageW(hInstance, MAKEINTRESOURCEW(IDI_APP_ICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
-    if (!g_hAppIcon && fs::exists(iconPath)) {
-            g_hAppIcon = (HICON)LoadImageW(NULL, iconPath.c_str(), IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
-    }
 
-    // Load PNG logo
-    std::wstring logoPath = Utils::GetAssetPath(L"MonkeySounds.png");
-    if (fs::exists(logoPath)) {
-        g_pMonkeySoundsImage = Gdiplus::Image::FromFile(logoPath.c_str());
+    // Load PNG logo from embedded RCDATA resource (IDR_PNG_LOGO)
+    // FindResource → LoadResource → LockResource gives us a raw byte pointer;
+    // wrap it in an IStream so GDI+ can decode it without touching the filesystem.
+    HRSRC hResInfo = FindResourceW(hInstance, MAKEINTRESOURCEW(IDR_PNG_LOGO), RT_RCDATA);
+    if (hResInfo) {
+        HGLOBAL hResData = LoadResource(hInstance, hResInfo);
+        if (hResData) {
+            void*  pData = LockResource(hResData);
+            DWORD  nSize = SizeofResource(hInstance, hResInfo);
+            if (pData && nSize > 0) {
+                IStream* pStream = SHCreateMemStream(static_cast<const BYTE*>(pData), nSize);
+                if (pStream) {
+                    g_pMonkeySoundsImage = Gdiplus::Image::FromStream(pStream);
+                    pStream->Release();
+                }
+            }
+            // No FreeResource/UnlockResource needed — PE resources are memory-mapped
+        }
     }
 
     // Initialize Audio Engine
@@ -687,10 +697,10 @@ void CreateControls(HWND hWnd) {
     // 3 parts: [left text (160px) | VU meter | CPU % (fixed 90px right pane)]
     // -1 means the last pane stretches to the window edge.
     // We anchor the second pane so the CPU pane is always >= 90px wide.
-    int statwidths[] = { 160, WINDOW_WIDTH - 90, -1 };
+    int statwidths[] = { 160, WINDOW_WIDTH - 92, -1 };
     SendMessageW(g_hStatusBar, SB_SETPARTS, 3, (LPARAM)statwidths);
     SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Ready");
-    SendMessageW(g_hStatusBar, SB_SETTEXTW, 2, (LPARAM)L" CPU: 0%");
+    SendMessageW(g_hStatusBar, SB_SETTEXTW, 2, (LPARAM)L" CPU: 0%  ");
 
     // VU meter — owner-draw static that lives over the middle status bar pane
     g_hVuBgBrush = CreateSolidBrush(RGB(30,30,30));
@@ -1270,7 +1280,7 @@ void UpdateCpuUsage() {
                 if (cpuPercent > 100) cpuPercent = 100;
 
                 WCHAR buf[32];
-                swprintf_s(buf, L" CPU: %d%%", cpuPercent);
+                swprintf_s(buf, L" CPU: %d%%  ", cpuPercent);
                 SendMessageW(g_hStatusBar, SB_SETTEXTW, 2, (LPARAM)buf);
             }
         }

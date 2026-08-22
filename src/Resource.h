@@ -6,6 +6,7 @@
 #define IDI_SMALL                   108
 #define IDC_MONKEYSOUNDS            109
 #define IDR_TRAY_MENU               110
+#define IDR_PNG_LOGO                150
 
 // Tray menu commands
 #define IDM_TRAY_SHOW               201
