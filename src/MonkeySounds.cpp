@@ -29,7 +29,7 @@ static std::wstring Utf8ToWide(const std::string& str) {
     return wstrTo;
 }
 
-#define WINDOW_WIDTH  480
+#define WINDOW_WIDTH  510
 #define WINDOW_HEIGHT 410
 #define TIMER_CPU_ID  1001
 #define TIMER_VU_ID   1002
@@ -224,7 +224,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     g_hFontIcon = CreateFontW(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe MDL2 Assets");
 
-    g_hTabBgBrush = CreateSolidBrush(RGB(240, 240, 240));
+    g_hTabBgBrush = CreateSolidBrush(RGB(249, 249, 249));
 
     // Register Window Class
     WNDCLASSEXW wcex = {};
@@ -335,7 +335,7 @@ void CreateControls(HWND hWnd) {
     g_hTabCtrl = CreateWindowExW(
         0, WC_TABCONTROL, L"",
         WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
-        8, 6, WINDOW_WIDTH - 16, 290,
+        8, 6, WINDOW_WIDTH - 30, 310,
         hWnd, (HMENU)IDC_TAB_CONTROL, g_hInstance, NULL
     );
     SetControlFont(g_hTabCtrl, g_hFontNormal);
@@ -350,11 +350,11 @@ void CreateControls(HWND hWnd) {
     TabCtrl_InsertItem(g_hTabCtrl, 2, &tie);
 
     // --- TAB 1: SOUNDS ---
-    // Keyboard Group  (height 130 to fit extra button row)
+    // Keyboard Group
     g_hKbGroup = CreateWindowExW(
         0, L"BUTTON", L"Keyboard Sounds",
         WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
-        16, 36, WINDOW_WIDTH - 32, 130,
+        16, 36, WINDOW_WIDTH - 50, 130,
         hWnd, (HMENU)IDC_GB_KEYBOARD, g_hInstance, NULL
     );
     SetControlFont(g_hKbGroup, g_hFontBold);
@@ -370,7 +370,7 @@ void CreateControls(HWND hWnd) {
     g_hKbNewBtn = CreateWindowExW(
         0, L"BUTTON", L"+ New Profile...",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        348, 53, 100, 23,
+        WINDOW_WIDTH - 140, 53, 104, 23,
         hWnd, (HMENU)IDC_BTN_KB_NEW, g_hInstance, NULL
     );
     SetControlFont(g_hKbNewBtn, g_hFontNormal);
@@ -383,11 +383,10 @@ void CreateControls(HWND hWnd) {
     );
     SetControlFont(g_hKbPresetLbl, g_hFontNormal);
 
-    // Combo narrowed to leave room for Test + Export buttons
     g_hKbPresetCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
         WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
-        76, 80, 145, 160,
+        76, 80, WINDOW_WIDTH - 346, 160,
         hWnd, (HMENU)IDC_COMBO_KB_PRESET, g_hInstance, NULL
     );
     SetControlFont(g_hKbPresetCombo, g_hFontNormal);
@@ -396,43 +395,43 @@ void CreateControls(HWND hWnd) {
     g_hKbFavBtn = CreateWindowExW(
         0, L"BUTTON", L"\u2606",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        224, 79, 24, 24,
+        WINDOW_WIDTH - 266, 79, 24, 24,
         hWnd, (HMENU)IDC_BTN_KB_FAVORITE, g_hInstance, NULL
     );
     SetControlFont(g_hKbFavBtn, g_hFontNormal);
 
-    // Info button — shows profile metadata (Segoe UI Symbol U+E946)
+    // Info button
     g_hKbInfoBtn = CreateWindowExW(
         0, L"BUTTON", L"\uE946",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        252, 79, 24, 24,
+        WINDOW_WIDTH - 238, 79, 24, 24,
         hWnd, (HMENU)IDC_BTN_KB_INFO, g_hInstance, NULL
     );
     SetControlFont(g_hKbInfoBtn, g_hFontIcon);
 
-    // Preview (play) icon button — U+25B6 filled play triangle
+    // Play button
     g_hKbTestBtn = CreateWindowExW(
         0, L"BUTTON", L"\u25B6",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        280, 79, 28, 24,
+        WINDOW_WIDTH - 210, 79, 28, 24,
         hWnd, (HMENU)IDC_BTN_KB_TEST, g_hInstance, NULL
     );
     SetControlFont(g_hKbTestBtn, g_hFontNormal);
 
-    // Export ZIP button
+    // Export button
     g_hKbExportBtn = CreateWindowExW(
         0, L"BUTTON", L"Export",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        312, 79, 55, 24,
+        WINDOW_WIDTH - 178, 79, 54, 24,
         hWnd, (HMENU)IDC_BTN_KB_EXPORT, g_hInstance, NULL
     );
     SetControlFont(g_hKbExportBtn, g_hFontNormal);
 
-    // Import ZIP (Custom) button
+    // Import ZIP button
     g_hKbCustomBtn = CreateWindowExW(
         0, L"BUTTON", L"Import ZIP...",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        371, 79, 77, 24,
+        WINDOW_WIDTH - 120, 79, 84, 24,
         hWnd, (HMENU)IDC_BTN_KB_CUSTOM, g_hInstance, NULL
     );
     SetControlFont(g_hKbCustomBtn, g_hFontNormal);
@@ -448,16 +447,16 @@ void CreateControls(HWND hWnd) {
     g_hKbVolSlider = CreateWindowExW(
         0, TRACKBAR_CLASS, L"",
         WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS | WS_TABSTOP,
-        80, 114, 368, 24,
+        80, 114, WINDOW_WIDTH - 126, 24,
         hWnd, (HMENU)IDC_SLIDER_KB_VOLUME, g_hInstance, NULL
     );
     SendMessageW(g_hKbVolSlider, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
 
-    // Mouse Group (shifted down 15px for taller keyboard group)
+    // Mouse Group
     g_hMouseGroup = CreateWindowExW(
         0, L"BUTTON", L"Mouse Sounds",
         WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
-        16, 173, WINDOW_WIDTH - 32, 130,
+        16, 173, WINDOW_WIDTH - 50, 130,
         hWnd, (HMENU)IDC_GB_MOUSE, g_hInstance, NULL
     );
     SetControlFont(g_hMouseGroup, g_hFontBold);
@@ -473,7 +472,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseNewBtn = CreateWindowExW(
         0, L"BUTTON", L"+ New Profile...",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        348, 190, 100, 23,
+        WINDOW_WIDTH - 140, 190, 104, 23,
         hWnd, (HMENU)IDC_BTN_MOUSE_NEW, g_hInstance, NULL
     );
     SetControlFont(g_hMouseNewBtn, g_hFontNormal);
@@ -489,7 +488,7 @@ void CreateControls(HWND hWnd) {
     g_hMousePresetCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
         WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
-        76, 217, 145, 160,
+        76, 217, WINDOW_WIDTH - 346, 160,
         hWnd, (HMENU)IDC_COMBO_MOUSE_PRESET, g_hInstance, NULL
     );
     SetControlFont(g_hMousePresetCombo, g_hFontNormal);
@@ -498,43 +497,43 @@ void CreateControls(HWND hWnd) {
     g_hMouseFavBtn = CreateWindowExW(
         0, L"BUTTON", L"\u2606",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        224, 216, 24, 24,
+        WINDOW_WIDTH - 266, 216, 24, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_FAVORITE, g_hInstance, NULL
     );
     SetControlFont(g_hMouseFavBtn, g_hFontNormal);
 
-    // Info button — shows profile metadata (Segoe UI Symbol U+E946)
+    // Info button
     g_hMouseInfoBtn = CreateWindowExW(
         0, L"BUTTON", L"\uE946",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        252, 216, 24, 24,
+        WINDOW_WIDTH - 238, 216, 24, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_INFO, g_hInstance, NULL
     );
     SetControlFont(g_hMouseInfoBtn, g_hFontIcon);
 
-    // Preview (play) icon button — U+25B6 filled play triangle
+    // Play button
     g_hMouseTestBtn = CreateWindowExW(
         0, L"BUTTON", L"\u25B6",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        280, 216, 28, 24,
+        WINDOW_WIDTH - 210, 216, 28, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_TEST, g_hInstance, NULL
     );
     SetControlFont(g_hMouseTestBtn, g_hFontNormal);
 
-    // Export ZIP button
+    // Export button
     g_hMouseExportBtn = CreateWindowExW(
         0, L"BUTTON", L"Export",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        312, 216, 55, 24,
+        WINDOW_WIDTH - 178, 216, 54, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_EXPORT, g_hInstance, NULL
     );
     SetControlFont(g_hMouseExportBtn, g_hFontNormal);
 
-    // Import ZIP (Custom) button
+    // Import ZIP button
     g_hMouseCustomBtn = CreateWindowExW(
         0, L"BUTTON", L"Import ZIP...",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        371, 216, 77, 24,
+        WINDOW_WIDTH - 120, 216, 84, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_CUSTOM, g_hInstance, NULL
     );
     SetControlFont(g_hMouseCustomBtn, g_hFontNormal);
@@ -550,7 +549,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseVolSlider = CreateWindowExW(
         0, TRACKBAR_CLASS, L"",
         WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS | WS_TABSTOP,
-        80, 251, 368, 24,
+        80, 251, WINDOW_WIDTH - 126, 24,
         hWnd, (HMENU)IDC_SLIDER_MOUSE_VOLUME, g_hInstance, NULL
     );
     SendMessageW(g_hMouseVolSlider, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
@@ -559,7 +558,7 @@ void CreateControls(HWND hWnd) {
     g_hAppSettingsGroup = CreateWindowExW(
         0, L"BUTTON", L"Application",
         WS_CHILD | BS_GROUPBOX,
-        16, 36, WINDOW_WIDTH - 32, 237,
+        16, 36, WINDOW_WIDTH - 50, 237,
         hWnd, (HMENU)IDC_GB_APPLICATION, g_hInstance, NULL
     );
     SetControlFont(g_hAppSettingsGroup, g_hFontBold);
@@ -583,7 +582,7 @@ void CreateControls(HWND hWnd) {
     g_hSeparator = CreateWindowExW(
         0, L"STATIC", L"",
         WS_CHILD | SS_ETCHEDHORZ,
-        28, 130, WINDOW_WIDTH - 56, 2,
+        28, 130, WINDOW_WIDTH - 74, 2,
         hWnd, (HMENU)-1, g_hInstance, NULL
     );
 
@@ -652,11 +651,13 @@ void CreateControls(HWND hWnd) {
     );
     SetControlFont(g_hStatusBar, g_hFontMono);
 
-    // 3 parts: [left text | VU meter | CPU %]
-    int statwidths[] = { 160, WINDOW_WIDTH - 88, -1 };
+    // 3 parts: [left text (160px) | VU meter | CPU % (fixed 90px right pane)]
+    // -1 means the last pane stretches to the window edge.
+    // We anchor the second pane so the CPU pane is always >= 90px wide.
+    int statwidths[] = { 160, WINDOW_WIDTH - 90, -1 };
     SendMessageW(g_hStatusBar, SB_SETPARTS, 3, (LPARAM)statwidths);
     SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Ready");
-    SendMessageW(g_hStatusBar, SB_SETTEXTW, 2, (LPARAM)L"  CPU: 0%");
+    SendMessageW(g_hStatusBar, SB_SETTEXTW, 2, (LPARAM)L" CPU: 0%");
 
     // VU meter — owner-draw static that lives over the middle status bar pane
     g_hVuBgBrush = CreateSolidBrush(RGB(30,30,30));
@@ -1149,7 +1150,7 @@ void VuDraw(HDC hdc, const RECT& rc) {
     int h = rc.bottom - rc.top;
 
     // Background — dark panel matching the status bar
-    HBRUSH hBg = CreateSolidBrush(RGB(240, 240, 240));
+    HBRUSH hBg = CreateSolidBrush(RGB(249, 249, 249));
     FillRect(hdc, &rc, hBg);
     DeleteObject(hBg);
 
@@ -1230,7 +1231,7 @@ void UpdateCpuUsage() {
                 if (cpuPercent > 100) cpuPercent = 100;
 
                 WCHAR buf[32];
-                swprintf_s(buf, L"  CPU: %d%%", cpuPercent);
+                swprintf_s(buf, L" CPU: %d%%", cpuPercent);
                 SendMessageW(g_hStatusBar, SB_SETTEXTW, 2, (LPARAM)buf);
             }
         }
@@ -1345,7 +1346,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         } else if (hwndStatic == g_hAboutCopy) {
             SetTextColor(hdcStatic, RGB(90, 90, 90));
         }
-        SetBkColor(hdcStatic, RGB(240, 240, 240));
+        SetBkColor(hdcStatic, RGB(249, 249, 249));
         SetBkMode(hdcStatic, TRANSPARENT);
         return (INT_PTR)g_hTabBgBrush;
     }
@@ -1353,7 +1354,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     case WM_CTLCOLORBTN:
     case WM_CTLCOLORDLG: {
         HDC hdcDlg = (HDC)wParam;
-        SetBkColor(hdcDlg, RGB(240, 240, 240));
+        SetBkColor(hdcDlg, RGB(249, 249, 249));
         SetBkMode(hdcDlg, TRANSPARENT);
         return (INT_PTR)g_hTabBgBrush;
     }
