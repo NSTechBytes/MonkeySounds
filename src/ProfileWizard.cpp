@@ -20,7 +20,7 @@
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
-#define WIZARD_WIDTH   560
+#define WIZARD_WIDTH   580
 #define WIZARD_HEIGHT  500
 
 enum WizardStep {
@@ -845,7 +845,7 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 
         // ==================== STEP 1 CONTROLS ====================
         pWiz->hGrpType = CreateWindowExW(0, L"BUTTON", L"Profile Device Type", WS_CHILD | BS_GROUPBOX,
-            20, 65, WIZARD_WIDTH - 40, 60, hWnd, NULL, GetModuleHandle(NULL), NULL);
+            20, 68, WIZARD_WIDTH - 40, 56, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hGrpType, WM_SETFONT, (WPARAM)pWiz->hFontBold, TRUE);
 
         pWiz->hRadKb = CreateWindowExW(0, L"BUTTON", L"Keyboard Profile", WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
@@ -1351,11 +1351,8 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         SelectObject(hdc, hOldPen);
         DeleteObject(hPen);
 
-        // If on step 1 (Info), fill background for Profile Device Type group with white
-        if (pWiz->currentStep == STEP_INFO) {
-            RECT rcGrpType = { 20, 65, rcClient.right - 20, 65 + 60 };
-            FillRect(hdc, &rcGrpType, pWiz->hWhiteBrush);
-        }
+        // If on step 1 (Info), fill background for Profile Device Type group with white - not needed
+        // Group box draws naturally on the gray background
 
         EndPaint(hWnd, &ps);
         return 0;
@@ -1369,12 +1366,6 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
             SetBkMode(hdcStatic, TRANSPARENT);
             SetTextColor(hdcStatic, (hwndStatic == pWiz->hLblStepTitle) ? RGB(20, 30, 45) : RGB(80, 90, 100));
             return (INT_PTR)pWiz->hHeaderBrush;
-        }
-
-        if (hwndStatic == pWiz->hRadKb || hwndStatic == pWiz->hRadMouse || hwndStatic == pWiz->hGrpType) {
-            SetBkColor(hdcStatic, RGB(255, 255, 255));
-            SetBkMode(hdcStatic, TRANSPARENT);
-            return (INT_PTR)pWiz->hWhiteBrush;
         }
 
         SetBkColor(hdcStatic, RGB(240, 240, 240));
