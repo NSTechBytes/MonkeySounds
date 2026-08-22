@@ -962,7 +962,7 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         SendMessageW(pWiz->hBtnAddKey, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         pWiz->hGrpKeySounds = CreateWindowExW(0, L"BUTTON", L"2. Assign Sounds for Selected Key", WS_CHILD | BS_GROUPBOX,
-            20, 140, WIZARD_WIDTH - 40, 110, hWnd, NULL, GetModuleHandle(NULL), NULL);
+            20, 140, WIZARD_WIDTH - 40, 115, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hGrpKeySounds, WM_SETFONT, (WPARAM)pWiz->hFontBold, TRUE);
 
         pWiz->hLblKeyPress = CreateWindowExW(0, L"STATIC", L"Press Sound:", WS_CHILD | SS_LEFT,
@@ -971,40 +971,40 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 
         pWiz->hEditKeyPress = CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"",
             WS_CHILD | ES_READONLY | ES_AUTOHSCROLL,
-            125, 163, WIZARD_WIDTH - 255, 24, hWnd, (HMENU)IDC_WIZ_EDIT_KEY_PRESS, GetModuleHandle(NULL), NULL);
+            125, 163, 292, 24, hWnd, (HMENU)IDC_WIZ_EDIT_KEY_PRESS, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hEditKeyPress, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         pWiz->hBtnBrowseKP = CreateWindowExW(0, L"BUTTON", L"Browse...", WS_CHILD | BS_PUSHBUTTON,
-            WIZARD_WIDTH - 124, 162, 60, 26, hWnd, (HMENU)IDC_WIZ_BTN_BROWSE_KP, GetModuleHandle(NULL), NULL);
+            421, 162, 65, 26, hWnd, (HMENU)IDC_WIZ_BTN_BROWSE_KP, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnBrowseKP, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         pWiz->hBtnClearKP = CreateWindowExW(0, L"BUTTON", L"\u2715", WS_CHILD | BS_PUSHBUTTON,
-            WIZARD_WIDTH - 60, 162, 22, 26, hWnd, (HMENU)IDC_WIZ_BTN_CLEAR_KP, GetModuleHandle(NULL), NULL);
+            490, 162, 26, 26, hWnd, (HMENU)IDC_WIZ_BTN_CLEAR_KP, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnClearKP, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         pWiz->hBtnPlayKP = CreateWindowExW(0, L"BUTTON", L"\u25B6", WS_CHILD | BS_PUSHBUTTON,
-            WIZARD_WIDTH - 36, 162, 22, 26, hWnd, (HMENU)IDC_WIZ_BTN_PLAY_KP, GetModuleHandle(NULL), NULL);
+            520, 162, 26, 26, hWnd, (HMENU)IDC_WIZ_BTN_PLAY_KP, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnPlayKP, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         pWiz->hLblKeyRel = CreateWindowExW(0, L"STATIC", L"Release Sound:", WS_CHILD | SS_LEFT,
-            36, 203, 85, 18, hWnd, NULL, GetModuleHandle(NULL), NULL);
+            36, 206, 85, 18, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hLblKeyRel, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         pWiz->hEditKeyRel = CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"",
             WS_CHILD | ES_READONLY | ES_AUTOHSCROLL,
-            125, 200, WIZARD_WIDTH - 255, 24, hWnd, (HMENU)IDC_WIZ_EDIT_KEY_REL, GetModuleHandle(NULL), NULL);
+            125, 203, 292, 24, hWnd, (HMENU)IDC_WIZ_EDIT_KEY_REL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hEditKeyRel, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         pWiz->hBtnBrowseKR = CreateWindowExW(0, L"BUTTON", L"Browse...", WS_CHILD | BS_PUSHBUTTON,
-            WIZARD_WIDTH - 124, 199, 60, 26, hWnd, (HMENU)IDC_WIZ_BTN_BROWSE_KR, GetModuleHandle(NULL), NULL);
+            421, 202, 65, 26, hWnd, (HMENU)IDC_WIZ_BTN_BROWSE_KR, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnBrowseKR, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         pWiz->hBtnClearKR = CreateWindowExW(0, L"BUTTON", L"\u2715", WS_CHILD | BS_PUSHBUTTON,
-            WIZARD_WIDTH - 60, 199, 22, 26, hWnd, (HMENU)IDC_WIZ_BTN_CLEAR_KR, GetModuleHandle(NULL), NULL);
+            490, 202, 26, 26, hWnd, (HMENU)IDC_WIZ_BTN_CLEAR_KR, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnClearKR, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         pWiz->hBtnPlayKR = CreateWindowExW(0, L"BUTTON", L"\u25B6", WS_CHILD | BS_PUSHBUTTON,
-            WIZARD_WIDTH - 36, 199, 22, 26, hWnd, (HMENU)IDC_WIZ_BTN_PLAY_KR, GetModuleHandle(NULL), NULL);
+            520, 202, 26, 26, hWnd, (HMENU)IDC_WIZ_BTN_PLAY_KR, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnPlayKR, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         pWiz->hLblAssigned = CreateWindowExW(0, L"STATIC", L"Configured Key / Button Mappings:", WS_CHILD | SS_LEFT,

@@ -410,14 +410,14 @@ void CreateControls(HWND hWnd) {
     );
     SetControlFont(g_hKbInfoBtn, g_hFontIcon);
 
-    // Preview (play) icon button — Segoe UI Symbol U+E102
+    // Preview (play) icon button — U+25B6 filled play triangle
     g_hKbTestBtn = CreateWindowExW(
-        0, L"BUTTON", L"\uE102",
+        0, L"BUTTON", L"\u25B6",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         280, 79, 28, 24,
         hWnd, (HMENU)IDC_BTN_KB_TEST, g_hInstance, NULL
     );
-    SetControlFont(g_hKbTestBtn, g_hFontIcon);
+    SetControlFont(g_hKbTestBtn, g_hFontNormal);
 
     // Export ZIP button
     g_hKbExportBtn = CreateWindowExW(
@@ -512,14 +512,14 @@ void CreateControls(HWND hWnd) {
     );
     SetControlFont(g_hMouseInfoBtn, g_hFontIcon);
 
-    // Preview (play) icon button — Segoe UI Symbol U+E102
+    // Preview (play) icon button — U+25B6 filled play triangle
     g_hMouseTestBtn = CreateWindowExW(
-        0, L"BUTTON", L"\uE102",
+        0, L"BUTTON", L"\u25B6",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         280, 216, 28, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_TEST, g_hInstance, NULL
     );
-    SetControlFont(g_hMouseTestBtn, g_hFontIcon);
+    SetControlFont(g_hMouseTestBtn, g_hFontNormal);
 
     // Export ZIP button
     g_hMouseExportBtn = CreateWindowExW(
