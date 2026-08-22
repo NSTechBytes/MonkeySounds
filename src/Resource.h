@@ -29,6 +29,7 @@
 #define IDC_BTN_KB_TEST             1108
 #define IDC_BTN_KB_EXPORT           1109
 #define IDC_BTN_KB_FAVORITE         1110
+#define IDC_BTN_KB_INFO             1111
 
 #define IDC_GB_MOUSE                1201
 #define IDC_CHK_MOUSE_ENABLE        1202
@@ -40,6 +41,7 @@
 #define IDC_BTN_MOUSE_TEST          1208
 #define IDC_BTN_MOUSE_EXPORT        1209
 #define IDC_BTN_MOUSE_FAVORITE      1210
+#define IDC_BTN_MOUSE_INFO          1211
 
 // Settings tab controls
 #define IDC_GB_APPLICATION          1301

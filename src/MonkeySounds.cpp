@@ -70,6 +70,7 @@ HWND g_hKbCustomBtn = NULL;
 HWND g_hKbTestBtn = NULL;
 HWND g_hKbExportBtn = NULL;
 HWND g_hKbFavBtn = NULL;
+HWND g_hKbInfoBtn = NULL;
 HWND g_hKbVolLbl = NULL;
 HWND g_hKbVolSlider = NULL;
 
@@ -81,6 +82,7 @@ HWND g_hMouseCustomBtn = NULL;
 HWND g_hMouseTestBtn = NULL;
 HWND g_hMouseExportBtn = NULL;
 HWND g_hMouseFavBtn = NULL;
+HWND g_hMouseInfoBtn = NULL;
 HWND g_hMouseVolLbl = NULL;
 HWND g_hMouseVolSlider = NULL;
 
@@ -123,6 +125,7 @@ void ExportCurrentProfile(bool isKeyboard);
 void TestCurrentProfile(bool isKeyboard);
 void ToggleFavorite(bool isKeyboard);
 void UpdateFavoriteButton(bool isKeyboard);
+void ShowProfileInfo(bool isKeyboard);
 void VuPulse();      // spike the VU on a keypress/click
 void VuDecay();      // called each timer tick to decay bar levels
 void VuDraw(HDC hdc, const RECT& rc); // paint the VU bars
@@ -214,9 +217,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
     g_hFontMono = CreateFontW(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, L"Consolas");
-    // Segoe UI Symbol — used for icon-only buttons (e.g. play/preview ▶)
+    // Segoe MDL2 Assets — used for icon-only buttons (play ▶ U+E102, info ⓘ U+E946)
     g_hFontIcon = CreateFontW(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI Symbol");
+        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe MDL2 Assets");
 
     g_hTabBgBrush = CreateSolidBrush(RGB(249, 249, 249));
 
@@ -387,11 +390,20 @@ void CreateControls(HWND hWnd) {
     );
     SetControlFont(g_hKbFavBtn, g_hFontNormal);
 
+    // Info button — shows profile metadata (Segoe UI Symbol U+E946)
+    g_hKbInfoBtn = CreateWindowExW(
+        0, L"BUTTON", L"\uE946",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        252, 79, 24, 24,
+        hWnd, (HMENU)IDC_BTN_KB_INFO, g_hInstance, NULL
+    );
+    SetControlFont(g_hKbInfoBtn, g_hFontIcon);
+
     // Preview (play) icon button — Segoe UI Symbol U+E102
     g_hKbTestBtn = CreateWindowExW(
         0, L"BUTTON", L"\uE102",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        251, 79, 28, 24,
+        280, 79, 28, 24,
         hWnd, (HMENU)IDC_BTN_KB_TEST, g_hInstance, NULL
     );
     SetControlFont(g_hKbTestBtn, g_hFontIcon);
@@ -400,7 +412,7 @@ void CreateControls(HWND hWnd) {
     g_hKbExportBtn = CreateWindowExW(
         0, L"BUTTON", L"Export",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        283, 79, 55, 24,
+        312, 79, 55, 24,
         hWnd, (HMENU)IDC_BTN_KB_EXPORT, g_hInstance, NULL
     );
     SetControlFont(g_hKbExportBtn, g_hFontNormal);
@@ -409,7 +421,7 @@ void CreateControls(HWND hWnd) {
     g_hKbCustomBtn = CreateWindowExW(
         0, L"BUTTON", L"Import ZIP...",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        342, 79, 106, 24,
+        371, 79, 77, 24,
         hWnd, (HMENU)IDC_BTN_KB_CUSTOM, g_hInstance, NULL
     );
     SetControlFont(g_hKbCustomBtn, g_hFontNormal);
@@ -472,11 +484,20 @@ void CreateControls(HWND hWnd) {
     );
     SetControlFont(g_hMouseFavBtn, g_hFontNormal);
 
+    // Info button — shows profile metadata (Segoe UI Symbol U+E946)
+    g_hMouseInfoBtn = CreateWindowExW(
+        0, L"BUTTON", L"\uE946",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        252, 216, 24, 24,
+        hWnd, (HMENU)IDC_BTN_MOUSE_INFO, g_hInstance, NULL
+    );
+    SetControlFont(g_hMouseInfoBtn, g_hFontIcon);
+
     // Preview (play) icon button — Segoe UI Symbol U+E102
     g_hMouseTestBtn = CreateWindowExW(
         0, L"BUTTON", L"\uE102",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        251, 216, 28, 24,
+        280, 216, 28, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_TEST, g_hInstance, NULL
     );
     SetControlFont(g_hMouseTestBtn, g_hFontIcon);
@@ -485,7 +506,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseExportBtn = CreateWindowExW(
         0, L"BUTTON", L"Export",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        283, 216, 55, 24,
+        312, 216, 55, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_EXPORT, g_hInstance, NULL
     );
     SetControlFont(g_hMouseExportBtn, g_hFontNormal);
@@ -494,7 +515,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseCustomBtn = CreateWindowExW(
         0, L"BUTTON", L"Import ZIP...",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        342, 216, 106, 24,
+        371, 216, 77, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_CUSTOM, g_hInstance, NULL
     );
     SetControlFont(g_hMouseCustomBtn, g_hFontNormal);
@@ -638,6 +659,7 @@ void UpdateTabVisibility(int tabIndex) {
     ShowWindow(g_hKbPresetLbl, showSounds);
     ShowWindow(g_hKbPresetCombo, showSounds);
     ShowWindow(g_hKbTestBtn, showSounds);
+    ShowWindow(g_hKbInfoBtn, showSounds);
     ShowWindow(g_hKbExportBtn, showSounds);
     ShowWindow(g_hKbFavBtn, showSounds);
     ShowWindow(g_hKbCustomBtn, showSounds);
@@ -649,6 +671,7 @@ void UpdateTabVisibility(int tabIndex) {
     ShowWindow(g_hMousePresetLbl, showSounds);
     ShowWindow(g_hMousePresetCombo, showSounds);
     ShowWindow(g_hMouseTestBtn, showSounds);
+    ShowWindow(g_hMouseInfoBtn, showSounds);
     ShowWindow(g_hMouseExportBtn, showSounds);
     ShowWindow(g_hMouseFavBtn, showSounds);
     ShowWindow(g_hMouseCustomBtn, showSounds);
@@ -990,6 +1013,56 @@ void ToggleFavorite(bool isKeyboard) {
         g_mouseProfiles = AudioEngine::GetInstance().ScanMouseProfiles();
 
     PopulatePresets();
+}
+
+void ShowProfileInfo(bool isKeyboard) {
+    std::string name, author, description;
+    int soundCount = 0;
+
+    if (isKeyboard) {
+        const auto& p = AudioEngine::GetInstance().GetCurrentKeyboardProfile();
+        name        = p.name;
+        author      = p.author;
+        description = p.description;
+        soundCount  = (int)p.sources.size();
+    } else {
+        const auto& p = AudioEngine::GetInstance().GetCurrentMouseProfile();
+        name        = p.name;
+        author      = p.author;
+        description = p.description;
+        soundCount  = (int)p.sources.size();
+    }
+
+    // Build info string (wide)
+    auto toW = [](const std::string& s) -> std::wstring {
+        if (s.empty()) return L"—";
+        int n = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, nullptr, 0);
+        std::wstring w(n, L'\0');
+        MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, &w[0], n);
+        if (!w.empty() && w.back() == L'\0') w.pop_back();
+        return w;
+    };
+
+    std::wstring wName   = toW(name);
+    std::wstring wAuthor = toW(author);
+    std::wstring wDesc   = toW(description);
+
+    WCHAR buf[1024];
+    swprintf_s(buf,
+        L"Name:         %s\n"
+        L"Author:       %s\n"
+        L"Sounds:       %d\n"
+        L"\n"
+        L"%s",
+        wName.c_str(),
+        wAuthor.c_str(),
+        soundCount,
+        wDesc.empty() ? L"" : wDesc.c_str()
+    );
+
+    std::wstring title = (isKeyboard ? L"Keyboard" : L"Mouse");
+    title += L" Profile Info";
+    MessageBoxW(g_hMainWnd, buf, title.c_str(), MB_OK | MB_ICONINFORMATION);
 }
 
 void TestCurrentProfile(bool isKeyboard) {
@@ -1371,6 +1444,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
         case IDC_BTN_MOUSE_TEST:
             TestCurrentProfile(false);
+            break;
+
+        case IDC_BTN_KB_INFO:
+            ShowProfileInfo(true);
+            break;
+
+        case IDC_BTN_MOUSE_INFO:
+            ShowProfileInfo(false);
             break;
 
         case IDC_BTN_KB_EXPORT:
