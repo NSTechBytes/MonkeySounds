@@ -29,8 +29,7 @@ static std::wstring Utf8ToWide(const std::string& str) {
 }
 
 #define WINDOW_WIDTH  480
-#define WINDOW_HEIGHT 380
-#define HEADER_HEIGHT 30
+#define WINDOW_HEIGHT 410
 #define TIMER_CPU_ID  1001
 #define TIMER_VU_ID   1002
 
@@ -107,8 +106,7 @@ std::vector<SoundProfileInfo> g_mouseProfiles;
 Gdiplus::Image* g_pMonkeySoundsImage = NULL;
 HICON g_hAppIcon = NULL;
 
-// Header buttons state
-static int g_hoverHeaderBtn = 0; // 0=none, 1=close
+
 
 // Forward declarations
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -246,7 +244,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
         WS_EX_APPWINDOW,
         L"MonkeySoundsMainWindow",
         L"MonkeySounds",
-        WS_POPUP | WS_CLIPCHILDREN | WS_BORDER,
+        WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN,
         posX, posY, WINDOW_WIDTH, WINDOW_HEIGHT,
         nullptr, nullptr, hInstance, nullptr
     );
@@ -326,7 +324,7 @@ void CreateControls(HWND hWnd) {
     g_hTabCtrl = CreateWindowExW(
         0, WC_TABCONTROL, L"",
         WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
-        8, HEADER_HEIGHT + 6, WINDOW_WIDTH - 16, 290,
+        8, 6, WINDOW_WIDTH - 16, 290,
         hWnd, (HMENU)IDC_TAB_CONTROL, g_hInstance, NULL
     );
     SetControlFont(g_hTabCtrl, g_hFontNormal);
@@ -345,7 +343,7 @@ void CreateControls(HWND hWnd) {
     g_hKbGroup = CreateWindowExW(
         0, L"BUTTON", L"Keyboard Sounds",
         WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
-        16, HEADER_HEIGHT + 36, WINDOW_WIDTH - 32, 130,
+        16, 36, WINDOW_WIDTH - 32, 130,
         hWnd, (HMENU)IDC_GB_KEYBOARD, g_hInstance, NULL
     );
     SetControlFont(g_hKbGroup, g_hFontBold);
@@ -353,7 +351,7 @@ void CreateControls(HWND hWnd) {
     g_hKbEnable = CreateWindowExW(
         0, L"BUTTON", L"Enable Keyboard Sounds",
         WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-        28, HEADER_HEIGHT + 56, 180, 20,
+        28, 56, 180, 20,
         hWnd, (HMENU)IDC_CHK_KB_ENABLE, g_hInstance, NULL
     );
     SetControlFont(g_hKbEnable, g_hFontNormal);
@@ -361,7 +359,7 @@ void CreateControls(HWND hWnd) {
     g_hKbPresetLbl = CreateWindowExW(
         0, L"STATIC", L"Preset:",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
-        28, HEADER_HEIGHT + 83, 44, 20,
+        28, 83, 44, 20,
         hWnd, (HMENU)IDC_LBL_KB_PRESET, g_hInstance, NULL
     );
     SetControlFont(g_hKbPresetLbl, g_hFontNormal);
@@ -370,7 +368,7 @@ void CreateControls(HWND hWnd) {
     g_hKbPresetCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
         WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
-        76, HEADER_HEIGHT + 80, 145, 160,
+        76, 80, 145, 160,
         hWnd, (HMENU)IDC_COMBO_KB_PRESET, g_hInstance, NULL
     );
     SetControlFont(g_hKbPresetCombo, g_hFontNormal);
@@ -379,7 +377,7 @@ void CreateControls(HWND hWnd) {
     g_hKbFavBtn = CreateWindowExW(
         0, L"BUTTON", L"\u2606",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        224, HEADER_HEIGHT + 79, 24, 24,
+        224, 79, 24, 24,
         hWnd, (HMENU)IDC_BTN_KB_FAVORITE, g_hInstance, NULL
     );
     SetControlFont(g_hKbFavBtn, g_hFontNormal);
@@ -388,7 +386,7 @@ void CreateControls(HWND hWnd) {
     g_hKbTestBtn = CreateWindowExW(
         0, L"BUTTON", L"Test",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        251, HEADER_HEIGHT + 79, 50, 24,
+        251, 79, 50, 24,
         hWnd, (HMENU)IDC_BTN_KB_TEST, g_hInstance, NULL
     );
     SetControlFont(g_hKbTestBtn, g_hFontNormal);
@@ -397,7 +395,7 @@ void CreateControls(HWND hWnd) {
     g_hKbExportBtn = CreateWindowExW(
         0, L"BUTTON", L"Export",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        305, HEADER_HEIGHT + 79, 55, 24,
+        305, 79, 55, 24,
         hWnd, (HMENU)IDC_BTN_KB_EXPORT, g_hInstance, NULL
     );
     SetControlFont(g_hKbExportBtn, g_hFontNormal);
@@ -406,7 +404,7 @@ void CreateControls(HWND hWnd) {
     g_hKbCustomBtn = CreateWindowExW(
         0, L"BUTTON", L"Import ZIP...",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        364, HEADER_HEIGHT + 79, 84, 24,
+        364, 79, 84, 24,
         hWnd, (HMENU)IDC_BTN_KB_CUSTOM, g_hInstance, NULL
     );
     SetControlFont(g_hKbCustomBtn, g_hFontNormal);
@@ -414,7 +412,7 @@ void CreateControls(HWND hWnd) {
     g_hKbVolLbl = CreateWindowExW(
         0, L"STATIC", L"Volume:",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
-        28, HEADER_HEIGHT + 116, 50, 20,
+        28, 116, 50, 20,
         hWnd, (HMENU)IDC_LBL_KB_VOLUME, g_hInstance, NULL
     );
     SetControlFont(g_hKbVolLbl, g_hFontNormal);
@@ -422,7 +420,7 @@ void CreateControls(HWND hWnd) {
     g_hKbVolSlider = CreateWindowExW(
         0, TRACKBAR_CLASS, L"",
         WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS | WS_TABSTOP,
-        80, HEADER_HEIGHT + 114, 368, 24,
+        80, 114, 368, 24,
         hWnd, (HMENU)IDC_SLIDER_KB_VOLUME, g_hInstance, NULL
     );
     SendMessageW(g_hKbVolSlider, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
@@ -431,7 +429,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseGroup = CreateWindowExW(
         0, L"BUTTON", L"Mouse Sounds",
         WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
-        16, HEADER_HEIGHT + 173, WINDOW_WIDTH - 32, 130,
+        16, 173, WINDOW_WIDTH - 32, 130,
         hWnd, (HMENU)IDC_GB_MOUSE, g_hInstance, NULL
     );
     SetControlFont(g_hMouseGroup, g_hFontBold);
@@ -439,7 +437,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseEnable = CreateWindowExW(
         0, L"BUTTON", L"Enable Mouse Sounds",
         WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-        28, HEADER_HEIGHT + 193, 180, 20,
+        28, 193, 180, 20,
         hWnd, (HMENU)IDC_CHK_MOUSE_ENABLE, g_hInstance, NULL
     );
     SetControlFont(g_hMouseEnable, g_hFontNormal);
@@ -447,7 +445,7 @@ void CreateControls(HWND hWnd) {
     g_hMousePresetLbl = CreateWindowExW(
         0, L"STATIC", L"Preset:",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
-        28, HEADER_HEIGHT + 220, 44, 20,
+        28, 220, 44, 20,
         hWnd, (HMENU)IDC_LBL_MOUSE_PRESET, g_hInstance, NULL
     );
     SetControlFont(g_hMousePresetLbl, g_hFontNormal);
@@ -455,7 +453,7 @@ void CreateControls(HWND hWnd) {
     g_hMousePresetCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
         WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
-        76, HEADER_HEIGHT + 217, 145, 160,
+        76, 217, 145, 160,
         hWnd, (HMENU)IDC_COMBO_MOUSE_PRESET, g_hInstance, NULL
     );
     SetControlFont(g_hMousePresetCombo, g_hFontNormal);
@@ -464,7 +462,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseFavBtn = CreateWindowExW(
         0, L"BUTTON", L"\u2606",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        224, HEADER_HEIGHT + 216, 24, 24,
+        224, 216, 24, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_FAVORITE, g_hInstance, NULL
     );
     SetControlFont(g_hMouseFavBtn, g_hFontNormal);
@@ -473,7 +471,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseTestBtn = CreateWindowExW(
         0, L"BUTTON", L"Test",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        251, HEADER_HEIGHT + 216, 50, 24,
+        251, 216, 50, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_TEST, g_hInstance, NULL
     );
     SetControlFont(g_hMouseTestBtn, g_hFontNormal);
@@ -482,7 +480,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseExportBtn = CreateWindowExW(
         0, L"BUTTON", L"Export",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        305, HEADER_HEIGHT + 216, 55, 24,
+        305, 216, 55, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_EXPORT, g_hInstance, NULL
     );
     SetControlFont(g_hMouseExportBtn, g_hFontNormal);
@@ -491,7 +489,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseCustomBtn = CreateWindowExW(
         0, L"BUTTON", L"Import ZIP...",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        364, HEADER_HEIGHT + 216, 84, 24,
+        364, 216, 84, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_CUSTOM, g_hInstance, NULL
     );
     SetControlFont(g_hMouseCustomBtn, g_hFontNormal);
@@ -499,7 +497,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseVolLbl = CreateWindowExW(
         0, L"STATIC", L"Volume:",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
-        28, HEADER_HEIGHT + 253, 50, 20,
+        28, 253, 50, 20,
         hWnd, (HMENU)IDC_LBL_MOUSE_VOLUME, g_hInstance, NULL
     );
     SetControlFont(g_hMouseVolLbl, g_hFontNormal);
@@ -507,7 +505,7 @@ void CreateControls(HWND hWnd) {
     g_hMouseVolSlider = CreateWindowExW(
         0, TRACKBAR_CLASS, L"",
         WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS | WS_TABSTOP,
-        80, HEADER_HEIGHT + 251, 368, 24,
+        80, 251, 368, 24,
         hWnd, (HMENU)IDC_SLIDER_MOUSE_VOLUME, g_hInstance, NULL
     );
     SendMessageW(g_hMouseVolSlider, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
@@ -516,7 +514,7 @@ void CreateControls(HWND hWnd) {
     g_hAppSettingsGroup = CreateWindowExW(
         0, L"BUTTON", L"Application",
         WS_CHILD | BS_GROUPBOX,
-        16, HEADER_HEIGHT + 36, WINDOW_WIDTH - 32, 237,
+        16, 36, WINDOW_WIDTH - 32, 237,
         hWnd, (HMENU)IDC_GB_APPLICATION, g_hInstance, NULL
     );
     SetControlFont(g_hAppSettingsGroup, g_hFontBold);
@@ -524,7 +522,7 @@ void CreateControls(HWND hWnd) {
     g_hVersionLbl = CreateWindowExW(
         0, L"STATIC", (L"Current Version: " + Utils::GetAppVersion()).c_str(),
         WS_CHILD | SS_LEFT,
-        28, HEADER_HEIGHT + 60, 200, 20,
+        28, 60, 200, 20,
         hWnd, (HMENU)IDC_LBL_VERSION, g_hInstance, NULL
     );
     SetControlFont(g_hVersionLbl, g_hFontNormal);
@@ -532,7 +530,7 @@ void CreateControls(HWND hWnd) {
     g_hCheckUpdatesBtn = CreateWindowExW(
         0, L"BUTTON", L"Check for Updates",
         WS_CHILD | BS_PUSHBUTTON,
-        28, HEADER_HEIGHT + 86, 130, 26,
+        28, 86, 130, 26,
         hWnd, (HMENU)IDC_BTN_CHECK_UPDATES, g_hInstance, NULL
     );
     SetControlFont(g_hCheckUpdatesBtn, g_hFontNormal);
@@ -540,14 +538,14 @@ void CreateControls(HWND hWnd) {
     g_hSeparator = CreateWindowExW(
         0, L"STATIC", L"",
         WS_CHILD | SS_ETCHEDHORZ,
-        28, HEADER_HEIGHT + 130, WINDOW_WIDTH - 56, 2,
+        28, 130, WINDOW_WIDTH - 56, 2,
         hWnd, (HMENU)-1, g_hInstance, NULL
     );
 
     g_hAutoStartChk = CreateWindowExW(
         0, L"BUTTON", L"Auto-start on Windows startup",
         WS_CHILD | BS_AUTOCHECKBOX,
-        28, HEADER_HEIGHT + 142, 240, 20,
+        28, 142, 240, 20,
         hWnd, (HMENU)IDC_CHK_AUTOSTART, g_hInstance, NULL
     );
     SetControlFont(g_hAutoStartChk, g_hFontNormal);
@@ -555,7 +553,7 @@ void CreateControls(HWND hWnd) {
     g_hStartupNotifChk = CreateWindowExW(
         0, L"BUTTON", L"Show notification on startup",
         WS_CHILD | BS_AUTOCHECKBOX,
-        28, HEADER_HEIGHT + 167, 240, 20,
+        28, 167, 240, 20,
         hWnd, (HMENU)IDC_CHK_STARTUP_NOTIF, g_hInstance, NULL
     );
     SetControlFont(g_hStartupNotifChk, g_hFontNormal);
@@ -564,14 +562,14 @@ void CreateControls(HWND hWnd) {
     g_hAboutLogo = CreateWindowExW(
         0, L"STATIC", L"",
         WS_CHILD | SS_OWNERDRAW,
-        (WINDOW_WIDTH - 88) / 2, HEADER_HEIGHT + 45, 88, 88,
+        (WINDOW_WIDTH - 88) / 2, 45, 88, 88,
         hWnd, (HMENU)IDC_STATIC_ABOUT_LOGO, g_hInstance, NULL
     );
 
     g_hAboutTitle = CreateWindowExW(
         0, L"STATIC", L"MonkeySounds",
         WS_CHILD | SS_CENTER,
-        20, HEADER_HEIGHT + 140, WINDOW_WIDTH - 40, 22,
+        20, 140, WINDOW_WIDTH - 40, 22,
         hWnd, (HMENU)IDC_STATIC_ABOUT_TITLE, g_hInstance, NULL
     );
     SetControlFont(g_hAboutTitle, g_hFontTitle);
@@ -579,7 +577,7 @@ void CreateControls(HWND hWnd) {
     g_hAboutDesc1 = CreateWindowExW(
         0, L"STATIC", L"Professional system sound",
         WS_CHILD | SS_CENTER,
-        20, HEADER_HEIGHT + 165, WINDOW_WIDTH - 40, 18,
+        20, 165, WINDOW_WIDTH - 40, 18,
         hWnd, (HMENU)IDC_STATIC_ABOUT_DESC1, g_hInstance, NULL
     );
     SetControlFont(g_hAboutDesc1, g_hFontNormal);
@@ -587,7 +585,7 @@ void CreateControls(HWND hWnd) {
     g_hAboutDesc2 = CreateWindowExW(
         0, L"STATIC", L"customization utility.",
         WS_CHILD | SS_CENTER,
-        20, HEADER_HEIGHT + 183, WINDOW_WIDTH - 40, 18,
+        20, 183, WINDOW_WIDTH - 40, 18,
         hWnd, (HMENU)IDC_STATIC_ABOUT_DESC2, g_hInstance, NULL
     );
     SetControlFont(g_hAboutDesc2, g_hFontNormal);
@@ -595,7 +593,7 @@ void CreateControls(HWND hWnd) {
     g_hAboutCopy = CreateWindowExW(
         0, L"STATIC", L"\u00A9 2026 MonkeySounds. All rights reserved.",
         WS_CHILD | SS_CENTER,
-        20, HEADER_HEIGHT + 215, WINDOW_WIDTH - 40, 18,
+        20, 215, WINDOW_WIDTH - 40, 18,
         hWnd, (HMENU)IDC_STATIC_ABOUT_COPY, g_hInstance, NULL
     );
     SetControlFont(g_hAboutCopy, g_hFontMono);
@@ -1179,53 +1177,6 @@ void ShowTrayMenu(HWND hWnd) {
     }
 }
 
-void DrawCustomHeader(HWND hWnd, HDC hdc) {
-    RECT rcHeader = { 0, 0, WINDOW_WIDTH, HEADER_HEIGHT };
-    HBRUSH hBlueBrush = CreateSolidBrush(RGB(0, 90, 158));
-    FillRect(hdc, &rcHeader, hBlueBrush);
-    DeleteObject(hBlueBrush);
-
-    // Draw speaker icon
-    HICON hSmallIcon = (HICON)LoadImageW(g_hInstance, MAKEINTRESOURCEW(IDI_SMALL), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-    if (!hSmallIcon) {
-        hSmallIcon = (HICON)LoadImageW(NULL, L"assets\\Icon.ico", IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
-    }
-    if (hSmallIcon) {
-        DrawIconEx(hdc, 8, 7, hSmallIcon, 16, 16, 0, NULL, DI_NORMAL);
-        DestroyIcon(hSmallIcon);
-    }
-
-    // Title Text
-    SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, RGB(255, 255, 255));
-    HFONT hOldFont = (HFONT)SelectObject(hdc, g_hFontTitle);
-    TextOutW(hdc, 28, 6, L"MonkeySounds", 12);
-
-    // Close Button only (on right side of header)
-    int btnY = 5;
-    int btnH = 20;
-
-    // Close Button (Red on hover)
-    RECT rcClose = { WINDOW_WIDTH - 22, btnY, WINDOW_WIDTH - 2, btnY + btnH };
-    HBRUSH hCloseBrush = CreateSolidBrush((g_hoverHeaderBtn == 1) ? RGB(232, 17, 35) : RGB(220, 220, 220));
-    FillRect(hdc, &rcClose, hCloseBrush);
-    DeleteObject(hCloseBrush);
-    FrameRect(hdc, &rcClose, (HBRUSH)GetStockObject(GRAY_BRUSH));
-
-    COLORREF closeColor = (g_hoverHeaderBtn == 1) ? RGB(255, 255, 255) : RGB(180, 0, 0);
-    HPEN hClosePen = CreatePen(PS_SOLID, 2, closeColor);
-    HPEN hOldPen = (HPEN)SelectObject(hdc, hClosePen);
-    MoveToEx(hdc, rcClose.left + 5, rcClose.top + 5, NULL);
-    LineTo(hdc, rcClose.right - 5, rcClose.bottom - 5);
-    MoveToEx(hdc, rcClose.right - 5, rcClose.top + 5, NULL);
-    LineTo(hdc, rcClose.left + 5, rcClose.bottom - 5);
-
-    SelectObject(hdc, hOldPen);
-    DeleteObject(hClosePen);
-
-    SelectObject(hdc, hOldFont);
-}
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
     case WM_CREATE:
@@ -1325,47 +1276,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         }
         break;
 
-    case WM_NCHITTEST: {
-        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-        ScreenToClient(hWnd, &pt);
-        if (pt.y >= 0 && pt.y < HEADER_HEIGHT) {
-            // Check header buttons area
-            if (pt.x >= WINDOW_WIDTH - 22) {
-                return HTCLIENT;
-            }
-            return HTCAPTION; // Allows moving the window by dragging the blue header
-        }
-        return HTCLIENT;
-    }
+    case WM_NCHITTEST:
+        return DefWindowProc(hWnd, message, wParam, lParam);
 
-    case WM_MOUSEMOVE: {
-        int x = GET_X_LPARAM(lParam);
-        int y = GET_Y_LPARAM(lParam);
-        int prevHover = g_hoverHeaderBtn;
-        g_hoverHeaderBtn = 0;
-        if (y >= 5 && y <= 25) {
-            if (x >= WINDOW_WIDTH - 22 && x < WINDOW_WIDTH - 2) {
-                g_hoverHeaderBtn = 1; // Close
-            }
-        }
-        if (prevHover != g_hoverHeaderBtn) {
-            RECT rcBtnArea = { WINDOW_WIDTH - 24, 0, WINDOW_WIDTH, HEADER_HEIGHT };
-            InvalidateRect(hWnd, &rcBtnArea, FALSE);
-        }
-        break;
-    }
-
-    case WM_LBUTTONDOWN: {
-        int x = GET_X_LPARAM(lParam);
-        int y = GET_Y_LPARAM(lParam);
-        if (y >= 5 && y <= 25) {
-            if (x >= WINDOW_WIDTH - 22 && x < WINDOW_WIDTH - 2) {
-                // Close / Minimize to tray
-                ShowWindow(hWnd, SW_HIDE);
-            }
-        }
-        break;
-    }
+    case WM_CLOSE:
+        ShowWindow(hWnd, SW_HIDE);
+        return 0;
 
     case WM_NOTIFY: {
         LPNMHDR pnmh = (LPNMHDR)lParam;
@@ -1520,8 +1436,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
     case WM_PAINT: {
         PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hWnd, &ps);
-        DrawCustomHeader(hWnd, hdc);
+        BeginPaint(hWnd, &ps);
         EndPaint(hWnd, &ps);
         break;
     }
