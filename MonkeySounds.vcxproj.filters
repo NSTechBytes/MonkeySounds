@@ -48,6 +48,9 @@
     <ClInclude Include="src\AppSettings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ProfileWizard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="src\Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -78,6 +81,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\MonkeySounds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ProfileWizard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\AudioEngine.cpp">

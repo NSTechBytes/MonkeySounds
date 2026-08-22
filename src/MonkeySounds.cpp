@@ -6,6 +6,7 @@
 #include "AppSettings.h"
 #include "Utils.h"
 #include "ZipUtils.h"
+#include "ProfileWizard.h"
 #include <commctrl.h>
 #include <gdiplus.h>
 #include <windowsx.h>
@@ -64,6 +65,7 @@ HBRUSH g_hTabBgBrush = NULL;
 // Control HWNDs - Sounds Tab
 HWND g_hKbGroup = NULL;
 HWND g_hKbEnable = NULL;
+HWND g_hKbNewBtn = NULL;
 HWND g_hKbPresetLbl = NULL;
 HWND g_hKbPresetCombo = NULL;
 HWND g_hKbCustomBtn = NULL;
@@ -76,6 +78,7 @@ HWND g_hKbVolSlider = NULL;
 
 HWND g_hMouseGroup = NULL;
 HWND g_hMouseEnable = NULL;
+HWND g_hMouseNewBtn = NULL;
 HWND g_hMousePresetLbl = NULL;
 HWND g_hMousePresetCombo = NULL;
 HWND g_hMouseCustomBtn = NULL;
@@ -364,6 +367,14 @@ void CreateControls(HWND hWnd) {
     );
     SetControlFont(g_hKbEnable, g_hFontNormal);
 
+    g_hKbNewBtn = CreateWindowExW(
+        0, L"BUTTON", L"+ New Profile...",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        348, 53, 100, 23,
+        hWnd, (HMENU)IDC_BTN_KB_NEW, g_hInstance, NULL
+    );
+    SetControlFont(g_hKbNewBtn, g_hFontNormal);
+
     g_hKbPresetLbl = CreateWindowExW(
         0, L"STATIC", L"Preset:",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
@@ -458,6 +469,14 @@ void CreateControls(HWND hWnd) {
         hWnd, (HMENU)IDC_CHK_MOUSE_ENABLE, g_hInstance, NULL
     );
     SetControlFont(g_hMouseEnable, g_hFontNormal);
+
+    g_hMouseNewBtn = CreateWindowExW(
+        0, L"BUTTON", L"+ New Profile...",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        348, 190, 100, 23,
+        hWnd, (HMENU)IDC_BTN_MOUSE_NEW, g_hInstance, NULL
+    );
+    SetControlFont(g_hMouseNewBtn, g_hFontNormal);
 
     g_hMousePresetLbl = CreateWindowExW(
         0, L"STATIC", L"Preset:",
@@ -656,6 +675,7 @@ void UpdateTabVisibility(int tabIndex) {
     int showSounds = (tabIndex == 0) ? SW_SHOW : SW_HIDE;
     ShowWindow(g_hKbGroup, showSounds);
     ShowWindow(g_hKbEnable, showSounds);
+    ShowWindow(g_hKbNewBtn, showSounds);
     ShowWindow(g_hKbPresetLbl, showSounds);
     ShowWindow(g_hKbPresetCombo, showSounds);
     ShowWindow(g_hKbTestBtn, showSounds);
@@ -668,6 +688,7 @@ void UpdateTabVisibility(int tabIndex) {
 
     ShowWindow(g_hMouseGroup, showSounds);
     ShowWindow(g_hMouseEnable, showSounds);
+    ShowWindow(g_hMouseNewBtn, showSounds);
     ShowWindow(g_hMousePresetLbl, showSounds);
     ShowWindow(g_hMousePresetCombo, showSounds);
     ShowWindow(g_hMouseTestBtn, showSounds);
@@ -1429,6 +1450,36 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                 }
             }
             break;
+
+        case IDC_BTN_KB_NEW: {
+            std::wstring createdPath;
+            if (ProfileWizard::Show(hWnd, true, createdPath)) {
+                g_kbProfiles = AudioEngine::GetInstance().ScanKeyboardProfiles();
+                if (!createdPath.empty() && fs::exists(createdPath)) {
+                    AudioEngine::GetInstance().LoadKeyboardProfile(createdPath);
+                    AudioEngine::GetInstance().PlayKey(VK_SPACE, true);
+                }
+                PopulatePresets();
+                SaveCurrentSettings();
+                SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  New keyboard profile created!");
+            }
+            break;
+        }
+
+        case IDC_BTN_MOUSE_NEW: {
+            std::wstring createdPath;
+            if (ProfileWizard::Show(hWnd, false, createdPath)) {
+                g_mouseProfiles = AudioEngine::GetInstance().ScanMouseProfiles();
+                if (!createdPath.empty() && fs::exists(createdPath)) {
+                    AudioEngine::GetInstance().LoadMouseProfile(createdPath);
+                    AudioEngine::GetInstance().PlayMouse("left", true);
+                }
+                PopulatePresets();
+                SaveCurrentSettings();
+                SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  New mouse profile created!");
+            }
+            break;
+        }
 
         case IDC_BTN_KB_CUSTOM:
             ChooseCustomProfile(true);
