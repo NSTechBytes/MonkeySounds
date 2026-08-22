@@ -97,6 +97,7 @@ struct WizardDialogState {
     HFONT hFontHeader = NULL;
     HBRUSH hBgBrush = NULL;
     HBRUSH hHeaderBrush = NULL;
+    HBRUSH hWhiteBrush = NULL;
 
     // Common Nav Controls
     HWND hBtnBack = NULL;
@@ -755,8 +756,9 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         pWiz->hFontTitle = CreateFontW(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
 
-        pWiz->hBgBrush = CreateSolidBrush(RGB(249, 249, 249));
+        pWiz->hBgBrush = CreateSolidBrush(RGB(240, 240, 240));
         pWiz->hHeaderBrush = CreateSolidBrush(RGB(240, 243, 246));
+        pWiz->hWhiteBrush = CreateSolidBrush(RGB(255, 255, 255));
 
         // Header Labels
         pWiz->hLblStepTitle = CreateWindowExW(0, L"STATIC", L"Step Title", WS_CHILD | WS_VISIBLE | SS_LEFT,
@@ -1272,8 +1274,11 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         MoveToEx(hdc, 0, footerY, NULL);
         LineTo(hdc, WIZARD_WIDTH, footerY);
 
-        SelectObject(hdc, hOldPen);
-        DeleteObject(hPen);
+        // If on step 1 (Info), fill background for Profile Device Type group with white
+        if (pWiz->currentStep == STEP_INFO) {
+            RECT rcGrpType = { 20, 65, WIZARD_WIDTH - 20, 65 + 60 };
+            FillRect(hdc, &rcGrpType, pWiz->hWhiteBrush);
+        }
 
         EndPaint(hWnd, &ps);
         return 0;
@@ -1289,7 +1294,13 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
             return (INT_PTR)pWiz->hHeaderBrush;
         }
 
-        SetBkColor(hdcStatic, RGB(249, 249, 249));
+        if (hwndStatic == pWiz->hRadKb || hwndStatic == pWiz->hRadMouse || hwndStatic == pWiz->hGrpType) {
+            SetBkColor(hdcStatic, RGB(255, 255, 255));
+            SetBkMode(hdcStatic, TRANSPARENT);
+            return (INT_PTR)pWiz->hWhiteBrush;
+        }
+
+        SetBkColor(hdcStatic, RGB(240, 240, 240));
         SetBkMode(hdcStatic, TRANSPARENT);
         return (INT_PTR)pWiz->hBgBrush;
     }
@@ -1297,7 +1308,15 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
     case WM_CTLCOLORBTN:
     case WM_CTLCOLORDLG: {
         HDC hdcDlg = (HDC)wParam;
-        SetBkColor(hdcDlg, RGB(249, 249, 249));
+        HWND hwndDlg = (HWND)lParam;
+
+        if (hwndDlg == pWiz->hRadKb || hwndDlg == pWiz->hRadMouse || hwndDlg == pWiz->hGrpType) {
+            SetBkColor(hdcDlg, RGB(255, 255, 255));
+            SetBkMode(hdcDlg, TRANSPARENT);
+            return (INT_PTR)pWiz->hWhiteBrush;
+        }
+
+        SetBkColor(hdcDlg, RGB(240, 240, 240));
         SetBkMode(hdcDlg, TRANSPARENT);
         return (INT_PTR)pWiz->hBgBrush;
     }
@@ -1313,6 +1332,7 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         if (pWiz->hFontHeader) DeleteObject(pWiz->hFontHeader);
         if (pWiz->hBgBrush) DeleteObject(pWiz->hBgBrush);
         if (pWiz->hHeaderBrush) DeleteObject(pWiz->hHeaderBrush);
+        if (pWiz->hWhiteBrush) DeleteObject(pWiz->hWhiteBrush);
 
         pWiz->isRunning = false;
         return 0;

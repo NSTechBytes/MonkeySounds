@@ -224,7 +224,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     g_hFontIcon = CreateFontW(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe MDL2 Assets");
 
-    g_hTabBgBrush = CreateSolidBrush(RGB(249, 249, 249));
+    g_hTabBgBrush = CreateSolidBrush(RGB(240, 240, 240));
 
     // Register Window Class
     WNDCLASSEXW wcex = {};
@@ -1149,7 +1149,7 @@ void VuDraw(HDC hdc, const RECT& rc) {
     int h = rc.bottom - rc.top;
 
     // Background — dark panel matching the status bar
-    HBRUSH hBg = CreateSolidBrush(RGB(249, 249, 249));
+    HBRUSH hBg = CreateSolidBrush(RGB(240, 240, 240));
     FillRect(hdc, &rc, hBg);
     DeleteObject(hBg);
 
@@ -1345,7 +1345,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         } else if (hwndStatic == g_hAboutCopy) {
             SetTextColor(hdcStatic, RGB(90, 90, 90));
         }
-        SetBkColor(hdcStatic, RGB(249, 249, 249));
+        SetBkColor(hdcStatic, RGB(240, 240, 240));
         SetBkMode(hdcStatic, TRANSPARENT);
         return (INT_PTR)g_hTabBgBrush;
     }
@@ -1353,7 +1353,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     case WM_CTLCOLORBTN:
     case WM_CTLCOLORDLG: {
         HDC hdcDlg = (HDC)wParam;
-        SetBkColor(hdcDlg, RGB(249, 249, 249));
+        SetBkColor(hdcDlg, RGB(240, 240, 240));
         SetBkMode(hdcDlg, TRANSPARENT);
         return (INT_PTR)g_hTabBgBrush;
     }
