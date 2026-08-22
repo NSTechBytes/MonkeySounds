@@ -61,3 +61,34 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "`nBuild succeeded! Output is located at: $outDir" -ForegroundColor Green
+
+# 4. Populate dist\ folder
+$distDir    = Join-Path $PSScriptRoot "dist"
+$srcExe     = Join-Path $outDir "MonkeySounds.exe"
+$srcSounds  = Join-Path $PSScriptRoot "Sounds"
+
+Write-Host "`n[dist] Preparing dist folder: $distDir" -ForegroundColor Cyan
+
+# Clean and recreate dist
+if (Test-Path $distDir) {
+    Remove-Item -Recurse -Force $distDir
+}
+New-Item -ItemType Directory -Path $distDir -Force | Out-Null
+
+# Copy EXE
+if (Test-Path $srcExe) {
+    Copy-Item -Path $srcExe -Destination $distDir -Force
+    Write-Host "[dist] Copied MonkeySounds.exe" -ForegroundColor Green
+} else {
+    Write-Warning "[dist] EXE not found at: $srcExe"
+}
+
+# Copy Sounds folder
+if (Test-Path $srcSounds) {
+    Copy-Item -Path $srcSounds -Destination (Join-Path $distDir "Sounds") -Recurse -Force
+    Write-Host "[dist] Copied Sounds folder" -ForegroundColor Green
+} else {
+    Write-Warning "[dist] Sounds folder not found at: $srcSounds"
+}
+
+Write-Host "`nDist ready at: $distDir" -ForegroundColor Green
