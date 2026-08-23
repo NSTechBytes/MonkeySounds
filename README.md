@@ -14,7 +14,13 @@
 
 </div>
 
-https://res.cloudinary.com/xkzylop3/video/upload/v1787455349/monkeysounds_demo.mp4
+<div align="center">
+  <a href="https://res.cloudinary.com/xkzylop3/video/upload/v1787455349/monkeysounds_demo.mp4" target="_blank">
+    <img src="https://res.cloudinary.com/xkzylop3/video/upload/so_0,w_720,h_400,c_fill/v1787455349/monkeysounds_demo.jpg" alt="MonkeySounds Demo — Click to Watch" width="720"/>
+    <br/>
+    <img src="https://img.shields.io/badge/▶_Click_to_Watch_Demo-0078D4?style=for-the-badge" alt="Click to Watch Demo"/>
+  </a>
+</div>
 
 ---
 
