@@ -10,7 +10,7 @@
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](LICENSE.txt)
 [![GitHub release](https://img.shields.io/github/v/release/NSTechBytes/MonkeySounds)](https://github.com/NSTechBytes/MonkeySounds/releases/latest)
 
-[Download](#-installation) · [Sound Profiles](#-sound-profiles) · [Create a Profile](#-creating-your-own-profile) · [Discord](https://discord.gg/fZejMxtMhf) · [Support on Patreon](https://www.patreon.com/c/nstechbytes)
+[Download](#installation) · [Sound Profiles](#sound-profiles) · [Create a Profile](#creating-your-own-profile) · [Profile JSON Reference](#profilejson-reference) · [Discord](https://discord.gg/fZejMxtMhf) · [Support on Patreon](https://www.patreon.com/c/nstechbytes)
 
 </div>
 
@@ -180,41 +180,258 @@ Click **+ New Profile...** in either the Keyboard or Mouse section to open it.
 3. **Specific bindings** *(optional)* — assign different sounds to individual keys (e.g. a louder thock for `Space` and `Enter`)
 4. **Options** — activate the profile immediately after creation, and optionally export it as a `.zip` for sharing
 
-### Profile folder structure
+---
 
-Every profile is a folder containing a `profile.json` and your audio files:
+## profile.json Reference
+
+Every profile is a folder containing a `profile.json` file and your audio files. You can create or edit `profile.json` by hand in any text editor (Notepad, VS Code, etc.) for full control.
+
+### Folder structure
 
 ```
 MyProfile/
 ├── profile.json
-├── key_press_1.wav
-├── key_press_2.wav
-└── key_release.wav
+├── press_key1.mp3
+├── press_key2.mp3
+├── release_key.mp3
+├── press_space.mp3
+└── press_enter.mp3
 ```
 
-`profile.json` example:
+### Full keyboard profile.json
+
 ```json
 {
-  "name": "My Profile",
-  "author": "YourName",
-  "description": "A custom keyboard sound profile",
-  "device": "keyboard",
-  "sources": {
-    "s1": { "press": "key_press_1.wav", "release": "key_release.wav" },
-    "s2": { "press": "key_press_2.wav" }
+  "profile": {
+    "name": "My Profile",
+    "author": "YourName",
+    "description": "A custom keyboard sound profile"
   },
-  "keymap": {
-    "default": ["s1", "s2"],
-    "space":   ["s1"],
-    "enter":   ["s1"]
-  }
+  "keys": {
+    "default": [
+      "s1",
+      "s2"
+    ],
+    "other": [
+      {
+        "keys": ["space"],
+        "sound": "s_space"
+      },
+      {
+        "keys": ["enter", "return"],
+        "sound": "s_enter"
+      },
+      {
+        "keys": ["backspace", "delete"],
+        "sound": "s_back"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "id": "s1",
+      "source": {
+        "press": "press_key1.mp3",
+        "release": "release_key.mp3"
+      }
+    },
+    {
+      "id": "s2",
+      "source": {
+        "press": "press_key2.mp3",
+        "release": "release_key.mp3"
+      }
+    },
+    {
+      "id": "s_space",
+      "source": {
+        "press": "press_space.mp3"
+      }
+    },
+    {
+      "id": "s_enter",
+      "source": {
+        "press": "press_enter.mp3"
+      }
+    },
+    {
+      "id": "s_back",
+      "source": {
+        "press": "press_back.mp3"
+      }
+    }
+  ]
 }
 ```
 
-### Sharing profiles
+### Full mouse profile.json
+
+```json
+{
+  "profile": {
+    "name": "My Mouse",
+    "author": "YourName",
+    "description": "Custom mouse click sounds",
+    "device": "mouse"
+  },
+  "buttons": {
+    "default": [
+      "click_left"
+    ],
+    "other": [
+      {
+        "buttons": ["left"],
+        "sound": "click_left"
+      },
+      {
+        "buttons": ["right"],
+        "sound": "click_right"
+      },
+      {
+        "buttons": ["middle"],
+        "sound": "click_middle"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "id": "click_left",
+      "source": {
+        "press": "left_down.wav",
+        "release": "left_up.wav"
+      }
+    },
+    {
+      "id": "click_right",
+      "source": {
+        "press": "right_down.wav",
+        "release": "right_up.wav"
+      }
+    },
+    {
+      "id": "click_middle",
+      "source": {
+        "press": "middle.wav"
+      }
+    }
+  ]
+}
+```
+
+### Field explanations
+
+| Field | Type | Description |
+|---|---|---|
+| `profile.name` | string | Profile display name shown in the preset dropdown |
+| `profile.author` | string | Author name shown in the info dialog |
+| `profile.description` | string | Short description shown in the info dialog |
+| `profile.device` | string | `"keyboard"` (default) or `"mouse"` |
+| `keys.default` | array of source IDs | Sound(s) played for any key not listed in `other`. Multiple IDs = random pick each press |
+| `keys.other` | array of rules | Per-key overrides. Each rule has a `keys` array and a `sound` source ID |
+| `buttons.default` | array of source IDs | Default sound(s) for mouse buttons not listed in `other` |
+| `buttons.other` | array of rules | Per-button overrides. Each rule has a `buttons` array and a `sound` source ID |
+| `sources` | array | Defines each sound. Each entry has an `id` and a `source` with `press` and optional `release` file paths |
+
+> **Tip:** The `release` field is optional. If omitted, no sound plays when the key is released.  
+> **Tip:** Audio files can be `.wav`, `.mp3`, or `.ogg`. Paths are relative to the profile folder.  
+> **Tip:** To add variation, list multiple source IDs in `default` — MonkeySounds picks one at random each time.
+
+---
+
+## Key Aliases
+
+When writing `keys.other` rules in `profile.json`, use these names in the `keys` array. MonkeySounds recognizes multiple aliases for each key — use whichever you prefer.
+
+### Regular Keys
+
+| Key | Aliases you can use |
+|---|---|
+| Letters | `a` – `z` (lowercase) |
+| Numbers (top row) | `0` – `9` |
+
+### Special Keys
+
+| Key | Aliases |
+|---|---|
+| Space | `space` |
+| Enter / Return | `enter`, `return` |
+| Backspace | `backspace`, `back`, `delete` |
+| Delete (Del) | `delete`, `del` |
+| Tab | `tab` |
+| Escape | `escape`, `esc` |
+| Caps Lock | `capslock`, `caps_lock`, `caps` |
+
+### Modifier Keys
+
+| Key | Aliases |
+|---|---|
+| Left Shift | `shift_l`, `lshift`, `shift` |
+| Right Shift | `shift_r`, `rshift`, `shift` |
+| Either Shift | `shift` |
+| Left Ctrl | `ctrl_l`, `lctrl`, `ctrl`, `control` |
+| Right Ctrl | `ctrl_r`, `rctrl`, `ctrl`, `control` |
+| Either Ctrl | `ctrl`, `control` |
+| Left Alt | `alt_l`, `lalt`, `alt` |
+| Right Alt / AltGr | `alt_r`, `ralt`, `alt_gr`, `alt` |
+| Either Alt | `alt`, `alt_gr` |
+| Windows / Super key | `cmd`, `win`, `windows`, `meta`, `super` |
+| Context Menu | `menu`, `apps`, `context_menu` |
+
+### Navigation Keys
+
+| Key | Aliases |
+|---|---|
+| Insert | `insert`, `ins` |
+| Home | `home` |
+| End | `end` |
+| Page Up | `page_up`, `pageup`, `pgup` |
+| Page Down | `page_down`, `pagedown`, `pgdn` |
+| Left Arrow | `left`, `arrow_left`, `leftarrow` |
+| Right Arrow | `right`, `arrow_right`, `rightarrow` |
+| Up Arrow | `up`, `arrow_up`, `uparrow` |
+| Down Arrow | `down`, `arrow_down`, `downarrow` |
+
+### Function Keys
+
+| Key | Alias |
+|---|---|
+| F1 – F24 | `f1`, `f2`, … `f24` |
+
+### Numpad Keys
+
+| Key | Alias |
+|---|---|
+| Numpad 0 – 9 | `numpad0`, `numpad1`, … `numpad9` |
+| Num Lock | `numlock`, `num_lock` |
+
+### System Keys
+
+| Key | Aliases |
+|---|---|
+| Print Screen | `printscreen`, `print_screen`, `prtscn` |
+| Scroll Lock | `scrolllock`, `scroll_lock` |
+| Pause / Break | `pause` |
+
+---
+
+### Mouse Button Aliases
+
+Use these in `buttons.other` rules in a mouse `profile.json`:
+
+| Button | Aliases |
+|---|---|
+| Left click | `left`, `click_left`, `primary`, `lclick`, `button1` |
+| Right click | `right`, `click_right`, `secondary`, `rclick`, `button2` |
+| Middle click | `middle`, `click_middle`, `wheel`, `mclick`, `button3` |
+
+---
+
+## Sharing profiles
 
 - **Export**: click **Export** next to any preset to save it as a `.zip`
 - **Import**: click **Import ZIP...** and pick the `.zip` — MonkeySounds extracts it and loads it automatically
+
+The ZIP just needs to contain the profile folder (with `profile.json` at its root).
 
 ---
 
@@ -263,7 +480,7 @@ cd MonkeySounds
 .\Build.ps1 -Configuration Release -Platform x64
 ```
 
-The compiled EXE ends up in `x64\Release\MonkeySounds.exe`.  
+The compiled EXE ends up in `x64\Release\MonkeySounds.exe`.
 The `dist\` folder contains the EXE and `Sounds\` folder ready for distribution.
 
 ---
@@ -289,7 +506,7 @@ Pull requests and profile submissions are welcome!
 
 ## License
 
-MonkeySounds is released under the **GNU General Public License v2.0**.  
+MonkeySounds is released under the **GNU General Public License v2.0**.
 See [LICENSE.txt](LICENSE.txt) for the full text.
 
 © 2026 MonkeySounds — NSTechBytes
