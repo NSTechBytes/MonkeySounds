@@ -3,20 +3,15 @@ name: Build
 on:
   push:
     branches: [ "master" ]
-    tags:
-      - "v*.*.*.*"
   pull_request:
     branches: [ "master" ]
   workflow_dispatch:
 
 permissions:
-  contents: write   # needed to create GitHub Releases on tag pushes
+  contents: read
 
 jobs:
 
-  # ---------------------------------------------------------------------------
-  # Job 1 — Compile and populate dist\
-  # ---------------------------------------------------------------------------
   build:
     name: Build (Release x64)
     runs-on: windows-latest
@@ -38,84 +33,3 @@ jobs:
           name: MonkeySounds-dist
           path: dist
           if-no-files-found: error
-
-  # ---------------------------------------------------------------------------
-  # Job 2 — Build NSIS installer (depends on dist artifact from Job 1)
-  # ---------------------------------------------------------------------------
-  installer:
-    name: Build Installer
-    runs-on: windows-latest
-    needs: build
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download dist artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: MonkeySounds-dist
-          path: dist
-
-      - name: Install NSIS
-        shell: powershell
-        run: choco install nsis --no-progress -y
-
-      - name: Build Installer
-        shell: powershell
-        run: |
-          # Choco installs NSIS here; find makensis explicitly since
-          # PATH is not refreshed between steps on the same runner.
-          $makensis = "C:\Program Files (x86)\NSIS\makensis.exe"
-          if (-not (Test-Path $makensis)) {
-            $makensis = "C:\Program Files\NSIS\makensis.exe"
-          }
-          if (-not (Test-Path $makensis)) {
-            throw "makensis.exe not found after NSIS install."
-          }
-          Push-Location installer
-          & $makensis setup.nsi
-          if ($LASTEXITCODE -ne 0) { throw "makensis failed with exit code $LASTEXITCODE" }
-          Pop-Location
-
-      - name: Upload installer artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: MonkeySounds-installer
-          path: installer/dist_output/*.exe
-          if-no-files-found: error
-
-  # ---------------------------------------------------------------------------
-  # Job 3 — Publish a GitHub Release (runs only on version tags: v*.*.*.*)
-  # ---------------------------------------------------------------------------
-  release:
-    name: Publish Release
-    runs-on: windows-latest
-    needs: installer
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-      - name: Download installer artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: MonkeySounds-installer
-          path: release-assets
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: "MonkeySounds ${{ github.ref_name }}"
-          body: |
-            ## MonkeySounds ${{ github.ref_name }}
-
-            ### Installation
-            Download `MonkeySounds_Setup_*.exe` and run it.
-            Choose **Standard** (recommended) or **Portable** mode during setup.
-
-            ### Links
-            - [GitHub](https://github.com/NSTechBytes/MonkeySounds)
-            - [Discord](https://discord.gg/fZejMxtMhf)
-            - [Support on Patreon](https://www.patreon.com/c/nstechbytes)
-          files: release-assets/*.exe
-          draft: false
-          prerelease: false
