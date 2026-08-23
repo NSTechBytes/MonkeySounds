@@ -9,6 +9,7 @@ $RepoRoot = $PSScriptRoot
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  MonkeySounds Setup Script" -ForegroundColor Cyan
 Write-Host "  Configuration: $Configuration | Platform: $Platform" -ForegroundColor Cyan
+Write-Host "  Installer supports Standard + Portable modes" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
 # ---------------------------------------------------------------------------
