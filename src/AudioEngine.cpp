@@ -10,8 +10,43 @@
 
 #pragma warning(push)
 #pragma warning(disable: 4244 4267)
+
+// ---------------------------------------------------------------------------
+// miniaudio — strip unused backends and decoders to reduce EXE size.
+//
+// Safe to disable: all non-Windows audio backends, FLAC decoder, encoding.
+// Must keep: WASAPI, WAV, MP3, OGG — these are the only ones we use.
+// Do NOT disable: MA_NO_NODE_GRAPH, MA_NO_ENGINE — ma_engine and
+// ma_sound_group depend on the node graph internally.
+// ---------------------------------------------------------------------------
+
+// Non-Windows backends — never compiled on Windows anyway, but explicit
+// defines prevent miniaudio from even trying to detect/include them.
+#define MA_NO_DSOUND        // Skip DirectSound (we use WASAPI)
+#define MA_NO_WINMM         // Skip WinMM legacy backend
+#define MA_NO_PULSEAUDIO    // Linux
+#define MA_NO_ALSA          // Linux
+#define MA_NO_COREAUDIO     // macOS
+#define MA_NO_SNDIO         // OpenBSD
+#define MA_NO_AUDIO4        // NetBSD
+#define MA_NO_OSS           // BSD
+#define MA_NO_AAUDIO        // Android
+#define MA_NO_OPENSL        // Android
+#define MA_NO_WEBAUDIO      // WebAssembly
+#define MA_NO_NULL          // Null/silent backend
+
+// Decoders we don't use
+#define MA_NO_FLAC          // FLAC not needed
+
+// We never write audio data
+#define MA_NO_ENCODING
+
+// No waveform/noise synthesis
+#define MA_NO_GENERATION
+
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
+
 #pragma warning(pop)
 
 #pragma comment(lib, "shlwapi.lib")
