@@ -59,19 +59,23 @@ jobs:
 
       - name: Install NSIS
         shell: powershell
-        run: |
-          choco install nsis --no-progress -y
-          # Refresh PATH so makensis.exe is found in subsequent steps
-          $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + $env:PATH
+        run: choco install nsis --no-progress -y
 
       - name: Build Installer
         shell: powershell
         run: |
-          $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + $env:PATH
-          # Run makensis directly — Setup.ps1 would re-run Build.ps1 which
-          # we don't need again; dist\ is already populated by the build job.
+          # Choco installs NSIS here; find makensis explicitly since
+          # PATH is not refreshed between steps on the same runner.
+          $makensis = "C:\Program Files (x86)\NSIS\makensis.exe"
+          if (-not (Test-Path $makensis)) {
+            $makensis = "C:\Program Files\NSIS\makensis.exe"
+          }
+          if (-not (Test-Path $makensis)) {
+            throw "makensis.exe not found after NSIS install."
+          }
           Push-Location installer
-          makensis setup.nsi
+          & $makensis setup.nsi
+          if ($LASTEXITCODE -ne 0) { throw "makensis failed with exit code $LASTEXITCODE" }
           Pop-Location
 
       - name: Upload installer artifact
