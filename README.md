@@ -16,14 +16,6 @@
 
 https://res.cloudinary.com/xkzylop3/video/upload/v1787455349/monkeysounds_demo.mp4
 
-<div align="center">
-
-<br/>
-
-[![Watch Demo](https://img.shields.io/badge/▶%20Watch%20Demo-Click%20to%20Play-blue?style=for-the-badge&logo=cloudinary)](https://res.cloudinary.com/xkzylop3/video/upload/v1787455349/monkeysounds_demo.mp4)
-
-</div>
-
 ---
 
 ## What is MonkeySounds?
