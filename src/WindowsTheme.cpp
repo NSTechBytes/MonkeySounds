@@ -804,7 +804,7 @@ void ApplyToControl(HWND w) {
   const DWORD style = (DWORD)GetWindowLongPtrW(w, GWL_STYLE);
   const bool isGroupBox = (_wcsicmp(cls, L"BUTTON") == 0) &&
                           ((style & BS_TYPEMASK) == BS_GROUPBOX);
-  if (!isGroupBox) {
+  if (dark && !isGroupBox) {
     SetWindowLongPtrW(w, GWL_STYLE, style | WS_CLIPSIBLINGS);
   }
 
@@ -834,12 +834,10 @@ void ApplyToControl(HWND w) {
   } else if (_wcsicmp(cls, L"BUTTON") == 0) {
     const DWORD style = (DWORD)GetWindowLongPtrW(w, GWL_STYLE);
     const DWORD type  = style & BS_TYPEMASK;
-    const bool isCheck = type == BS_AUTOCHECKBOX || type == BS_CHECKBOX ||
-                         type == BS_AUTORADIOBUTTON || type == BS_RADIOBUTTON || type == BS_GROUPBOX;
-    SetWindowTheme(w, dark ? L"DarkMode_Explorer" : (isCheck ? L"" : L"Explorer"), nullptr);
+    SetWindowTheme(w, dark ? L"DarkMode_Explorer" : L"Explorer", nullptr);
     if (dark && (type != BS_OWNERDRAW)) SetControlSubclass(w, ControlType::Button);
   } else if (_wcsicmp(cls, L"COMBOBOX") == 0) {
-    SetWindowTheme(w, dark ? L"DarkMode_CFD" : L"", nullptr);
+    SetWindowTheme(w, dark ? L"DarkMode_CFD" : L"Explorer", nullptr);
     const DWORD style = (DWORD)GetWindowLongPtrW(w, GWL_STYLE);
     COMBOBOXINFO info = {sizeof(COMBOBOXINFO)};
     if (GetComboBoxInfo(w, &info) && info.hwndList) {

@@ -219,21 +219,43 @@ static void ApplyFontsToControls() {
 }
 
 static void FixControlZOrder() {
-    // Keep background containers at the bottom of the child Z-order:
-    //   top -> interactive/label controls -> groupboxes -> tab control (bottom)
-    // Also keep WS_CLIPSIBLINGS off g_hTabCtrl so it paints the page background under groupboxes.
-    HWND groups[] = { g_hKbGroup, g_hMouseGroup, g_hAppSettingsGroup };
-    for (HWND grp : groups) {
-        if (grp) {
-            SetWindowPos(grp, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    if (WindowsTheme::IsUsingDarkMode()) {
+        // Dark mode: keep background containers at the bottom of the child Z-order:
+        //   top -> interactive/label controls -> groupboxes -> tab control (bottom)
+        // Also keep WS_CLIPSIBLINGS off g_hTabCtrl so it paints the page background under groupboxes.
+        HWND groups[] = { g_hKbGroup, g_hMouseGroup, g_hAppSettingsGroup };
+        for (HWND grp : groups) {
+            if (grp) {
+                SetWindowPos(grp, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+            }
         }
-    }
-    if (g_hTabCtrl) {
-        LONG_PTR tabStyle = GetWindowLongPtrW(g_hTabCtrl, GWL_STYLE);
-        if (tabStyle & WS_CLIPSIBLINGS) {
-            SetWindowLongPtrW(g_hTabCtrl, GWL_STYLE, tabStyle & ~WS_CLIPSIBLINGS);
+        if (g_hTabCtrl) {
+            LONG_PTR tabStyle = GetWindowLongPtrW(g_hTabCtrl, GWL_STYLE);
+            if (tabStyle & WS_CLIPSIBLINGS) {
+                SetWindowLongPtrW(g_hTabCtrl, GWL_STYLE, tabStyle & ~WS_CLIPSIBLINGS);
+            }
+            SetWindowPos(g_hTabCtrl, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
         }
-        SetWindowPos(g_hTabCtrl, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    } else {
+        // Light mode: match original Win32 hierarchy so standard SysTabControl32 paints cleanly
+        // behind controls without clipping groupboxes or painting over controls.
+        HWND mainWnd = g_hTabCtrl ? GetParent(g_hTabCtrl) : nullptr;
+        if (mainWnd) {
+            for (HWND child = GetWindow(mainWnd, GW_CHILD); child; child = GetWindow(child, GW_HWNDNEXT)) {
+                if (child == g_hTabCtrl || child == g_hStatusBar || child == g_hVuWnd) continue;
+                LONG_PTR st = GetWindowLongPtrW(child, GWL_STYLE);
+                if (st & WS_CLIPSIBLINGS) {
+                    SetWindowLongPtrW(child, GWL_STYLE, st & ~WS_CLIPSIBLINGS);
+                }
+            }
+        }
+        if (g_hTabCtrl) {
+            LONG_PTR tabStyle = GetWindowLongPtrW(g_hTabCtrl, GWL_STYLE);
+            if (!(tabStyle & WS_CLIPSIBLINGS)) {
+                SetWindowLongPtrW(g_hTabCtrl, GWL_STYLE, tabStyle | WS_CLIPSIBLINGS);
+            }
+            SetWindowPos(g_hTabCtrl, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        }
     }
     if (g_hVuWnd) {
         SetWindowPos(g_hVuWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
@@ -1601,8 +1623,7 @@ void ApplyThemeToMainWindow(HWND hWnd) {
         (LONG_PTR)(WindowsTheme::IsUsingDarkMode() ? WindowsTheme::GetDarkBackgroundBrush() : g_hTabBgBrush));
     WindowsTheme::ApplyToDialog(hWnd);
     FixControlZOrder();
-    InvalidateRect(hWnd, NULL, TRUE);
-    UpdateWindow(hWnd);
+    RedrawWindow(hWnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
