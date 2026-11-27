@@ -1,4 +1,4 @@
-#include "Resource.h"
+﻿#include "Resource.h"
 #include <windows.h>
 
 IDI_APP_ICON    ICON    "../assets/Icon.ico"
@@ -9,7 +9,7 @@ IDR_PNG_LOGO    RCDATA  "../assets/MonkeySounds.png"
 
 // Version resource — update these values for each release
 #define VER_MAJOR       1
-#define VER_MINOR       0
+#define VER_MINOR       1
 #define VER_PATCH       0
 #define VER_BUILD       0
 
@@ -28,12 +28,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName",      "NSTechBytes"
             VALUE "FileDescription",  "MonkeySounds - Keyboard & Mouse Sound Simulator"
-            VALUE "FileVersion",      "1.0.0.0"
+            VALUE "FileVersion",      "1.1.0.0"
             VALUE "InternalName",     "MonkeySounds"
             VALUE "LegalCopyright",   "\xA9 2026 MonkeySounds. All rights reserved."
             VALUE "OriginalFilename", "MonkeySounds.exe"
             VALUE "ProductName",      "MonkeySounds"
-            VALUE "ProductVersion",   "1.0.0.0"
+            VALUE "ProductVersion",   "1.1.0.0"
         END
     END
     BLOCK "VarFileInfo"

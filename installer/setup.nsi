@@ -6,7 +6,7 @@
 !define APP_NAME       "MonkeySounds"
 !define APP_EXE        "MonkeySounds.exe"
 !define PUBLISHER      "NSTechBytes"
-!define VERSION        "1.0.0.0"
+!define VERSION        "1.1.0.0"
 !define REGKEY         "Software\MonkeySounds"
 !define UNINSTALL_KEY  "Software\Microsoft\Windows\CurrentVersion\Uninstall\MonkeySounds"
 !define WEBSITE        "https://github.com/NSTechBytes/MonkeySounds"

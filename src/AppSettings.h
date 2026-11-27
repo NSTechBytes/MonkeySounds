@@ -11,6 +11,7 @@ struct AppConfig {
     std::wstring mouseProfilePath;
     bool autoStart = false;
     bool showStartupNotification = true;
+    bool ignoreKeyAutorepeat = false;
     std::vector<std::wstring> kbFavorites;    // profile json paths marked as favorite
     std::vector<std::wstring> mouseFavorites; // profile json paths marked as favorite
 };

@@ -44,6 +44,7 @@ void AppSettings::Load() {
         if (j.contains("keyboardProfilePath")) m_config.keyboardProfilePath = Utils::Utf8ToWide(j["keyboardProfilePath"].get<std::string>());
         if (j.contains("mouseProfilePath")) m_config.mouseProfilePath = Utils::Utf8ToWide(j["mouseProfilePath"].get<std::string>());
         if (j.contains("showStartupNotification")) m_config.showStartupNotification = j["showStartupNotification"].get<bool>();
+        if (j.contains("ignoreKeyAutorepeat")) m_config.ignoreKeyAutorepeat = j["ignoreKeyAutorepeat"].get<bool>();
 
         // Load favorites lists
         if (j.contains("kbFavorites") && j["kbFavorites"].is_array()) {
@@ -72,6 +73,7 @@ void AppSettings::Save() {
         j["keyboardProfilePath"] = Utils::WideToUtf8(m_config.keyboardProfilePath);
         j["mouseProfilePath"] = Utils::WideToUtf8(m_config.mouseProfilePath);
         j["showStartupNotification"] = m_config.showStartupNotification;
+        j["ignoreKeyAutorepeat"] = m_config.ignoreKeyAutorepeat;
 
         // Save favorites lists
         auto kbFavArr = nlohmann::json::array();

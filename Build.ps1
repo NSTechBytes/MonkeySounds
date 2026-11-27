@@ -53,7 +53,7 @@ $slnPath = Join-Path $PSScriptRoot "MonkeySounds.sln"
 $outDir  = Join-Path $PSScriptRoot "$Platform\$Configuration"
 Write-Host "[3/3] Building solution: $slnPath ($Configuration|$Platform)..." -ForegroundColor Yellow
 
-& $msbuild $slnPath /p:Configuration=$Configuration /p:Platform=$Platform /m /verbosity:minimal
+& $msbuild $slnPath /p:Configuration=$Configuration /p:Platform=$Platform /p:PreferredToolArchitecture=x64 /m /verbosity:minimal
 
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Build failed with exit code $LASTEXITCODE"

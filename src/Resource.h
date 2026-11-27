@@ -52,6 +52,7 @@
 #define IDC_BTN_CHECK_UPDATES       1303
 #define IDC_CHK_AUTOSTART           1304
 #define IDC_CHK_STARTUP_NOTIF       1305
+#define IDC_CHK_IGNORE_AUTOREPEAT   1306
 
 // About tab controls
 #define IDC_STATIC_ABOUT_LOGO       1310

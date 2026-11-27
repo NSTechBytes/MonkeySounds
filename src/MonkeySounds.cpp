@@ -96,6 +96,7 @@ HWND g_hCheckUpdatesBtn = NULL;
 HWND g_hSeparator = NULL;
 HWND g_hAutoStartChk = NULL;
 HWND g_hStartupNotifChk = NULL;
+HWND g_hIgnoreAutorepeatChk = NULL;
 
 // Control HWNDs - About Tab
 HWND g_hAboutLogo = NULL;
@@ -198,6 +199,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     AudioEngine::GetInstance().SetMouseEnabled(config.mouseEnabled);
     AudioEngine::GetInstance().SetKeyboardVolume(config.keyboardVolume);
     AudioEngine::GetInstance().SetMouseVolume(config.mouseVolume);
+    InputHook::GetInstance().SetIgnoreAutorepeat(config.ignoreKeyAutorepeat);
 
     // Scan profiles
     g_kbProfiles = AudioEngine::GetInstance().ScanKeyboardProfiles();
@@ -615,6 +617,14 @@ void CreateControls(HWND hWnd) {
     );
     SetControlFont(g_hStartupNotifChk, g_hFontNormal);
 
+    g_hIgnoreAutorepeatChk = CreateWindowExW(
+        0, L"BUTTON", L"Ignore key autorepeat (typing & gaming)",
+        WS_CHILD | BS_AUTOCHECKBOX,
+        28, 192, 280, 20,
+        hWnd, (HMENU)IDC_CHK_IGNORE_AUTOREPEAT, g_hInstance, NULL
+    );
+    SetControlFont(g_hIgnoreAutorepeatChk, g_hFontNormal);
+
     // --- TAB 3: ABOUT ---
     g_hAboutLogo = CreateWindowExW(
         0, L"STATIC", L"",
@@ -751,6 +761,7 @@ void UpdateTabVisibility(int tabIndex) {
     ShowWindow(g_hSeparator, showSettings);
     ShowWindow(g_hAutoStartChk, showSettings);
     ShowWindow(g_hStartupNotifChk, showSettings);
+    ShowWindow(g_hIgnoreAutorepeatChk, showSettings);
 
     // Tab 2: About
     int showAbout = (tabIndex == 2) ? SW_SHOW : SW_HIDE;
@@ -885,6 +896,7 @@ void LoadSettingsToUI() {
 
     Button_SetCheck(g_hAutoStartChk, config.autoStart ? BST_CHECKED : BST_UNCHECKED);
     Button_SetCheck(g_hStartupNotifChk, config.showStartupNotification ? BST_CHECKED : BST_UNCHECKED);
+    Button_SetCheck(g_hIgnoreAutorepeatChk, config.ignoreKeyAutorepeat ? BST_CHECKED : BST_UNCHECKED);
 
     PopulatePresets(); // also calls UpdateFavoriteButton for both
 }
@@ -899,6 +911,8 @@ void SaveCurrentSettings() {
     cfg.mouseProfilePath = AudioEngine::GetInstance().GetCurrentMouseProfilePath();
     cfg.autoStart = (Button_GetCheck(g_hAutoStartChk) == BST_CHECKED);
     cfg.showStartupNotification = (Button_GetCheck(g_hStartupNotifChk) == BST_CHECKED);
+    cfg.ignoreKeyAutorepeat = (Button_GetCheck(g_hIgnoreAutorepeatChk) == BST_CHECKED);
+    InputHook::GetInstance().SetIgnoreAutorepeat(cfg.ignoreKeyAutorepeat);
     AppSettings::GetInstance().Save();
 }
 
@@ -1600,6 +1614,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             break;
 
         case IDC_CHK_STARTUP_NOTIF:
+            SaveCurrentSettings();
+            break;
+
+        case IDC_CHK_IGNORE_AUTOREPEAT:
             SaveCurrentSettings();
             break;
 

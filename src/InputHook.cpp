@@ -2,6 +2,7 @@
 #include "InputHook.h"
 #include "AudioEngine.h"
 #include "Resource.h"
+#include <algorithm>
 
 // Forward reference to the main window handle (defined in MonkeySounds.cpp)
 extern HWND g_hMainWnd;
@@ -17,7 +18,18 @@ InputHook::~InputHook() {
     UninstallHooks();
 }
 
+void InputHook::SetIgnoreAutorepeat(bool ignore) {
+    m_ignoreAutorepeat = ignore;
+    ResetKeyState();
+}
+
+void InputHook::ResetKeyState() {
+    std::fill(std::begin(m_keyState), std::end(m_keyState), false);
+    std::fill(std::begin(m_lastKeyTime), std::end(m_lastKeyTime), 0);
+}
+
 bool InputHook::InstallHooks(HINSTANCE hInstance) {
+    ResetKeyState();
     if (m_keyboardHook == NULL) {
         m_keyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
     }
@@ -28,6 +40,7 @@ bool InputHook::InstallHooks(HINSTANCE hInstance) {
 }
 
 void InputHook::UninstallHooks() {
+    ResetKeyState();
     if (m_keyboardHook != NULL) {
         UnhookWindowsHookEx(m_keyboardHook);
         m_keyboardHook = NULL;
@@ -41,10 +54,29 @@ void InputHook::UninstallHooks() {
 LRESULT CALLBACK InputHook::LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode == HC_ACTION) {
         KBDLLHOOKSTRUCT* pKbd = (KBDLLHOOKSTRUCT*)lParam;
+        InputHook& hook = InputHook::GetInstance();
+
         if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
-            AudioEngine::GetInstance().PlayKey(pKbd->vkCode, true);
-            if (g_hMainWnd) PostMessageW(g_hMainWnd, WM_VU_PULSE, 0, 0);
+            bool isRepeat = false;
+            if (hook.m_ignoreAutorepeat && pKbd->vkCode < 256) {
+                DWORD now = pKbd->time != 0 ? pKbd->time : GetTickCount();
+                if (hook.m_keyState[pKbd->vkCode]) {
+                    if ((DWORD)(now - hook.m_lastKeyTime[pKbd->vkCode]) < 2000) {
+                        isRepeat = true;
+                    }
+                }
+                hook.m_keyState[pKbd->vkCode] = true;
+                hook.m_lastKeyTime[pKbd->vkCode] = now;
+            }
+
+            if (!isRepeat) {
+                AudioEngine::GetInstance().PlayKey(pKbd->vkCode, true);
+                if (g_hMainWnd) PostMessageW(g_hMainWnd, WM_VU_PULSE, 0, 0);
+            }
         } else if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
+            if (pKbd->vkCode < 256) {
+                hook.m_keyState[pKbd->vkCode] = false;
+            }
             AudioEngine::GetInstance().PlayKey(pKbd->vkCode, false);
         }
     }

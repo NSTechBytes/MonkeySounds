@@ -9,6 +9,10 @@ public:
     void UninstallHooks();
     bool IsInstalled() const { return m_keyboardHook != NULL && m_mouseHook != NULL; }
 
+    void SetIgnoreAutorepeat(bool ignore);
+    bool GetIgnoreAutorepeat() const { return m_ignoreAutorepeat; }
+    void ResetKeyState();
+
 private:
     InputHook();
     ~InputHook();
@@ -18,4 +22,8 @@ private:
 
     HHOOK m_keyboardHook = NULL;
     HHOOK m_mouseHook = NULL;
+
+    bool m_ignoreAutorepeat = false;
+    bool m_keyState[256] = {};
+    DWORD m_lastKeyTime[256] = {};
 };
