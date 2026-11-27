@@ -15,6 +15,7 @@ struct AppConfig {
     bool checkUpdatesOnStartup = false;
     bool checkUpdatesInBackground = false;
     std::string theme = "system"; // "system", "dark", "light"
+    std::string language = "system"; // "system" = auto-detect, or BCP-47 code
     std::vector<std::wstring> kbFavorites;    // profile json paths marked as favorite
     std::vector<std::wstring> mouseFavorites; // profile json paths marked as favorite
 };

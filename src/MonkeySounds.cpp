@@ -9,6 +9,7 @@
 #include "ProfileWizard.h"
 #include "WindowsTheme.h"
 #include "DpiUtil.h"
+#include "Lang.h"
 #include <commctrl.h>
 #include <gdiplus.h>
 #include <windowsx.h>
@@ -43,7 +44,7 @@ static std::wstring Utf8ToWide(const std::string& str) {
 }
 
 #define WINDOW_WIDTH  510
-#define WINDOW_HEIGHT 410
+#define WINDOW_HEIGHT 450
 #define TIMER_CPU_ID    1001
 #define TIMER_VU_ID     1002
 #define TIMER_UPDATE_ID 1003
@@ -116,6 +117,9 @@ HWND g_hUpdateStartupChk = NULL;
 HWND g_hUpdateBgChk = NULL;
 HWND g_hThemeLbl = NULL;
 HWND g_hThemeCombo = NULL;
+HWND g_hLangLbl = NULL;
+HWND g_hLangCombo = NULL;
+HWND g_hLangNote = NULL;
 
 // Update check state (at most one update dialog per program run session)
 static std::atomic<bool> g_isCheckingForUpdates{false};
@@ -225,6 +229,9 @@ static void ApplyFontsToControls() {
     sf(g_hUpdateBgChk,          g_hFontNormal);
     sf(g_hThemeLbl,             g_hFontNormal);
     sf(g_hThemeCombo,           g_hFontNormal);
+    sf(g_hLangLbl,              g_hFontNormal);
+    sf(g_hLangCombo,            g_hFontNormal);
+    sf(g_hLangNote,             g_hFontNormal);
     sf(g_hAboutTitle,           g_hFontTitle);
     sf(g_hAboutDesc1,           g_hFontNormal);
     sf(g_hAboutDesc2,           g_hFontNormal);
@@ -307,7 +314,7 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
     SendMessageW(g_hStatusBar, WM_SIZE, 0, 0);
 
     // Tab Control (must stay at HWND_BOTTOM so child-area controls above it are not clipped out)
-    SetWindowPos(g_hTabCtrl, HWND_BOTTOM, S(8), S(6), W - S(30), S(310), SWP_NOACTIVATE);
+    SetWindowPos(g_hTabCtrl, HWND_BOTTOM, S(8), S(6), W - S(30), S(350), SWP_NOACTIVATE);
 
     // --- Sounds Tab: Keyboard Group ---
     SetWindowPos(g_hKbGroup,       NULL, S(16), S(36), W-S(50),   S(130), SWP_NOZORDER | SWP_NOACTIVATE);
@@ -338,7 +345,7 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
     SetWindowPos(g_hMouseVolSlider,   NULL, S(80), S(251), W-S(131),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
 
     // --- Settings Tab ---
-    SetWindowPos(g_hAppSettingsGroup,    NULL, S(16), S(36),  W-S(50),  S(244), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hAppSettingsGroup,    NULL, S(16), S(36),  W-S(50),  S(288), SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(g_hVersionLbl,          NULL, S(28), S(56),  S(200),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(g_hCheckUpdatesBtn,     NULL, S(28), S(80),  S(130),   S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(g_hSeparator,           NULL, S(28), S(116), W-S(74),  S(2),   SWP_NOZORDER | SWP_NOACTIVATE);
@@ -349,6 +356,9 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
     SetWindowPos(g_hUpdateBgChk,         NULL, S(28), S(218), S(280),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(g_hThemeLbl,            NULL, S(28), S(246), S(55),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(g_hThemeCombo,          NULL, S(88), S(243), S(140),   S(100), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hLangLbl,             NULL, S(28), S(276), S(55),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hLangCombo,           NULL, S(88), S(273), S(190),   S(200), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hLangNote,            NULL, S(28), S(300), W-S(74),  S(18),  SWP_NOZORDER | SWP_NOACTIVATE);
 
     // --- About Tab ---
     SetWindowPos(g_hAboutLogo,  NULL, (W-S(88))/2, S(45),  S(88), S(88), SWP_NOZORDER | SWP_NOACTIVATE);
@@ -435,6 +445,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     // Load App Settings
     AppSettings::GetInstance().Load();
     const auto& config = AppSettings::GetInstance().GetConfig();
+
+    {
+        std::string langCode = config.language;
+        if (langCode == "system" || langCode.empty())
+            langCode = Lang::SystemLocale();
+        Lang::Load(langCode);
+    }
 
     WindowsTheme::SetSettingsHandlers(
         []() -> std::string { return AppSettings::GetInstance().GetConfig().theme; },
@@ -544,10 +561,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
         nidBalloon.uFlags = NIF_INFO;
         nidBalloon.dwInfoFlags = NIIF_INFO | NIIF_NOSOUND;
         nidBalloon.uTimeout = 4000;
-        wcscpy_s(nidBalloon.szInfoTitle, L"MonkeySounds is running");
-        wcscpy_s(nidBalloon.szInfo,
-            L"Keyboard & mouse sounds are active.\n"
-            L"Right-click the tray icon to mute or open settings.");
+        wcscpy_s(nidBalloon.szInfoTitle, TR("tray.balloon.title"));
+        wcscpy_s(nidBalloon.szInfo, TR("tray.balloon.body"));
         Shell_NotifyIconW(NIM_MODIFY, &nidBalloon);
     }
 
@@ -600,17 +615,17 @@ void CreateControls(HWND hWnd) {
 
     TCITEMW tie = {};
     tie.mask = TCIF_TEXT;
-    tie.pszText = (LPWSTR)L"Sounds";
+    tie.pszText = (LPWSTR)TR("tab.sounds");
     TabCtrl_InsertItem(g_hTabCtrl, 0, &tie);
-    tie.pszText = (LPWSTR)L"Settings";
+    tie.pszText = (LPWSTR)TR("tab.settings");
     TabCtrl_InsertItem(g_hTabCtrl, 1, &tie);
-    tie.pszText = (LPWSTR)L"About";
+    tie.pszText = (LPWSTR)TR("tab.about");
     TabCtrl_InsertItem(g_hTabCtrl, 2, &tie);
 
     // --- TAB 1: SOUNDS ---
     // Keyboard Group
     g_hKbGroup = CreateWindowExW(
-        0, L"BUTTON", L"Keyboard Sounds",
+        0, L"BUTTON", TR("sounds.keyboard.group"),
         WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
         16, 36, WINDOW_WIDTH - 50, 130,
         hWnd, (HMENU)IDC_GB_KEYBOARD, g_hInstance, NULL
@@ -618,7 +633,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hKbGroup, g_hFontBold);
 
     g_hKbEnable = CreateWindowExW(
-        0, L"BUTTON", L"Enable Keyboard Sounds",
+        0, L"BUTTON", TR("sounds.keyboard.enable"),
         WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
         28, 56, 180, 20,
         hWnd, (HMENU)IDC_CHK_KB_ENABLE, g_hInstance, NULL
@@ -626,7 +641,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hKbEnable, g_hFontNormal);
 
     g_hKbNewBtn = CreateWindowExW(
-        0, L"BUTTON", L"+ New Profile...",
+        0, L"BUTTON", TR("sounds.keyboard.newprofile"),
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         WINDOW_WIDTH - 145, 53, 104, 23,
         hWnd, (HMENU)IDC_BTN_KB_NEW, g_hInstance, NULL
@@ -634,7 +649,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hKbNewBtn, g_hFontNormal);
 
     g_hKbPresetLbl = CreateWindowExW(
-        0, L"STATIC", L"Preset:",
+        0, L"STATIC", TR("sounds.keyboard.preset"),
         WS_CHILD | WS_VISIBLE | SS_LEFT,
         28, 83, 44, 20,
         hWnd, (HMENU)IDC_LBL_KB_PRESET, g_hInstance, NULL
@@ -678,7 +693,7 @@ void CreateControls(HWND hWnd) {
 
     // Export button
     g_hKbExportBtn = CreateWindowExW(
-        0, L"BUTTON", L"Export",
+        0, L"BUTTON", TR("sounds.keyboard.export"),
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         WINDOW_WIDTH - 183, 79, 54, 24,
         hWnd, (HMENU)IDC_BTN_KB_EXPORT, g_hInstance, NULL
@@ -687,7 +702,7 @@ void CreateControls(HWND hWnd) {
 
     // Import ZIP button
     g_hKbCustomBtn = CreateWindowExW(
-        0, L"BUTTON", L"Import ZIP...",
+        0, L"BUTTON", TR("sounds.keyboard.import"),
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         WINDOW_WIDTH - 125, 79, 84, 24,
         hWnd, (HMENU)IDC_BTN_KB_CUSTOM, g_hInstance, NULL
@@ -695,7 +710,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hKbCustomBtn, g_hFontNormal);
 
     g_hKbVolLbl = CreateWindowExW(
-        0, L"STATIC", L"Volume:",
+        0, L"STATIC", TR("sounds.keyboard.volume"),
         WS_CHILD | WS_VISIBLE | SS_LEFT,
         28, 116, 50, 20,
         hWnd, (HMENU)IDC_LBL_KB_VOLUME, g_hInstance, NULL
@@ -712,7 +727,7 @@ void CreateControls(HWND hWnd) {
 
     // Mouse Group
     g_hMouseGroup = CreateWindowExW(
-        0, L"BUTTON", L"Mouse Sounds",
+        0, L"BUTTON", TR("sounds.mouse.group"),
         WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
         16, 173, WINDOW_WIDTH - 50, 130,
         hWnd, (HMENU)IDC_GB_MOUSE, g_hInstance, NULL
@@ -720,7 +735,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hMouseGroup, g_hFontBold);
 
     g_hMouseEnable = CreateWindowExW(
-        0, L"BUTTON", L"Enable Mouse Sounds",
+        0, L"BUTTON", TR("sounds.mouse.enable"),
         WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
         28, 193, 180, 20,
         hWnd, (HMENU)IDC_CHK_MOUSE_ENABLE, g_hInstance, NULL
@@ -728,7 +743,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hMouseEnable, g_hFontNormal);
 
     g_hMouseNewBtn = CreateWindowExW(
-        0, L"BUTTON", L"+ New Profile...",
+        0, L"BUTTON", TR("sounds.mouse.newprofile"),
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         WINDOW_WIDTH - 145, 190, 104, 23,
         hWnd, (HMENU)IDC_BTN_MOUSE_NEW, g_hInstance, NULL
@@ -736,7 +751,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hMouseNewBtn, g_hFontNormal);
 
     g_hMousePresetLbl = CreateWindowExW(
-        0, L"STATIC", L"Preset:",
+        0, L"STATIC", TR("sounds.mouse.preset"),
         WS_CHILD | WS_VISIBLE | SS_LEFT,
         28, 220, 44, 20,
         hWnd, (HMENU)IDC_LBL_MOUSE_PRESET, g_hInstance, NULL
@@ -780,7 +795,7 @@ void CreateControls(HWND hWnd) {
 
     // Export button
     g_hMouseExportBtn = CreateWindowExW(
-        0, L"BUTTON", L"Export",
+        0, L"BUTTON", TR("sounds.mouse.export"),
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         WINDOW_WIDTH - 183, 216, 54, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_EXPORT, g_hInstance, NULL
@@ -789,7 +804,7 @@ void CreateControls(HWND hWnd) {
 
     // Import ZIP button
     g_hMouseCustomBtn = CreateWindowExW(
-        0, L"BUTTON", L"Import ZIP...",
+        0, L"BUTTON", TR("sounds.mouse.import"),
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         WINDOW_WIDTH - 125, 216, 84, 24,
         hWnd, (HMENU)IDC_BTN_MOUSE_CUSTOM, g_hInstance, NULL
@@ -797,7 +812,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hMouseCustomBtn, g_hFontNormal);
 
     g_hMouseVolLbl = CreateWindowExW(
-        0, L"STATIC", L"Volume:",
+        0, L"STATIC", TR("sounds.mouse.volume"),
         WS_CHILD | WS_VISIBLE | SS_LEFT,
         28, 253, 50, 20,
         hWnd, (HMENU)IDC_LBL_MOUSE_VOLUME, g_hInstance, NULL
@@ -814,15 +829,15 @@ void CreateControls(HWND hWnd) {
 
     // --- TAB 2: SETTINGS ---
     g_hAppSettingsGroup = CreateWindowExW(
-        0, L"BUTTON", L"Application",
+        0, L"BUTTON", TR("settings.group.app"),
         WS_CHILD | BS_GROUPBOX,
-        16, 36, WINDOW_WIDTH - 50, 237,
+        16, 36, WINDOW_WIDTH - 50, 288,
         hWnd, (HMENU)IDC_GB_APPLICATION, g_hInstance, NULL
     );
     SetControlFont(g_hAppSettingsGroup, g_hFontBold);
 
     g_hVersionLbl = CreateWindowExW(
-        0, L"STATIC", (L"Current Version: " + Utils::GetAppVersion()).c_str(),
+        0, L"STATIC", (TRS("settings.version") + Utils::GetAppVersion()).c_str(),
         WS_CHILD | SS_LEFT,
         28, 60, 200, 20,
         hWnd, (HMENU)IDC_LBL_VERSION, g_hInstance, NULL
@@ -830,7 +845,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hVersionLbl, g_hFontNormal);
 
     g_hCheckUpdatesBtn = CreateWindowExW(
-        0, L"BUTTON", L"Check for Updates",
+        0, L"BUTTON", TR("settings.checkUpdates"),
         WS_CHILD | BS_PUSHBUTTON,
         28, 86, 130, 26,
         hWnd, (HMENU)IDC_BTN_CHECK_UPDATES, g_hInstance, NULL
@@ -845,7 +860,7 @@ void CreateControls(HWND hWnd) {
     );
 
     g_hAutoStartChk = CreateWindowExW(
-        0, L"BUTTON", L"Auto-start on Windows startup",
+        0, L"BUTTON", TR("settings.autoStart"),
         WS_CHILD | BS_AUTOCHECKBOX,
         28, 142, 240, 20,
         hWnd, (HMENU)IDC_CHK_AUTOSTART, g_hInstance, NULL
@@ -853,7 +868,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hAutoStartChk, g_hFontNormal);
 
     g_hStartupNotifChk = CreateWindowExW(
-        0, L"BUTTON", L"Show notification on startup",
+        0, L"BUTTON", TR("settings.startupNotif"),
         WS_CHILD | BS_AUTOCHECKBOX,
         28, 167, 240, 20,
         hWnd, (HMENU)IDC_CHK_STARTUP_NOTIF, g_hInstance, NULL
@@ -861,7 +876,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hStartupNotifChk, g_hFontNormal);
 
     g_hIgnoreAutorepeatChk = CreateWindowExW(
-        0, L"BUTTON", L"Ignore key autorepeat (typing & gaming)",
+        0, L"BUTTON", TR("settings.ignoreAutorepeat"),
         WS_CHILD | BS_AUTOCHECKBOX,
         28, 172, 290, 20,
         hWnd, (HMENU)IDC_CHK_IGNORE_AUTOREPEAT, g_hInstance, NULL
@@ -869,7 +884,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hIgnoreAutorepeatChk, g_hFontNormal);
 
     g_hUpdateStartupChk = CreateWindowExW(
-        0, L"BUTTON", L"Check for updates on startup",
+        0, L"BUTTON", TR("settings.updateOnStartup"),
         WS_CHILD | BS_AUTOCHECKBOX,
         28, 195, 280, 20,
         hWnd, (HMENU)IDC_CHK_UPDATE_STARTUP, g_hInstance, NULL
@@ -877,7 +892,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hUpdateStartupChk, g_hFontNormal);
 
     g_hUpdateBgChk = CreateWindowExW(
-        0, L"BUTTON", L"Check for updates in background",
+        0, L"BUTTON", TR("settings.updateInBackground"),
         WS_CHILD | BS_AUTOCHECKBOX,
         28, 218, 280, 20,
         hWnd, (HMENU)IDC_CHK_UPDATE_BG, g_hInstance, NULL
@@ -885,23 +900,51 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hUpdateBgChk, g_hFontNormal);
 
     g_hThemeLbl = CreateWindowExW(
-        0, L"STATIC", L"Theme:",
+        0, L"STATIC", TR("settings.theme"),
         WS_CHILD | SS_LEFT,
-        28, 224, 55, 20,
+        28, 246, 55, 20,
         hWnd, (HMENU)IDC_LBL_THEME, g_hInstance, NULL
     );
     SetControlFont(g_hThemeLbl, g_hFontNormal);
 
     g_hThemeCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
-        WS_CHILD | CBS_DROPDOWNLIST | WS_VSCROLL,
-        88, 221, 140, 100,
+        WS_CHILD | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
+        88, 243, 140, 100,
         hWnd, (HMENU)IDC_COMBO_THEME, g_hInstance, NULL
     );
     SetControlFont(g_hThemeCombo, g_hFontNormal);
-    SendMessageW(g_hThemeCombo, CB_ADDSTRING, 0, (LPARAM)L"System");
-    SendMessageW(g_hThemeCombo, CB_ADDSTRING, 0, (LPARAM)L"Light");
-    SendMessageW(g_hThemeCombo, CB_ADDSTRING, 0, (LPARAM)L"Dark");
+    SendMessageW(g_hThemeCombo, CB_ADDSTRING, 0, (LPARAM)TR("settings.theme.system"));
+    SendMessageW(g_hThemeCombo, CB_ADDSTRING, 0, (LPARAM)TR("settings.theme.light"));
+    SendMessageW(g_hThemeCombo, CB_ADDSTRING, 0, (LPARAM)TR("settings.theme.dark"));
+
+    g_hLangLbl = CreateWindowExW(
+        0, L"STATIC", TR("settings.language"),
+        WS_CHILD | SS_LEFT,
+        28, 276, 55, 20,
+        hWnd, (HMENU)IDC_LBL_LANG, g_hInstance, NULL
+    );
+    SetControlFont(g_hLangLbl, g_hFontNormal);
+
+    g_hLangCombo = CreateWindowExW(
+        0, L"COMBOBOX", L"",
+        WS_CHILD | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
+        88, 273, 190, 200,
+        hWnd, (HMENU)IDC_COMBO_LANG, g_hInstance, NULL
+    );
+    SetControlFont(g_hLangCombo, g_hFontNormal);
+    SendMessageW(g_hLangCombo, CB_ADDSTRING, 0, (LPARAM)TR("settings.language.system"));
+    for (int i = 0; i < Lang::kLocaleCount; ++i) {
+        SendMessageW(g_hLangCombo, CB_ADDSTRING, 0, (LPARAM)Lang::kSupportedLocaleNames[i]);
+    }
+
+    g_hLangNote = CreateWindowExW(
+        0, L"STATIC", TR("settings.languageRestart"),
+        WS_CHILD | SS_LEFT,
+        28, 300, WINDOW_WIDTH - 74, 18,
+        hWnd, (HMENU)IDC_LBL_LANG_NOTE, g_hInstance, NULL
+    );
+    SetControlFont(g_hLangNote, g_hFontNormal);
 
     // --- TAB 3: ABOUT ---
     g_hAboutLogo = CreateWindowExW(
@@ -912,7 +955,7 @@ void CreateControls(HWND hWnd) {
     );
 
     g_hAboutTitle = CreateWindowExW(
-        0, L"STATIC", L"MonkeySounds",
+        0, L"STATIC", TR("about.title"),
         WS_CHILD | SS_CENTER,
         20, 140, WINDOW_WIDTH - 40, 22,
         hWnd, (HMENU)IDC_STATIC_ABOUT_TITLE, g_hInstance, NULL
@@ -920,7 +963,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hAboutTitle, g_hFontTitle);
 
     g_hAboutDesc1 = CreateWindowExW(
-        0, L"STATIC", L"Professional system sound",
+        0, L"STATIC", TR("about.desc1"),
         WS_CHILD | SS_CENTER,
         20, 165, WINDOW_WIDTH - 40, 18,
         hWnd, (HMENU)IDC_STATIC_ABOUT_DESC1, g_hInstance, NULL
@@ -928,7 +971,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hAboutDesc1, g_hFontNormal);
 
     g_hAboutDesc2 = CreateWindowExW(
-        0, L"STATIC", L"customization utility.",
+        0, L"STATIC", TR("about.desc2"),
         WS_CHILD | SS_CENTER,
         20, 183, WINDOW_WIDTH - 40, 18,
         hWnd, (HMENU)IDC_STATIC_ABOUT_DESC2, g_hInstance, NULL
@@ -936,7 +979,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hAboutDesc2, g_hFontNormal);
 
     g_hAboutCopy = CreateWindowExW(
-        0, L"STATIC", L"\u00A9 2026 MonkeySounds. All rights reserved.",
+        0, L"STATIC", TR("about.copy"),
         WS_CHILD | SS_CENTER,
         20, 215, WINDOW_WIDTH - 40, 18,
         hWnd, (HMENU)IDC_STATIC_ABOUT_COPY, g_hInstance, NULL
@@ -950,7 +993,7 @@ void CreateControls(HWND hWnd) {
     int btnStartX = (WINDOW_WIDTH - (3 * btnW + 2 * btnGap)) / 2;
 
     g_hAboutGithubBtn = CreateWindowExW(
-        0, L"BUTTON", L"GitHub",
+        0, L"BUTTON", TR("about.github"),
         WS_CHILD | BS_PUSHBUTTON,
         btnStartX, btnY, btnW, btnH,
         hWnd, (HMENU)IDC_BTN_GITHUB, g_hInstance, NULL
@@ -958,7 +1001,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hAboutGithubBtn, g_hFontNormal);
 
     g_hAboutDiscordBtn = CreateWindowExW(
-        0, L"BUTTON", L"Discord",
+        0, L"BUTTON", TR("about.discord"),
         WS_CHILD | BS_PUSHBUTTON,
         btnStartX + btnW + btnGap, btnY, btnW, btnH,
         hWnd, (HMENU)IDC_BTN_DISCORD, g_hInstance, NULL
@@ -966,7 +1009,7 @@ void CreateControls(HWND hWnd) {
     SetControlFont(g_hAboutDiscordBtn, g_hFontNormal);
 
     g_hAboutPatreonBtn = CreateWindowExW(
-        0, L"BUTTON", L"Support on Patreon",
+        0, L"BUTTON", TR("about.patreon"),
         WS_CHILD | BS_PUSHBUTTON,
         btnStartX + (btnW + btnGap) * 2, btnY, btnW, btnH,
         hWnd, (HMENU)IDC_BTN_PATREON, g_hInstance, NULL
@@ -987,7 +1030,7 @@ void CreateControls(HWND hWnd) {
     // We anchor the second pane so the CPU pane is always >= 90px wide.
     int statwidths[] = { 160, WINDOW_WIDTH - 92, -1 };
     SendMessageW(g_hStatusBar, SB_SETPARTS, 3, (LPARAM)statwidths);
-    SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Ready");
+    SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.ready"));
     SendMessageW(g_hStatusBar, SB_SETTEXTW, 2, (LPARAM)L" CPU: 0%  ");
 
     // VU meter — owner-draw static that lives over the middle status bar pane
@@ -1047,6 +1090,9 @@ void UpdateTabVisibility(int tabIndex) {
     ShowWindow(g_hUpdateBgChk, showSettings);
     ShowWindow(g_hThemeLbl, showSettings);
     ShowWindow(g_hThemeCombo, showSettings);
+    ShowWindow(g_hLangLbl, showSettings);
+    ShowWindow(g_hLangCombo, showSettings);
+    ShowWindow(g_hLangNote, showSettings);
 
     // Tab 2: About
     int showAbout = (tabIndex == 2) ? SW_SHOW : SW_HIDE;
@@ -1190,6 +1236,17 @@ void LoadSettingsToUI() {
     else if (config.theme == "dark") themeIdx = 2;
     SendMessageW(g_hThemeCombo, CB_SETCURSEL, themeIdx, 0);
 
+    int langIdx = 0; // System
+    if (config.language != "system" && !config.language.empty()) {
+        for (int i = 0; i < Lang::kLocaleCount; ++i) {
+            if (config.language == Lang::kSupportedLocales[i]) {
+                langIdx = i + 1;
+                break;
+            }
+        }
+    }
+    SendMessageW(g_hLangCombo, CB_SETCURSEL, langIdx, 0);
+
     PopulatePresets(); // also calls UpdateFavoriteButton for both
 }
 
@@ -1212,6 +1269,10 @@ void SaveCurrentSettings() {
     else if (themeIdx == 2) cfg.theme = "dark";
     else cfg.theme = "system";
 
+    int langIdx = (int)SendMessageW(g_hLangCombo, CB_GETCURSEL, 0, 0);
+    if (langIdx <= 0 || langIdx > Lang::kLocaleCount) cfg.language = "system";
+    else cfg.language = Lang::kSupportedLocales[langIdx - 1];
+
     InputHook::GetInstance().SetIgnoreAutorepeat(cfg.ignoreKeyAutorepeat);
     AppSettings::GetInstance().Save();
 }
@@ -1225,8 +1286,8 @@ void ChooseCustomProfile(bool isKeyboard) {
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = MAX_PATH;
     ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-    ofn.lpstrTitle = isKeyboard ? L"Import Keyboard Sound Pack (.zip)"
-                                : L"Import Mouse Sound Pack (.zip)";
+    ofn.lpstrTitle = isKeyboard ? TR("import.title.keyboard")
+                                : TR("import.title.mouse");
 
     if (!GetOpenFileNameW(&ofn)) return;
 
@@ -1240,12 +1301,12 @@ void ChooseCustomProfile(bool isKeyboard) {
     std::wstring destDir = (fs::path(destBase) / zipName).wstring();
 
     // Extract
-    SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Importing sound pack...");
+    SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.importing"));
     if (!ZipUtils::ExtractZip(szFile, destDir)) {
         MessageBoxW(g_hMainWnd,
-            L"Failed to extract the ZIP file.\nMake sure it contains a valid profile.json.",
-            L"Import Error", MB_OK | MB_ICONERROR);
-        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Import failed.");
+            TR("import.error.extract"),
+            TR("import.error.title"), MB_OK | MB_ICONERROR);
+        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.importFailed"));
         return;
     }
 
@@ -1263,10 +1324,9 @@ void ChooseCustomProfile(bool isKeyboard) {
 
     if (!fs::exists(profileJson)) {
         MessageBoxW(g_hMainWnd,
-            L"No profile.json found in the extracted ZIP.\n"
-            L"The sound pack must contain a profile.json at its root.",
-            L"Import Error", MB_OK | MB_ICONERROR);
-        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Import failed — no profile.json.");
+            TR("import.error.noJson"),
+            TR("import.error.title"), MB_OK | MB_ICONERROR);
+        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.importFailed"));
         return;
     }
 
@@ -1295,10 +1355,9 @@ void ChooseCustomProfile(bool isKeyboard) {
             (LPARAM)(std::wstring(L"  Imported: ") + zipName).c_str());
     } else {
         MessageBoxW(g_hMainWnd,
-            L"The profile.json was found but could not be loaded.\n"
-            L"Please check that the file is valid.",
-            L"Import Error", MB_OK | MB_ICONERROR);
-        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Import failed — invalid profile.");
+            TR("import.error.badJson"),
+            TR("import.error.title"), MB_OK | MB_ICONERROR);
+        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.importBadProf"));
     }
 }
 
@@ -1308,8 +1367,8 @@ void ExportCurrentProfile(bool isKeyboard) {
         : AudioEngine::GetInstance().GetCurrentMouseProfilePath();
 
     if (profilePath.empty() || !fs::exists(profilePath)) {
-        MessageBoxW(g_hMainWnd, L"No profile is currently loaded.",
-                    L"Export", MB_OK | MB_ICONWARNING);
+        MessageBoxW(g_hMainWnd, TR("export.error.noProfile"),
+                    TR("export.dialog.title"), MB_OK | MB_ICONWARNING);
         return;
     }
 
@@ -1328,20 +1387,20 @@ void ExportCurrentProfile(bool isKeyboard) {
     ofn.nMaxFile     = MAX_PATH;
     ofn.lpstrDefExt  = L"zip";
     ofn.Flags        = OFN_EXPLORER | OFN_OVERWRITEPROMPT;
-    ofn.lpstrTitle   = isKeyboard ? L"Export Keyboard Sound Pack"
-                                  : L"Export Mouse Sound Pack";
+    ofn.lpstrTitle   = isKeyboard ? TR("export.title.keyboard")
+                                  : TR("export.title.mouse");
 
     if (!GetSaveFileNameW(&ofn)) return;
 
-    SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Exporting sound pack...");
+    SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.exporting"));
 
     if (ZipUtils::CreateZipFromDir(profileDir, szFile)) {
         SendMessageW(g_hStatusBar, SB_SETTEXTW, 0,
             (LPARAM)(std::wstring(L"  Exported: ") + fs::path(szFile).filename().wstring()).c_str());
     } else {
-        MessageBoxW(g_hMainWnd, L"Failed to create ZIP archive.",
-                    L"Export Error", MB_OK | MB_ICONERROR);
-        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Export failed.");
+        MessageBoxW(g_hMainWnd, TR("export.error.failed"),
+                    TR("export.error.title"), MB_OK | MB_ICONERROR);
+        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.exportFailed"));
     }
 }
 
@@ -1382,11 +1441,11 @@ void ToggleFavorite(bool isKeyboard) {
     if (it != favList.end()) {
         // Remove from favorites
         favList.erase(it);
-        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Removed from favorites.");
+        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.removedFav"));
     } else {
         // Add to favorites
         favList.push_back(currentPath);
-        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)L"  Added to favorites! \u2605");
+        SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.addedFav"));
     }
 
     AppSettings::GetInstance().Save();
@@ -1445,9 +1504,8 @@ void ShowProfileInfo(bool isKeyboard) {
         wDesc.empty() ? L"" : wDesc.c_str()
     );
 
-    std::wstring title = (isKeyboard ? L"Keyboard" : L"Mouse");
-    title += L" Profile Info";
-    MessageBoxW(g_hMainWnd, buf, title.c_str(), MB_OK | MB_ICONINFORMATION);
+    const wchar_t* title = isKeyboard ? TR("profile.info.keyboard") : TR("profile.info.mouse");
+    MessageBoxW(g_hMainWnd, buf, title, MB_OK | MB_ICONINFORMATION);
 }
 
 void TestCurrentProfile(bool isKeyboard) {
@@ -1614,6 +1672,12 @@ void ShowTrayMenu(HWND hWnd) {
         HMENU hSubMenu = GetSubMenu(hMenu, 0);
         SetForegroundWindow(hWnd);
 
+        // Localize tray menu strings
+        ModifyMenuW(hSubMenu, IDM_TRAY_SHOW,       MF_BYCOMMAND | MF_STRING, IDM_TRAY_SHOW,       TR("tray.show"));
+        ModifyMenuW(hSubMenu, IDM_TRAY_MUTE_KB,    MF_BYCOMMAND | MF_STRING, IDM_TRAY_MUTE_KB,    TR("tray.muteKb"));
+        ModifyMenuW(hSubMenu, IDM_TRAY_MUTE_MOUSE, MF_BYCOMMAND | MF_STRING, IDM_TRAY_MUTE_MOUSE, TR("tray.muteMouse"));
+        ModifyMenuW(hSubMenu, IDM_TRAY_EXIT,       MF_BYCOMMAND | MF_STRING, IDM_TRAY_EXIT,       TR("tray.exit"));
+
         // Update mute checkmarks
         CheckMenuItem(hSubMenu, IDM_TRAY_MUTE_KB, AudioEngine::GetInstance().IsKeyboardEnabled() ? MF_UNCHECKED : MF_CHECKED);
         CheckMenuItem(hSubMenu, IDM_TRAY_MUTE_MOUSE, AudioEngine::GetInstance().IsMouseEnabled() ? MF_UNCHECKED : MF_CHECKED);
@@ -1763,7 +1827,7 @@ static void StartAsyncUpdateCheck(HWND hWnd, bool silent) {
     if (g_isCheckingForUpdates.exchange(true)) return;
 
     if (!silent && g_hCheckUpdatesBtn) {
-        SetWindowTextW(g_hCheckUpdatesBtn, L"Checking...");
+        SetWindowTextW(g_hCheckUpdatesBtn, TR("update.checking"));
         EnableWindow(g_hCheckUpdatesBtn, FALSE);
     }
 
@@ -1778,7 +1842,7 @@ static void StartAsyncUpdateCheck(HWND hWnd, bool silent) {
         delete params;
         g_isCheckingForUpdates = false;
         if (!silent && g_hCheckUpdatesBtn) {
-            SetWindowTextW(g_hCheckUpdatesBtn, L"Check for Updates");
+            SetWindowTextW(g_hCheckUpdatesBtn, TR("update.checkUpdates"));
             EnableWindow(g_hCheckUpdatesBtn, TRUE);
         }
     }
@@ -1911,31 +1975,38 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         if (!res) break;
 
         if (g_hCheckUpdatesBtn) {
-            SetWindowTextW(g_hCheckUpdatesBtn, L"Check for Updates");
+            SetWindowTextW(g_hCheckUpdatesBtn, TR("update.checkUpdates"));
             EnableWindow(g_hCheckUpdatesBtn, TRUE);
         }
+
+        auto replaceToken = [](std::wstring str, const wchar_t* tok, const std::wstring& val) {
+            size_t pos = str.find(tok);
+            if (pos != std::wstring::npos) {
+                str.replace(pos, wcslen(tok), val);
+            }
+            return str;
+        };
 
         if (!res->fetchOk) {
             if (!res->silent) {
                 WindowsTheme::DialogHookScope themeScope;
                 MessageBoxW(hWnd,
-                    L"Unable to check for updates from GitHub.\nPlease check your internet connection and try again.",
-                    L"MonkeySounds Update", MB_OK | MB_ICONWARNING);
+                    TR("update.failed.body"),
+                    TR("update.failed.title"), MB_OK | MB_ICONWARNING);
             }
         } else if (res->updateAvailable) {
             if (g_hStatusBar) {
-                std::wstring sbMsg = L"  Update available: " + res->latestTag;
+                std::wstring sbMsg = L"  " + TRS("update.available.title") + L": " + res->latestTag;
                 SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)sbMsg.c_str());
             }
             // Show at most one update dialog during the entire program run session
             if (!g_updateDialogOpen.load() && !g_updateDialogShownThisSession.exchange(true)) {
                 g_updateDialogOpen = true;
-                std::wstring msg = L"A new version of MonkeySounds is available!\n\n"
-                                   L"Current version: " + res->currentVersion + L"\n"
-                                   L"Latest version: " + res->latestTag + L"\n\n"
-                                   L"Would you like to open the release page?";
+                std::wstring msg = TRS("update.available.body");
+                msg = replaceToken(msg, L"{0}", res->currentVersion);
+                msg = replaceToken(msg, L"{1}", res->latestTag);
                 WindowsTheme::DialogHookScope themeScope;
-                int rc = MessageBoxW(hWnd, msg.c_str(), L"MonkeySounds Update", MB_YESNO | MB_ICONINFORMATION);
+                int rc = MessageBoxW(hWnd, msg.c_str(), TR("update.available.title"), MB_YESNO | MB_ICONINFORMATION);
                 g_updateDialogOpen = false;
                 if (rc == IDYES) {
                     ShellExecuteW(hWnd, L"open", res->releaseUrl.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
@@ -1945,9 +2016,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             }
         } else {
             if (!res->silent) {
-                std::wstring msg = L"You are using the latest version (" + res->currentVersion + L").";
+                std::wstring msg = replaceToken(TRS("update.uptodate.body"), L"{0}", res->currentVersion);
                 WindowsTheme::DialogHookScope themeScope;
-                MessageBoxW(hWnd, msg.c_str(), L"MonkeySounds Update", MB_OK | MB_ICONINFORMATION);
+                MessageBoxW(hWnd, msg.c_str(), TR("update.uptodate.title"), MB_OK | MB_ICONINFORMATION);
             }
         }
 
@@ -2159,6 +2230,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             if (wmEvent == CBN_SELCHANGE) {
                 SaveCurrentSettings();
                 ApplyThemeToMainWindow(hWnd);
+            }
+            break;
+
+        case IDC_COMBO_LANG:
+            if (wmEvent == CBN_SELCHANGE) {
+                SaveCurrentSettings();
             }
             break;
 

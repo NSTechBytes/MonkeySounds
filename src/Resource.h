@@ -57,6 +57,9 @@
 #define IDC_COMBO_THEME             1308
 #define IDC_CHK_UPDATE_STARTUP      1309
 #define IDC_CHK_UPDATE_BG           1318
+#define IDC_LBL_LANG                1319
+#define IDC_COMBO_LANG              1320
+#define IDC_LBL_LANG_NOTE           1321
 
 // About tab controls
 #define IDC_STATIC_ABOUT_LOGO       1310

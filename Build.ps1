@@ -91,4 +91,13 @@ if (Test-Path $srcSounds) {
     Write-Warning "[dist] Sounds folder not found at: $srcSounds"
 }
 
+# Copy locales folder
+$srcLocales = Join-Path $PSScriptRoot "locales"
+if (Test-Path $srcLocales) {
+    Copy-Item -Path $srcLocales -Destination (Join-Path $distDir "locales") -Recurse -Force
+    Write-Host "[dist] Copied locales folder" -ForegroundColor Green
+} else {
+    Write-Warning "[dist] locales folder not found at: $srcLocales"
+}
+
 Write-Host "`nDist ready at: $distDir" -ForegroundColor Green

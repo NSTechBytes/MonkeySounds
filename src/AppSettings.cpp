@@ -52,6 +52,9 @@ void AppSettings::Load() {
             if (t == "system" || t == "dark" || t == "light")
                 m_config.theme = t;
         }
+        if (j.contains("language") && j["language"].is_string()) {
+            m_config.language = j["language"].get<std::string>();
+        }
 
         // Load favorites lists
         if (j.contains("kbFavorites") && j["kbFavorites"].is_array()) {
@@ -84,6 +87,7 @@ void AppSettings::Save() {
         j["checkUpdatesOnStartup"] = m_config.checkUpdatesOnStartup;
         j["checkUpdatesInBackground"] = m_config.checkUpdatesInBackground;
         j["theme"] = m_config.theme;
+        j["language"] = m_config.language;
 
         // Save favorites lists
         auto kbFavArr = nlohmann::json::array();

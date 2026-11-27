@@ -90,7 +90,11 @@
     <Manifest>
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
     </Manifest>
+    <PostBuildEvent>
+      <Command>xcopy /E /I /Y "$(ProjectDir)locales" "$(OutDir)locales"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -122,7 +126,11 @@
     <Manifest>
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
     </Manifest>
+    <PostBuildEvent>
+      <Command>xcopy /E /I /Y "$(ProjectDir)locales" "$(OutDir)locales"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -143,7 +151,11 @@
     <Manifest>
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
     </Manifest>
+    <PostBuildEvent>
+      <Command>xcopy /E /I /Y "$(ProjectDir)locales" "$(OutDir)locales"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -175,7 +187,11 @@
     <Manifest>
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
     </Manifest>
+    <PostBuildEvent>
+      <Command>xcopy /E /I /Y "$(ProjectDir)locales" "$(OutDir)locales"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
   <ItemGroup>
     <ClInclude Include="src\framework.h" />
     <ClInclude Include="src\MonkeySounds.h" />
@@ -189,6 +205,7 @@
     <ClInclude Include="src\ZipUtils.h" />
     <ClInclude Include="src\WindowsTheme.h" />
     <ClInclude Include="src\DpiUtil.h" />
+    <ClInclude Include="src\Lang.h" />
     <ClInclude Include="src\third_party\miniaudio.h" />
     <ClInclude Include="src\third_party\json.hpp" />
     <ClInclude Include="src\third_party\zlib\zlib.h" />
@@ -205,6 +222,7 @@
     <ClCompile Include="src\AppSettings.cpp" />
     <ClCompile Include="src\Utils.cpp" />
     <ClCompile Include="src\WindowsTheme.cpp" />
+    <ClCompile Include="src\Lang.cpp" />
     <ClCompile Include="src\ZipUtils.cpp">
       <SDLCheck>false</SDLCheck>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

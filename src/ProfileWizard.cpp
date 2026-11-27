@@ -5,6 +5,7 @@
 #include "Resource.h"
 #include "WindowsTheme.h"
 #include "DpiUtil.h"
+#include "Lang.h"
 #include "json.hpp"
 #include <commctrl.h>
 #include <shlobj.h>
@@ -491,25 +492,25 @@ static void UpdateKeyEditFields(WizardDialogState* pWiz) {
 }
 
 static void RefreshSummary(WizardDialogState* pWiz) {
-    std::wstring sum = L"=== Profile Summary ===\r\n\r\n";
-    sum += L"Device: " + Utils::Utf8ToWide(pWiz->data.deviceType == "keyboard" ? "Keyboard" : "Mouse") + L"\r\n";
-    sum += L"Name: " + Utils::Utf8ToWide(pWiz->data.name.empty() ? "(Untitled)" : pWiz->data.name) + L"\r\n";
-    sum += L"Author: " + Utils::Utf8ToWide(pWiz->data.author.empty() ? "Anonymous" : pWiz->data.author) + L"\r\n";
-    sum += L"Description: " + Utils::Utf8ToWide(pWiz->data.description) + L"\r\n\r\n";
+    std::wstring sum = TRS("wizard.sum.header");
+    sum += TRS("wizard.sum.device") + (pWiz->data.deviceType == "keyboard" ? TRS("wizard.sum.keyboard") : TRS("wizard.sum.mouse")) + L"\r\n";
+    sum += TRS("wizard.sum.name") + (pWiz->data.name.empty() ? TRS("wizard.sum.untitled") : Utils::Utf8ToWide(pWiz->data.name)) + L"\r\n";
+    sum += TRS("wizard.sum.author") + (pWiz->data.author.empty() ? TRS("wizard.sum.anon") : Utils::Utf8ToWide(pWiz->data.author)) + L"\r\n";
+    sum += TRS("wizard.sum.desc") + Utils::Utf8ToWide(pWiz->data.description) + L"\r\n\r\n";
 
-    sum += L"Default Press Sounds: " + std::to_wstring(pWiz->data.defaultPressFiles.size()) + L" file(s)\r\n";
+    sum += TRS("wizard.sum.defPress") + std::to_wstring(pWiz->data.defaultPressFiles.size()) + TRS("wizard.sum.defPressFmt") + L"\r\n";
     for (size_t i = 0; i < pWiz->data.defaultPressFiles.size(); ++i) {
         sum += L"  - " + fs::path(pWiz->data.defaultPressFiles[i]).filename().wstring() + L"\r\n";
     }
     if (!pWiz->data.defaultReleaseFiles.empty()) {
-        sum += L"Default Release Sound: " + fs::path(pWiz->data.defaultReleaseFiles[0]).filename().wstring() + L"\r\n";
+        sum += TRS("wizard.sum.defRel") + fs::path(pWiz->data.defaultReleaseFiles[0]).filename().wstring() + L"\r\n";
     }
 
-    sum += L"\r\nSpecific Key / Button Mappings: " + std::to_wstring(pWiz->data.specificBindings.size()) + L"\r\n";
+    sum += TRS("wizard.sum.bindings") + std::to_wstring(pWiz->data.specificBindings.size()) + L"\r\n";
     for (const auto& b : pWiz->data.specificBindings) {
         sum += L"  * " + Utils::Utf8ToWide(b.keyName) + L": ";
-        if (!b.pressPath.empty()) sum += L"press=" + fs::path(b.pressPath).filename().wstring() + L" ";
-        if (!b.releasePath.empty()) sum += L"release=" + fs::path(b.releasePath).filename().wstring();
+        if (!b.pressPath.empty()) sum += TRS("wizard.sum.press") + fs::path(b.pressPath).filename().wstring() + L" ";
+        if (!b.releasePath.empty()) sum += TRS("wizard.sum.release") + fs::path(b.releasePath).filename().wstring();
         sum += L"\r\n";
     }
 
@@ -522,8 +523,8 @@ static void RefreshSummary(WizardDialogState* pWiz) {
     ShowWindow(pWiz->hBtnTestRight, isKb ? SW_HIDE : SW_SHOW);
     ShowWindow(pWiz->hBtnTestMid, isKb ? SW_HIDE : SW_SHOW);
     SetWindowTextW(pWiz->hLblTestNote, isKb
-        ? L"Type below to test your new sound profile live before creating:"
-        : L"Click the buttons below to test mouse clicks live before creating:");
+        ? TR("wizard.lbl.testNote.kb")
+        : TR("wizard.lbl.testNote.mouse"));
 }
 
 static void HideAllStepControls(WizardDialogState* pWiz) {
@@ -558,24 +559,30 @@ static void ShowStep(WizardDialogState* pWiz, int step) {
     HideAllStepControls(pWiz);
 
     // 2. Update Header
-    std::wstring stepTitle = L"Step " + std::to_wstring(step + 1) + L" of 4: ";
+    std::wstring stepTitle = TRS("wizard.step.of");
+    {
+        size_t pos = stepTitle.find(L"{0}");
+        if (pos != std::wstring::npos) {
+            stepTitle.replace(pos, 3, std::to_wstring(step + 1));
+        }
+    }
     std::wstring stepSub = L"";
     switch (step) {
     case STEP_INFO:
-        stepTitle += L"Profile Information";
-        stepSub = L"Choose device type and provide profile name, author, and description.";
+        stepTitle += TRS("wizard.step1.title");
+        stepSub = TRS("wizard.step1.sub");
         break;
     case STEP_DEFAULT_SOUNDS:
-        stepTitle += (pWiz->data.deviceType == "keyboard" ? L"Default Keyboard Sounds" : L"Default Mouse Sounds");
-        stepSub = L"Select default press audio files (multiple for variations) and optional release audio.";
+        stepTitle += (pWiz->data.deviceType == "keyboard" ? TRS("wizard.step2.title.kb") : TRS("wizard.step2.title.mouse"));
+        stepSub = TRS("wizard.step2.sub");
         break;
     case STEP_SPECIFIC_KEYS:
-        stepTitle += (pWiz->data.deviceType == "keyboard" ? L"Special Key Sounds" : L"Button Specific Sounds");
-        stepSub = L"Configure dedicated sound effects for Spacebar, Enter, Backspace, Modifiers, or Mouse clicks.";
+        stepTitle += (pWiz->data.deviceType == "keyboard" ? TRS("wizard.step3.title.kb") : TRS("wizard.step3.title.mouse"));
+        stepSub = TRS("wizard.step3.sub");
         break;
     case STEP_TEST_SAVE:
-        stepTitle += L"Test & Create Profile";
-        stepSub = L"Test your new profile in real-time, then save or export it.";
+        stepTitle += TRS("wizard.step4.title");
+        stepSub = TRS("wizard.step4.sub");
         break;
     }
 
@@ -584,7 +591,7 @@ static void ShowStep(WizardDialogState* pWiz, int step) {
 
     // 3. Nav Buttons
     EnableWindow(pWiz->hBtnBack, step > STEP_INFO);
-    SetWindowTextW(pWiz->hBtnNext, (step == STEP_TEST_SAVE) ? L"Finish & Create" : L"Next >");
+    SetWindowTextW(pWiz->hBtnNext, (step == STEP_TEST_SAVE) ? TR("wizard.btn.finish") : TR("wizard.btn.next"));
 
     // 4. Show only current step controls
     switch (step) {
@@ -700,7 +707,7 @@ static bool ValidateAndSaveStep(WizardDialogState* pWiz, int step) {
         // Trim
         size_t first = wName.find_first_not_of(L" \t\r\n");
         if (first == std::wstring::npos) {
-            MessageBoxW(pWiz->hWnd, L"Please enter a Profile Name.", L"Required Field", MB_OK | MB_ICONWARNING);
+            MessageBoxW(pWiz->hWnd, TR("wizard.validate.nameEmpty"), TR("wizard.validate.nameTitle"), MB_OK | MB_ICONWARNING);
             SetFocus(pWiz->hEditName);
             return false;
         }
@@ -721,7 +728,7 @@ static bool ValidateAndSaveStep(WizardDialogState* pWiz, int step) {
         return true;
     } else if (step == STEP_DEFAULT_SOUNDS) {
         if (pWiz->data.defaultPressFiles.empty()) {
-            MessageBoxW(pWiz->hWnd, L"Please add at least one default press sound file.", L"Missing Sound", MB_OK | MB_ICONWARNING);
+            MessageBoxW(pWiz->hWnd, TR("wizard.validate.noPress"), TR("wizard.validate.noPressTtl"), MB_OK | MB_ICONWARNING);
             return false;
         }
         return true;
@@ -970,7 +977,7 @@ static bool CreateAndWriteProfile(WizardDialogState* pWiz) {
             ofn.nMaxFile = MAX_PATH;
             ofn.lpstrDefExt = L"zip";
             ofn.Flags = OFN_EXPLORER | OFN_OVERWRITEPROMPT;
-            ofn.lpstrTitle = L"Export Created Sound Pack ZIP";
+            ofn.lpstrTitle = TR("wizard.export.title");
 
             if (GetSaveFileNameW(&ofn)) {
                 ZipUtils::CreateZipFromDir(finalDestDir.wstring(), szZipFile);
@@ -1009,28 +1016,28 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 
         // Navigation Footer Buttons
         int btnY = WIZARD_HEIGHT - 75;
-        pWiz->hBtnBack = CreateWindowExW(0, L"BUTTON", L"< Back", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        pWiz->hBtnBack = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.back"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             WIZARD_WIDTH - 300, btnY, 80, 28, hWnd, (HMENU)IDC_WIZ_BTN_BACK, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnBack, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hBtnNext = CreateWindowExW(0, L"BUTTON", L"Next >", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
+        pWiz->hBtnNext = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.next"), WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
             WIZARD_WIDTH - 212, btnY, 110, 28, hWnd, (HMENU)IDC_WIZ_BTN_NEXT, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnNext, WM_SETFONT, (WPARAM)pWiz->hFontBold, TRUE);
 
-        pWiz->hBtnCancel = CreateWindowExW(0, L"BUTTON", L"Cancel", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        pWiz->hBtnCancel = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.cancel"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             WIZARD_WIDTH - 94, btnY, 74, 28, hWnd, (HMENU)IDC_WIZ_BTN_CANCEL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnCancel, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         // ==================== STEP 1 CONTROLS ====================
-        pWiz->hGrpType = CreateWindowExW(0, L"BUTTON", L"Profile Device Type", WS_CHILD | BS_GROUPBOX,
+        pWiz->hGrpType = CreateWindowExW(0, L"BUTTON", TR("wizard.grp.deviceType"), WS_CHILD | BS_GROUPBOX,
             20, 68, WIZARD_WIDTH - 40, 56, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hGrpType, WM_SETFONT, (WPARAM)pWiz->hFontBold, TRUE);
 
-        pWiz->hRadKb = CreateWindowExW(0, L"BUTTON", L"Keyboard Profile", WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
+        pWiz->hRadKb = CreateWindowExW(0, L"BUTTON", TR("wizard.rad.keyboard"), WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
             36, 90, 160, 20, hWnd, (HMENU)IDC_WIZ_RAD_KEYBOARD, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hRadKb, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hRadMouse = CreateWindowExW(0, L"BUTTON", L"Mouse Profile", WS_CHILD | BS_AUTORADIOBUTTON,
+        pWiz->hRadMouse = CreateWindowExW(0, L"BUTTON", TR("wizard.rad.mouse"), WS_CHILD | BS_AUTORADIOBUTTON,
             210, 90, 160, 20, hWnd, (HMENU)IDC_WIZ_RAD_MOUSE, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hRadMouse, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
@@ -1040,7 +1047,7 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
             SendMessageW(pWiz->hRadMouse, BM_SETCHECK, BST_CHECKED, 0);
         }
 
-        pWiz->hLblName = CreateWindowExW(0, L"STATIC", L"Profile Name:*", WS_CHILD | SS_LEFT,
+        pWiz->hLblName = CreateWindowExW(0, L"STATIC", TR("wizard.lbl.name"), WS_CHILD | SS_LEFT,
             20, 140, 120, 18, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hLblName, WM_SETFONT, (WPARAM)pWiz->hFontBold, TRUE);
 
@@ -1048,7 +1055,7 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
             20, 160, WIZARD_WIDTH - 40, 24, hWnd, (HMENU)IDC_WIZ_EDIT_NAME, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hEditName, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hLblAuthor = CreateWindowExW(0, L"STATIC", L"Author / Creator Name:", WS_CHILD | SS_LEFT,
+        pWiz->hLblAuthor = CreateWindowExW(0, L"STATIC", TR("wizard.lbl.author"), WS_CHILD | SS_LEFT,
             20, 195, 180, 18, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hLblAuthor, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
@@ -1056,7 +1063,7 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
             20, 215, WIZARD_WIDTH - 40, 24, hWnd, (HMENU)IDC_WIZ_EDIT_AUTHOR, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hEditAuthor, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hLblDesc = CreateWindowExW(0, L"STATIC", L"Description / Switch Info:", WS_CHILD | SS_LEFT,
+        pWiz->hLblDesc = CreateWindowExW(0, L"STATIC", TR("wizard.lbl.desc"), WS_CHILD | SS_LEFT,
             20, 250, 200, 18, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hLblDesc, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
@@ -1065,7 +1072,7 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         SendMessageW(pWiz->hEditDesc, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         // ==================== STEP 2 CONTROLS ====================
-        pWiz->hGrpDefPress = CreateWindowExW(0, L"BUTTON", L"Default Press Sound(s) - Base Typing / Click", WS_CHILD | BS_GROUPBOX,
+        pWiz->hGrpDefPress = CreateWindowExW(0, L"BUTTON", TR("wizard.grp.defPress"), WS_CHILD | BS_GROUPBOX,
             20, 65, WIZARD_WIDTH - 40, 175, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hGrpDefPress, WM_SETFONT, (WPARAM)pWiz->hFontBold, TRUE);
 
@@ -1074,19 +1081,19 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
             36, 90, WIZARD_WIDTH - 170, 135, hWnd, (HMENU)IDC_WIZ_LIST_DEF_PRESS, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hListDefPress, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hBtnAddPress = CreateWindowExW(0, L"BUTTON", L"Add...", WS_CHILD | BS_PUSHBUTTON,
+        pWiz->hBtnAddPress = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.add"), WS_CHILD | BS_PUSHBUTTON,
             WIZARD_WIDTH - 124, 90, 84, 26, hWnd, (HMENU)IDC_WIZ_BTN_ADD_PRESS, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnAddPress, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hBtnDelPress = CreateWindowExW(0, L"BUTTON", L"Remove", WS_CHILD | BS_PUSHBUTTON,
+        pWiz->hBtnDelPress = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.remove"), WS_CHILD | BS_PUSHBUTTON,
             WIZARD_WIDTH - 124, 122, 84, 26, hWnd, (HMENU)IDC_WIZ_BTN_DEL_PRESS, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnDelPress, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hBtnPlayPress = CreateWindowExW(0, L"BUTTON", L"Play \u25B6", WS_CHILD | BS_PUSHBUTTON,
+        pWiz->hBtnPlayPress = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.play"), WS_CHILD | BS_PUSHBUTTON,
             WIZARD_WIDTH - 124, 154, 84, 26, hWnd, (HMENU)IDC_WIZ_BTN_PLAY_PRESS, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnPlayPress, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hGrpDefRel = CreateWindowExW(0, L"BUTTON", L"Default Release Sound (Optional)", WS_CHILD | BS_GROUPBOX,
+        pWiz->hGrpDefRel = CreateWindowExW(0, L"BUTTON", TR("wizard.grp.defRel"), WS_CHILD | BS_GROUPBOX,
             20, 248, WIZARD_WIDTH - 40, 75, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hGrpDefRel, WM_SETFONT, (WPARAM)pWiz->hFontBold, TRUE);
 
@@ -1095,11 +1102,11 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
             36, 275, WIZARD_WIDTH - 210, 24, hWnd, (HMENU)IDC_WIZ_EDIT_DEF_REL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hEditDefRel, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hBtnBrowseRel = CreateWindowExW(0, L"BUTTON", L"Browse...", WS_CHILD | BS_PUSHBUTTON,
+        pWiz->hBtnBrowseRel = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.browse"), WS_CHILD | BS_PUSHBUTTON,
             WIZARD_WIDTH - 165, 274, 65, 26, hWnd, (HMENU)IDC_WIZ_BTN_BROWSE_REL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnBrowseRel, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hBtnClearRel = CreateWindowExW(0, L"BUTTON", L"\u2715", WS_CHILD | BS_PUSHBUTTON,
+        pWiz->hBtnClearRel = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.clear"), WS_CHILD | BS_PUSHBUTTON,
             WIZARD_WIDTH - 96, 274, 26, 26, hWnd, (HMENU)IDC_WIZ_BTN_CLEAR_REL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnClearRel, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
@@ -1108,16 +1115,16 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         SendMessageW(pWiz->hBtnPlayRel, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         pWiz->hLblDefNote = CreateWindowExW(0, L"STATIC",
-            L"Tip: Adding multiple press audio files enables natural round-robin variation on every keystroke.",
+            TR("wizard.tip.multiPress"),
             WS_CHILD | SS_LEFT, 20, 330, WIZARD_WIDTH - 40, 20, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hLblDefNote, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         // ==================== STEP 3 CONTROLS ====================
-        pWiz->hGrpKeySelect = CreateWindowExW(0, L"BUTTON", L"1. Select Key or Button", WS_CHILD | BS_GROUPBOX,
+        pWiz->hGrpKeySelect = CreateWindowExW(0, L"BUTTON", TR("wizard.grp.keySelect"), WS_CHILD | BS_GROUPBOX,
             20, 65, WIZARD_WIDTH - 40, 70, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hGrpKeySelect, WM_SETFONT, (WPARAM)pWiz->hFontBold, TRUE);
 
-        pWiz->hLblQuickKey = CreateWindowExW(0, L"STATIC", L"Standard Key:", WS_CHILD | SS_LEFT,
+        pWiz->hLblQuickKey = CreateWindowExW(0, L"STATIC", TR("wizard.lbl.quickKey"), WS_CHILD | SS_LEFT,
             36, 92, 85, 18, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hLblQuickKey, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
@@ -1126,7 +1133,7 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
             125, 89, 180, 160, hWnd, (HMENU)IDC_WIZ_COMBO_KEY_LIST, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hComboKeyList, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hLblCustomKey = CreateWindowExW(0, L"STATIC", L"Or Custom:", WS_CHILD | SS_LEFT,
+        pWiz->hLblCustomKey = CreateWindowExW(0, L"STATIC", TR("wizard.lbl.customKey"), WS_CHILD | SS_LEFT,
             315, 92, 65, 18, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hLblCustomKey, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
@@ -1135,15 +1142,15 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
             382, 89, 70, 24, hWnd, (HMENU)IDC_WIZ_EDIT_CUSTOM_KEY, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hEditCustomKey, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hBtnAddKey = CreateWindowExW(0, L"BUTTON", L"Set", WS_CHILD | BS_PUSHBUTTON,
+        pWiz->hBtnAddKey = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.set"), WS_CHILD | BS_PUSHBUTTON,
             458, 88, 45, 26, hWnd, (HMENU)IDC_WIZ_BTN_ADD_KEY, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnAddKey, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hGrpKeySounds = CreateWindowExW(0, L"BUTTON", L"2. Assign Sounds for Selected Key", WS_CHILD | BS_GROUPBOX,
+        pWiz->hGrpKeySounds = CreateWindowExW(0, L"BUTTON", TR("wizard.grp.keySounds"), WS_CHILD | BS_GROUPBOX,
             20, 140, WIZARD_WIDTH - 40, 115, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hGrpKeySounds, WM_SETFONT, (WPARAM)pWiz->hFontBold, TRUE);
 
-        pWiz->hLblKeyPress = CreateWindowExW(0, L"STATIC", L"Press Sound:", WS_CHILD | SS_LEFT,
+        pWiz->hLblKeyPress = CreateWindowExW(0, L"STATIC", TR("wizard.lbl.keyPress"), WS_CHILD | SS_LEFT,
             36, 166, 85, 18, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hLblKeyPress, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
@@ -1152,11 +1159,11 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
             125, 163, 292, 24, hWnd, (HMENU)IDC_WIZ_EDIT_KEY_PRESS, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hEditKeyPress, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hBtnBrowseKP = CreateWindowExW(0, L"BUTTON", L"Browse...", WS_CHILD | BS_PUSHBUTTON,
+        pWiz->hBtnBrowseKP = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.browse"), WS_CHILD | BS_PUSHBUTTON,
             421, 162, 65, 26, hWnd, (HMENU)IDC_WIZ_BTN_BROWSE_KP, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnBrowseKP, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hBtnClearKP = CreateWindowExW(0, L"BUTTON", L"\u2715", WS_CHILD | BS_PUSHBUTTON,
+        pWiz->hBtnClearKP = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.clear"), WS_CHILD | BS_PUSHBUTTON,
             490, 162, 26, 26, hWnd, (HMENU)IDC_WIZ_BTN_CLEAR_KP, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnClearKP, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
@@ -1164,7 +1171,7 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
             520, 162, 26, 26, hWnd, (HMENU)IDC_WIZ_BTN_PLAY_KP, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnPlayKP, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hLblKeyRel = CreateWindowExW(0, L"STATIC", L"Release Sound:", WS_CHILD | SS_LEFT,
+        pWiz->hLblKeyRel = CreateWindowExW(0, L"STATIC", TR("wizard.lbl.keyRel"), WS_CHILD | SS_LEFT,
             36, 206, 85, 18, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hLblKeyRel, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
@@ -1173,11 +1180,11 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
             125, 203, 292, 24, hWnd, (HMENU)IDC_WIZ_EDIT_KEY_REL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hEditKeyRel, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hBtnBrowseKR = CreateWindowExW(0, L"BUTTON", L"Browse...", WS_CHILD | BS_PUSHBUTTON,
+        pWiz->hBtnBrowseKR = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.browse"), WS_CHILD | BS_PUSHBUTTON,
             421, 202, 65, 26, hWnd, (HMENU)IDC_WIZ_BTN_BROWSE_KR, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnBrowseKR, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hBtnClearKR = CreateWindowExW(0, L"BUTTON", L"\u2715", WS_CHILD | BS_PUSHBUTTON,
+        pWiz->hBtnClearKR = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.clear"), WS_CHILD | BS_PUSHBUTTON,
             490, 202, 26, 26, hWnd, (HMENU)IDC_WIZ_BTN_CLEAR_KR, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnClearKR, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
@@ -1185,7 +1192,7 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
             520, 202, 26, 26, hWnd, (HMENU)IDC_WIZ_BTN_PLAY_KR, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnPlayKR, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hLblAssigned = CreateWindowExW(0, L"STATIC", L"Configured Key / Button Mappings:", WS_CHILD | SS_LEFT,
+        pWiz->hLblAssigned = CreateWindowExW(0, L"STATIC", TR("wizard.lbl.assigned"), WS_CHILD | SS_LEFT,
             20, 258, 260, 18, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hLblAssigned, WM_SETFONT, (WPARAM)pWiz->hFontBold, TRUE);
 
@@ -1194,12 +1201,12 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
             20, 278, WIZARD_WIDTH - 140, 80, hWnd, (HMENU)IDC_WIZ_LIST_ASSIGNED, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hListAssigned, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hBtnRemoveBind = CreateWindowExW(0, L"BUTTON", L"Delete Mapping", WS_CHILD | BS_PUSHBUTTON,
+        pWiz->hBtnRemoveBind = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.deleteMapping"), WS_CHILD | BS_PUSHBUTTON,
             WIZARD_WIDTH - 115, 278, 95, 28, hWnd, (HMENU)IDC_WIZ_BTN_REMOVE_BIND, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnRemoveBind, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         // ==================== STEP 4 CONTROLS ====================
-        pWiz->hGrpSummary = CreateWindowExW(0, L"BUTTON", L"Profile Configuration Review", WS_CHILD | BS_GROUPBOX,
+        pWiz->hGrpSummary = CreateWindowExW(0, L"BUTTON", TR("wizard.grp.summary"), WS_CHILD | BS_GROUPBOX,
             20, 65, WIZARD_WIDTH - 40, 140, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hGrpSummary, WM_SETFONT, (WPARAM)pWiz->hFontBold, TRUE);
 
@@ -1208,11 +1215,11 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
             36, 88, WIZARD_WIDTH - 72, 105, hWnd, (HMENU)IDC_WIZ_EDIT_SUMMARY, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hEditSummary, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hGrpTest = CreateWindowExW(0, L"BUTTON", L"Interactive Live Sound Test", WS_CHILD | BS_GROUPBOX,
+        pWiz->hGrpTest = CreateWindowExW(0, L"BUTTON", TR("wizard.grp.test"), WS_CHILD | BS_GROUPBOX,
             20, 212, WIZARD_WIDTH - 40, 105, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hGrpTest, WM_SETFONT, (WPARAM)pWiz->hFontBold, TRUE);
 
-        pWiz->hLblTestNote = CreateWindowExW(0, L"STATIC", L"Type below to test:", WS_CHILD | SS_LEFT,
+        pWiz->hLblTestNote = CreateWindowExW(0, L"STATIC", TR("wizard.lbl.testNote.kb"), WS_CHILD | SS_LEFT,
             36, 232, WIZARD_WIDTH - 72, 18, hWnd, NULL, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hLblTestNote, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
@@ -1224,24 +1231,24 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         // Subclass test pad edit control to capture raw WM_KEYDOWN and WM_KEYUP
         g_oldTestPadProc = (WNDPROC)SetWindowLongPtrW(pWiz->hEditTestPad, GWLP_WNDPROC, (LONG_PTR)TestPadSubclassProc);
 
-        pWiz->hBtnTestLeft = CreateWindowExW(0, L"BUTTON", L"Test Left Click", WS_CHILD | BS_PUSHBUTTON,
+        pWiz->hBtnTestLeft = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.testLeft"), WS_CHILD | BS_PUSHBUTTON,
             36, 254, 140, 32, hWnd, (HMENU)IDC_WIZ_BTN_TEST_LEFT, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnTestLeft, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hBtnTestRight = CreateWindowExW(0, L"BUTTON", L"Test Right Click", WS_CHILD | BS_PUSHBUTTON,
+        pWiz->hBtnTestRight = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.testRight"), WS_CHILD | BS_PUSHBUTTON,
             190, 254, 140, 32, hWnd, (HMENU)IDC_WIZ_BTN_TEST_RIGHT, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnTestRight, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hBtnTestMid = CreateWindowExW(0, L"BUTTON", L"Test Middle Click", WS_CHILD | BS_PUSHBUTTON,
+        pWiz->hBtnTestMid = CreateWindowExW(0, L"BUTTON", TR("wizard.btn.testMid"), WS_CHILD | BS_PUSHBUTTON,
             345, 254, 140, 32, hWnd, (HMENU)IDC_WIZ_BTN_TEST_MID, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hBtnTestMid, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
-        pWiz->hChkActivate = CreateWindowExW(0, L"BUTTON", L"Activate this profile immediately in MonkeySounds",
+        pWiz->hChkActivate = CreateWindowExW(0, L"BUTTON", TR("wizard.chk.activate"),
             WS_CHILD | BS_AUTOCHECKBOX, 24, 325, 360, 20, hWnd, (HMENU)IDC_WIZ_CHK_ACTIVATE, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hChkActivate, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
         SendMessageW(pWiz->hChkActivate, BM_SETCHECK, BST_CHECKED, 0);
 
-        pWiz->hChkExportZip = CreateWindowExW(0, L"BUTTON", L"Also export as shareable Sound Pack (.zip)",
+        pWiz->hChkExportZip = CreateWindowExW(0, L"BUTTON", TR("wizard.chk.exportZip"),
             WS_CHILD | BS_AUTOCHECKBOX, 24, 348, 360, 20, hWnd, (HMENU)IDC_WIZ_CHK_EXPORT_ZIP, GetModuleHandle(NULL), NULL);
         SendMessageW(pWiz->hChkExportZip, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
@@ -1268,10 +1275,10 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
                 // Finish & Create Profile
                 if (CreateAndWriteProfile(pWiz)) {
                     pWiz->success = true;
-                    MessageBoxW(hWnd, L"Sound profile created successfully!", L"Profile Wizard", MB_OK | MB_ICONINFORMATION);
+                    MessageBoxW(hWnd, TR("wizard.created.msg"), TR("wizard.created.title"), MB_OK | MB_ICONINFORMATION);
                     DestroyWindow(hWnd);
                 } else {
-                    MessageBoxW(hWnd, L"Failed to create the sound profile. Please check directory permissions.", L"Creation Error", MB_OK | MB_ICONERROR);
+                    MessageBoxW(hWnd, TR("wizard.failed.msg"), TR("wizard.failed.title"), MB_OK | MB_ICONERROR);
                 }
             }
             break;
@@ -1668,7 +1675,7 @@ bool ProfileWizard::Show(HWND hParentWnd, bool isKeyboard, std::wstring& outCrea
     HWND hWnd = CreateWindowExW(
         WS_EX_DLGMODALFRAME | WS_EX_TOPMOST,
         L"MonkeySoundsProfileWizard",
-        L"Create Sound Profile Wizard",
+        TR("wizard.title"),
         WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
         x, y, scaledWizW, scaledWizH,
         hParentWnd, NULL, GetModuleHandle(NULL), NULL
