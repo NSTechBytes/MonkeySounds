@@ -1673,7 +1673,7 @@ bool ProfileWizard::Show(HWND hParentWnd, bool isKeyboard, std::wstring& outCrea
     int y = rcParent.top  + ((rcParent.bottom - rcParent.top) - scaledWizH) / 2;
 
     HWND hWnd = CreateWindowExW(
-        WS_EX_DLGMODALFRAME | WS_EX_TOPMOST,
+        WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | (Lang::IsRTL() ? WS_EX_LAYOUTRTL : 0),
         L"MonkeySoundsProfileWizard",
         TR("wizard.title"),
         WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,

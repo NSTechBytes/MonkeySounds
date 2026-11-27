@@ -53,7 +53,9 @@ void AppSettings::Load() {
                 m_config.theme = t;
         }
         if (j.contains("language") && j["language"].is_string()) {
-            m_config.language = j["language"].get<std::string>();
+            std::string lang = j["language"].get<std::string>();
+            if (!lang.empty() && lang != "system")
+                m_config.language = lang;
         }
 
         // Load favorites lists

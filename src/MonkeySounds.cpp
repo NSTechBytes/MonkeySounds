@@ -44,7 +44,7 @@ static std::wstring Utf8ToWide(const std::string& str) {
 }
 
 #define WINDOW_WIDTH  510
-#define WINDOW_HEIGHT 450
+#define WINDOW_HEIGHT 426
 #define TIMER_CPU_ID    1001
 #define TIMER_VU_ID     1002
 #define TIMER_UPDATE_ID 1003
@@ -119,7 +119,6 @@ HWND g_hThemeLbl = NULL;
 HWND g_hThemeCombo = NULL;
 HWND g_hLangLbl = NULL;
 HWND g_hLangCombo = NULL;
-HWND g_hLangNote = NULL;
 
 // Update check state (at most one update dialog per program run session)
 static std::atomic<bool> g_isCheckingForUpdates{false};
@@ -231,7 +230,6 @@ static void ApplyFontsToControls() {
     sf(g_hThemeCombo,           g_hFontNormal);
     sf(g_hLangLbl,              g_hFontNormal);
     sf(g_hLangCombo,            g_hFontNormal);
-    sf(g_hLangNote,             g_hFontNormal);
     sf(g_hAboutTitle,           g_hFontTitle);
     sf(g_hAboutDesc1,           g_hFontNormal);
     sf(g_hAboutDesc2,           g_hFontNormal);
@@ -314,7 +312,7 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
     SendMessageW(g_hStatusBar, WM_SIZE, 0, 0);
 
     // Tab Control (must stay at HWND_BOTTOM so child-area controls above it are not clipped out)
-    SetWindowPos(g_hTabCtrl, HWND_BOTTOM, S(8), S(6), W - S(30), S(350), SWP_NOACTIVATE);
+    SetWindowPos(g_hTabCtrl, HWND_BOTTOM, S(8), S(6), W - S(30), S(326), SWP_NOACTIVATE);
 
     // --- Sounds Tab: Keyboard Group ---
     SetWindowPos(g_hKbGroup,       NULL, S(16), S(36), W-S(50),   S(130), SWP_NOZORDER | SWP_NOACTIVATE);
@@ -345,7 +343,7 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
     SetWindowPos(g_hMouseVolSlider,   NULL, S(80), S(251), W-S(131),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
 
     // --- Settings Tab ---
-    SetWindowPos(g_hAppSettingsGroup,    NULL, S(16), S(36),  W-S(50),  S(288), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hAppSettingsGroup,    NULL, S(16), S(36),  W-S(50),  S(268), SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(g_hVersionLbl,          NULL, S(28), S(56),  S(200),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(g_hCheckUpdatesBtn,     NULL, S(28), S(80),  S(130),   S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(g_hSeparator,           NULL, S(28), S(116), W-S(74),  S(2),   SWP_NOZORDER | SWP_NOACTIVATE);
@@ -358,7 +356,6 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
     SetWindowPos(g_hThemeCombo,          NULL, S(88), S(243), S(140),   S(100), SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(g_hLangLbl,             NULL, S(28), S(276), S(55),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(g_hLangCombo,           NULL, S(88), S(273), S(190),   S(200), SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hLangNote,            NULL, S(28), S(300), W-S(74),  S(18),  SWP_NOZORDER | SWP_NOACTIVATE);
 
     // --- About Tab ---
     SetWindowPos(g_hAboutLogo,  NULL, (W-S(88))/2, S(45),  S(88), S(88), SWP_NOZORDER | SWP_NOACTIVATE);
@@ -446,12 +443,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     AppSettings::GetInstance().Load();
     const auto& config = AppSettings::GetInstance().GetConfig();
 
-    {
-        std::string langCode = config.language;
-        if (langCode == "system" || langCode.empty())
-            langCode = Lang::SystemLocale();
-        Lang::Load(langCode);
-    }
+    Lang::Load(config.language);
 
     WindowsTheme::SetSettingsHandlers(
         []() -> std::string { return AppSettings::GetInstance().GetConfig().theme; },
@@ -831,7 +823,7 @@ void CreateControls(HWND hWnd) {
     g_hAppSettingsGroup = CreateWindowExW(
         0, L"BUTTON", TR("settings.group.app"),
         WS_CHILD | BS_GROUPBOX,
-        16, 36, WINDOW_WIDTH - 50, 288,
+        16, 36, WINDOW_WIDTH - 50, 268,
         hWnd, (HMENU)IDC_GB_APPLICATION, g_hInstance, NULL
     );
     SetControlFont(g_hAppSettingsGroup, g_hFontBold);
@@ -933,18 +925,9 @@ void CreateControls(HWND hWnd) {
         hWnd, (HMENU)IDC_COMBO_LANG, g_hInstance, NULL
     );
     SetControlFont(g_hLangCombo, g_hFontNormal);
-    SendMessageW(g_hLangCombo, CB_ADDSTRING, 0, (LPARAM)TR("settings.language.system"));
     for (int i = 0; i < Lang::kLocaleCount; ++i) {
         SendMessageW(g_hLangCombo, CB_ADDSTRING, 0, (LPARAM)Lang::kSupportedLocaleNames[i]);
     }
-
-    g_hLangNote = CreateWindowExW(
-        0, L"STATIC", TR("settings.languageRestart"),
-        WS_CHILD | SS_LEFT,
-        28, 300, WINDOW_WIDTH - 74, 18,
-        hWnd, (HMENU)IDC_LBL_LANG_NOTE, g_hInstance, NULL
-    );
-    SetControlFont(g_hLangNote, g_hFontNormal);
 
     // --- TAB 3: ABOUT ---
     g_hAboutLogo = CreateWindowExW(
@@ -1092,7 +1075,6 @@ void UpdateTabVisibility(int tabIndex) {
     ShowWindow(g_hThemeCombo, showSettings);
     ShowWindow(g_hLangLbl, showSettings);
     ShowWindow(g_hLangCombo, showSettings);
-    ShowWindow(g_hLangNote, showSettings);
 
     // Tab 2: About
     int showAbout = (tabIndex == 2) ? SW_SHOW : SW_HIDE;
@@ -1236,13 +1218,11 @@ void LoadSettingsToUI() {
     else if (config.theme == "dark") themeIdx = 2;
     SendMessageW(g_hThemeCombo, CB_SETCURSEL, themeIdx, 0);
 
-    int langIdx = 0; // System
-    if (config.language != "system" && !config.language.empty()) {
-        for (int i = 0; i < Lang::kLocaleCount; ++i) {
-            if (config.language == Lang::kSupportedLocales[i]) {
-                langIdx = i + 1;
-                break;
-            }
+    int langIdx = 0; // English
+    for (int i = 0; i < Lang::kLocaleCount; ++i) {
+        if (config.language == Lang::kSupportedLocales[i]) {
+            langIdx = i;
+            break;
         }
     }
     SendMessageW(g_hLangCombo, CB_SETCURSEL, langIdx, 0);
@@ -1270,8 +1250,8 @@ void SaveCurrentSettings() {
     else cfg.theme = "system";
 
     int langIdx = (int)SendMessageW(g_hLangCombo, CB_GETCURSEL, 0, 0);
-    if (langIdx <= 0 || langIdx > Lang::kLocaleCount) cfg.language = "system";
-    else cfg.language = Lang::kSupportedLocales[langIdx - 1];
+    if (langIdx < 0 || langIdx >= Lang::kLocaleCount) cfg.language = "en";
+    else cfg.language = Lang::kSupportedLocales[langIdx];
 
     InputHook::GetInstance().SetIgnoreAutorepeat(cfg.ignoreKeyAutorepeat);
     AppSettings::GetInstance().Save();
@@ -1882,6 +1862,101 @@ void ApplyThemeToMainWindow(HWND hWnd) {
     RedrawWindow(hWnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
 }
 
+static void SetWindowRtl(HWND h, bool rtl) {
+    if (!h) return;
+    LONG_PTR ex = GetWindowLongPtrW(h, GWL_EXSTYLE);
+    LONG_PTR next = rtl ? (ex | WS_EX_LAYOUTRTL) : (ex & ~WS_EX_LAYOUTRTL);
+    if (next != ex) {
+        SetWindowLongPtrW(h, GWL_EXSTYLE, next);
+    }
+}
+
+static void ApplyLayoutDirection(HWND hWnd, bool rtl) {
+    if (!hWnd || !IsWindow(hWnd)) return;
+    SetWindowRtl(hWnd, rtl);
+    EnumChildWindows(hWnd, [](HWND child, LPARAM lParam) -> BOOL {
+        if (child == g_hAboutLogo || child == g_hVuWnd) {
+            SetWindowRtl(child, false);
+            return TRUE;
+        }
+        SetWindowRtl(child, lParam != 0);
+        return TRUE;
+    }, rtl ? 1 : 0);
+    SetWindowPos(hWnd, NULL, 0, 0, 0, 0,
+        SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+    LayoutControls(hWnd, DpiUtil::GetWindowDpi(hWnd));
+}
+
+void ApplyLanguageToMainWindow(HWND hWnd) {
+    if (!hWnd || !IsWindow(hWnd)) return;
+
+    // Tab titles
+    auto setTabText = [](int idx, const wchar_t* text) {
+        TCITEMW tie = {};
+        tie.mask = TCIF_TEXT;
+        tie.pszText = (LPWSTR)text;
+        SendMessageW(g_hTabCtrl, TCM_SETITEMW, idx, (LPARAM)&tie);
+    };
+    setTabText(0, TR("tab.sounds"));
+    setTabText(1, TR("tab.settings"));
+    setTabText(2, TR("tab.about"));
+
+    // Sounds tab
+    SetWindowTextW(g_hKbGroup,      TR("sounds.keyboard.group"));
+    SetWindowTextW(g_hKbEnable,     TR("sounds.keyboard.enable"));
+    SetWindowTextW(g_hKbNewBtn,     TR("sounds.keyboard.newprofile"));
+    SetWindowTextW(g_hKbPresetLbl,  TR("sounds.keyboard.preset"));
+    SetWindowTextW(g_hKbExportBtn,  TR("sounds.keyboard.export"));
+    SetWindowTextW(g_hKbCustomBtn,  TR("sounds.keyboard.import"));
+    SetWindowTextW(g_hKbVolLbl,     TR("sounds.keyboard.volume"));
+
+    SetWindowTextW(g_hMouseGroup,     TR("sounds.mouse.group"));
+    SetWindowTextW(g_hMouseEnable,    TR("sounds.mouse.enable"));
+    SetWindowTextW(g_hMouseNewBtn,    TR("sounds.mouse.newprofile"));
+    SetWindowTextW(g_hMousePresetLbl, TR("sounds.mouse.preset"));
+    SetWindowTextW(g_hMouseExportBtn, TR("sounds.mouse.export"));
+    SetWindowTextW(g_hMouseCustomBtn, TR("sounds.mouse.import"));
+    SetWindowTextW(g_hMouseVolLbl,    TR("sounds.mouse.volume"));
+
+    // Settings tab
+    SetWindowTextW(g_hAppSettingsGroup,    TR("settings.group.app"));
+    SetWindowTextW(g_hVersionLbl,          (TRS("settings.version") + Utils::GetAppVersion()).c_str());
+    SetWindowTextW(g_hCheckUpdatesBtn,     g_isCheckingForUpdates.load() ? TR("update.checking") : TR("settings.checkUpdates"));
+    SetWindowTextW(g_hAutoStartChk,        TR("settings.autoStart"));
+    SetWindowTextW(g_hStartupNotifChk,     TR("settings.startupNotif"));
+    SetWindowTextW(g_hIgnoreAutorepeatChk, TR("settings.ignoreAutorepeat"));
+    SetWindowTextW(g_hUpdateStartupChk,    TR("settings.updateOnStartup"));
+    SetWindowTextW(g_hUpdateBgChk,         TR("settings.updateInBackground"));
+    SetWindowTextW(g_hThemeLbl,            TR("settings.theme"));
+    SetWindowTextW(g_hLangLbl,             TR("settings.language"));
+
+    // Refresh Theme combo items while preserving selection
+    int curTheme = (int)SendMessageW(g_hThemeCombo, CB_GETCURSEL, 0, 0);
+    if (curTheme < 0) curTheme = 0;
+    SendMessageW(g_hThemeCombo, CB_RESETCONTENT, 0, 0);
+    SendMessageW(g_hThemeCombo, CB_ADDSTRING, 0, (LPARAM)TR("settings.theme.system"));
+    SendMessageW(g_hThemeCombo, CB_ADDSTRING, 0, (LPARAM)TR("settings.theme.light"));
+    SendMessageW(g_hThemeCombo, CB_ADDSTRING, 0, (LPARAM)TR("settings.theme.dark"));
+    SendMessageW(g_hThemeCombo, CB_SETCURSEL, curTheme, 0);
+
+    // About tab
+    SetWindowTextW(g_hAboutTitle,      TR("about.title"));
+    SetWindowTextW(g_hAboutDesc1,      TR("about.desc1"));
+    SetWindowTextW(g_hAboutDesc2,      TR("about.desc2"));
+    SetWindowTextW(g_hAboutCopy,       TR("about.copy"));
+    SetWindowTextW(g_hAboutGithubBtn,  TR("about.github"));
+    SetWindowTextW(g_hAboutDiscordBtn, TR("about.discord"));
+    SetWindowTextW(g_hAboutPatreonBtn, TR("about.patreon"));
+
+    // Status bar
+    SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.ready"));
+
+    // Apply RTL / LTR direction and relayout
+    ApplyLayoutDirection(hWnd, Lang::IsRTL());
+    FixControlZOrder();
+    RedrawWindow(hWnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
     case WM_CREATE:
@@ -1923,9 +1998,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             int badgeY = (h - badgeH) / 2;
 
             if (g_pMonkeySoundsImage) {
+                int oldLayout = SetLayout(hdc, 0);
                 Gdiplus::Graphics graphics(hdc);
                 graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
                 graphics.DrawImage(g_pMonkeySoundsImage, badgeX, badgeY, badgeW, badgeH);
+                if (oldLayout != GDI_ERROR) SetLayout(hdc, oldLayout);
             } else if (g_hAppIcon) {
                 int iconSz = DpiUtil::Scale(48, logoDpi);
                 DrawIconEx(hdc, badgeX + (badgeW - iconSz) / 2, badgeY + (badgeH - iconSz) / 2, g_hAppIcon, iconSz, iconSz, 0, NULL, DI_NORMAL);
@@ -2236,6 +2313,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         case IDC_COMBO_LANG:
             if (wmEvent == CBN_SELCHANGE) {
                 SaveCurrentSettings();
+                Lang::Load(AppSettings::GetInstance().GetConfig().language);
+                ApplyLanguageToMainWindow(hWnd);
             }
             break;
 

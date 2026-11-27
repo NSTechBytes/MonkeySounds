@@ -27,6 +27,9 @@ bool Load(const std::string& locale);
 // Return the current locale code (e.g. "en", "de").
 const std::string& CurrentLocale();
 
+// Return true if the given locale (or current locale when empty) is RTL.
+bool IsRTL(const std::string& locale = "");
+
 // Translate a key.  Returns the English fallback when the key is missing.
 const wchar_t* Get(const char* key);
 

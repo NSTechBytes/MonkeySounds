@@ -253,7 +253,10 @@ static std::wstring Utf8ToWide(const std::string& s) {
 // Load
 // ---------------------------------------------------------------------------
 bool Load(const std::string& locale) {
-    g_currentLocale = locale.empty() ? "en" : locale;
+    g_currentLocale = (locale.empty() || locale == "system") ? "en" : locale;
+
+    // Update process default layout direction for newly created dialogs/MessageBoxes
+    SetProcessDefaultLayout(IsRTL(g_currentLocale) ? LAYOUT_RTL : 0);
 
     // Always seed with English fallback first so missing keys degrade gracefully
     g_strings.clear();
@@ -284,6 +287,11 @@ bool Load(const std::string& locale) {
 // Accessors
 // ---------------------------------------------------------------------------
 const std::string& CurrentLocale() { return g_currentLocale; }
+
+bool IsRTL(const std::string& locale) {
+    const std::string& loc = locale.empty() ? g_currentLocale : locale;
+    return (loc == "ar" || loc == "he");
+}
 
 const wchar_t* Get(const char* key) {
     auto it = g_strings.find(key);
