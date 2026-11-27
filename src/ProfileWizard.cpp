@@ -176,6 +176,9 @@ struct WizardDialogState {
 
 static WizardDialogState* g_pWiz = nullptr;
 
+// Forward declarations
+static void FixWizardGroupBoxZOrder(WizardDialogState* pWiz);
+
 // ---------------------------------------------------------------------------
 // Wizard DPI-aware font and layout helpers
 // ---------------------------------------------------------------------------
@@ -333,6 +336,14 @@ static void LayoutWizardControls(WizardDialogState* pWiz, UINT dpi) {
     SetWindowPos(pWiz->hChkExportZip, NULL, S(24),  S(348), S(360),  S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
 
     // Keep GroupBoxes at HWND_BOTTOM so controls inside them are never clipped out by WS_CLIPSIBLINGS
+    FixWizardGroupBoxZOrder(pWiz);
+
+    InvalidateRect(hWnd, NULL, TRUE);
+}
+
+// Push all GroupBox controls to HWND_BOTTOM so sibling controls render on top of them.
+// Must be called any time ShowWindow is used on a GroupBox (which pulls it to Z-order top).
+static void FixWizardGroupBoxZOrder(WizardDialogState* pWiz) {
     HWND groups[] = {
         pWiz->hGrpType, pWiz->hGrpDefPress, pWiz->hGrpDefRel,
         pWiz->hGrpKeySelect, pWiz->hGrpKeySounds, pWiz->hGrpSummary, pWiz->hGrpTest
@@ -342,8 +353,6 @@ static void LayoutWizardControls(WizardDialogState* pWiz, UINT dpi) {
             SetWindowPos(grp, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
         }
     }
-
-    InvalidateRect(hWnd, NULL, TRUE);
 }
 
 static void PlayAudioPreview(const std::wstring& filePath) {
@@ -676,7 +685,9 @@ static void ShowStep(WizardDialogState* pWiz, int step) {
         break;
     }
 
-    // 5. Invalidate and immediately repaint whole dialog window
+    // 5. Re-apply GroupBox Z-order fix (ShowWindow pulls groupboxes to Z-order top)
+    //    then invalidate and immediately repaint whole dialog window
+    FixWizardGroupBoxZOrder(pWiz);
     InvalidateRect(pWiz->hWnd, NULL, TRUE);
     UpdateWindow(pWiz->hWnd);
 }
