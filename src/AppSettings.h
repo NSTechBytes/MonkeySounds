@@ -12,6 +12,8 @@ struct AppConfig {
     bool autoStart = false;
     bool showStartupNotification = true;
     bool ignoreKeyAutorepeat = false;
+    bool checkUpdatesOnStartup = false;
+    bool checkUpdatesInBackground = false;
     std::string theme = "system"; // "system", "dark", "light"
     std::vector<std::wstring> kbFavorites;    // profile json paths marked as favorite
     std::vector<std::wstring> mouseFavorites; // profile json paths marked as favorite

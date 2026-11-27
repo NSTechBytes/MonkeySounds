@@ -15,6 +15,8 @@
 #include <shlobj.h>
 #include <shellapi.h>
 #include <dwmapi.h>
+#include <wininet.h>
+#include "json.hpp"
 
 #ifndef DWMWA_CLOAK
 #define DWMWA_CLOAK 13
@@ -22,9 +24,13 @@
 #include <filesystem>
 #include <vector>
 #include <string>
+#include <sstream>
+#include <atomic>
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+
+#pragma comment(lib, "wininet.lib")
 
 namespace fs = std::filesystem;
 
@@ -38,8 +44,10 @@ static std::wstring Utf8ToWide(const std::string& str) {
 
 #define WINDOW_WIDTH  510
 #define WINDOW_HEIGHT 410
-#define TIMER_CPU_ID  1001
-#define TIMER_VU_ID   1002
+#define TIMER_CPU_ID    1001
+#define TIMER_VU_ID     1002
+#define TIMER_UPDATE_ID 1003
+#define UPDATE_CHECK_INTERVAL_MS (60 * 60 * 1000) // 1 hour
 
 // VU visualizer state
 #define NUM_VU_BARS   14
@@ -104,8 +112,15 @@ HWND g_hSeparator = NULL;
 HWND g_hAutoStartChk = NULL;
 HWND g_hStartupNotifChk = NULL;
 HWND g_hIgnoreAutorepeatChk = NULL;
+HWND g_hUpdateStartupChk = NULL;
+HWND g_hUpdateBgChk = NULL;
 HWND g_hThemeLbl = NULL;
 HWND g_hThemeCombo = NULL;
+
+// Update check state (at most one update dialog per program run session)
+static std::atomic<bool> g_isCheckingForUpdates{false};
+static std::atomic<bool> g_updateDialogOpen{false};
+static std::atomic<bool> g_updateDialogShownThisSession{false};
 
 // Control HWNDs - About Tab
 HWND g_hAboutLogo = NULL;
@@ -206,6 +221,8 @@ static void ApplyFontsToControls() {
     sf(g_hAutoStartChk,         g_hFontNormal);
     sf(g_hStartupNotifChk,      g_hFontNormal);
     sf(g_hIgnoreAutorepeatChk,  g_hFontNormal);
+    sf(g_hUpdateStartupChk,     g_hFontNormal);
+    sf(g_hUpdateBgChk,          g_hFontNormal);
     sf(g_hThemeLbl,             g_hFontNormal);
     sf(g_hThemeCombo,           g_hFontNormal);
     sf(g_hAboutTitle,           g_hFontTitle);
@@ -321,15 +338,17 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
     SetWindowPos(g_hMouseVolSlider,   NULL, S(80), S(251), W-S(131),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
 
     // --- Settings Tab ---
-    SetWindowPos(g_hAppSettingsGroup,    NULL, S(16), S(36),  W-S(50),  S(237), SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hVersionLbl,          NULL, S(28), S(60),  S(200),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hCheckUpdatesBtn,     NULL, S(28), S(86),  S(130),   S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hSeparator,           NULL, S(28), S(130), W-S(74),  S(2),   SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hAutoStartChk,        NULL, S(28), S(142), S(240),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hStartupNotifChk,     NULL, S(28), S(167), S(240),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hIgnoreAutorepeatChk, NULL, S(28), S(192), S(280),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hThemeLbl,            NULL, S(28), S(224), S(55),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hThemeCombo,          NULL, S(88), S(221), S(140),   S(100), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hAppSettingsGroup,    NULL, S(16), S(36),  W-S(50),  S(244), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hVersionLbl,          NULL, S(28), S(56),  S(200),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hCheckUpdatesBtn,     NULL, S(28), S(80),  S(130),   S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hSeparator,           NULL, S(28), S(116), W-S(74),  S(2),   SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hAutoStartChk,        NULL, S(28), S(126), S(260),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hStartupNotifChk,     NULL, S(28), S(149), S(260),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hIgnoreAutorepeatChk, NULL, S(28), S(172), S(290),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hUpdateStartupChk,    NULL, S(28), S(195), S(280),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hUpdateBgChk,         NULL, S(28), S(218), S(280),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hThemeLbl,            NULL, S(28), S(246), S(55),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hThemeCombo,          NULL, S(88), S(243), S(140),   S(100), SWP_NOZORDER | SWP_NOACTIVATE);
 
     // --- About Tab ---
     SetWindowPos(g_hAboutLogo,  NULL, (W-S(88))/2, S(45),  S(88), S(88), SWP_NOZORDER | SWP_NOACTIVATE);
@@ -844,10 +863,26 @@ void CreateControls(HWND hWnd) {
     g_hIgnoreAutorepeatChk = CreateWindowExW(
         0, L"BUTTON", L"Ignore key autorepeat (typing & gaming)",
         WS_CHILD | BS_AUTOCHECKBOX,
-        28, 192, 280, 20,
+        28, 172, 290, 20,
         hWnd, (HMENU)IDC_CHK_IGNORE_AUTOREPEAT, g_hInstance, NULL
     );
     SetControlFont(g_hIgnoreAutorepeatChk, g_hFontNormal);
+
+    g_hUpdateStartupChk = CreateWindowExW(
+        0, L"BUTTON", L"Check for updates on startup",
+        WS_CHILD | BS_AUTOCHECKBOX,
+        28, 195, 280, 20,
+        hWnd, (HMENU)IDC_CHK_UPDATE_STARTUP, g_hInstance, NULL
+    );
+    SetControlFont(g_hUpdateStartupChk, g_hFontNormal);
+
+    g_hUpdateBgChk = CreateWindowExW(
+        0, L"BUTTON", L"Check for updates in background",
+        WS_CHILD | BS_AUTOCHECKBOX,
+        28, 218, 280, 20,
+        hWnd, (HMENU)IDC_CHK_UPDATE_BG, g_hInstance, NULL
+    );
+    SetControlFont(g_hUpdateBgChk, g_hFontNormal);
 
     g_hThemeLbl = CreateWindowExW(
         0, L"STATIC", L"Theme:",
@@ -1008,6 +1043,8 @@ void UpdateTabVisibility(int tabIndex) {
     ShowWindow(g_hAutoStartChk, showSettings);
     ShowWindow(g_hStartupNotifChk, showSettings);
     ShowWindow(g_hIgnoreAutorepeatChk, showSettings);
+    ShowWindow(g_hUpdateStartupChk, showSettings);
+    ShowWindow(g_hUpdateBgChk, showSettings);
     ShowWindow(g_hThemeLbl, showSettings);
     ShowWindow(g_hThemeCombo, showSettings);
 
@@ -1145,6 +1182,8 @@ void LoadSettingsToUI() {
     Button_SetCheck(g_hAutoStartChk, config.autoStart ? BST_CHECKED : BST_UNCHECKED);
     Button_SetCheck(g_hStartupNotifChk, config.showStartupNotification ? BST_CHECKED : BST_UNCHECKED);
     Button_SetCheck(g_hIgnoreAutorepeatChk, config.ignoreKeyAutorepeat ? BST_CHECKED : BST_UNCHECKED);
+    Button_SetCheck(g_hUpdateStartupChk, config.checkUpdatesOnStartup ? BST_CHECKED : BST_UNCHECKED);
+    Button_SetCheck(g_hUpdateBgChk, config.checkUpdatesInBackground ? BST_CHECKED : BST_UNCHECKED);
 
     int themeIdx = 0; // System
     if (config.theme == "light") themeIdx = 1;
@@ -1165,6 +1204,8 @@ void SaveCurrentSettings() {
     cfg.autoStart = (Button_GetCheck(g_hAutoStartChk) == BST_CHECKED);
     cfg.showStartupNotification = (Button_GetCheck(g_hStartupNotifChk) == BST_CHECKED);
     cfg.ignoreKeyAutorepeat = (Button_GetCheck(g_hIgnoreAutorepeatChk) == BST_CHECKED);
+    cfg.checkUpdatesOnStartup = (Button_GetCheck(g_hUpdateStartupChk) == BST_CHECKED);
+    cfg.checkUpdatesInBackground = (Button_GetCheck(g_hUpdateBgChk) == BST_CHECKED);
 
     int themeIdx = (int)SendMessageW(g_hThemeCombo, CB_GETCURSEL, 0, 0);
     if (themeIdx == 1) cfg.theme = "light";
@@ -1600,6 +1641,157 @@ void ShowTrayMenu(HWND hWnd) {
     }
 }
 
+static std::vector<int> ParseVersion(const std::wstring& value) {
+    std::wstring s = value;
+    if (!s.empty() && (s[0] == L'v' || s[0] == L'V')) {
+        s.erase(s.begin());
+    }
+    for (wchar_t& ch : s) {
+        if (!(ch >= L'0' && ch <= L'9') && ch != L'.') {
+            ch = L'.';
+        }
+    }
+    std::vector<int> parts;
+    std::wstringstream ss(s);
+    std::wstring token;
+    while (std::getline(ss, token, L'.')) {
+        if (token.empty()) continue;
+        try {
+            parts.push_back(std::stoi(token));
+        } catch (...) {
+            parts.push_back(0);
+        }
+    }
+    return parts;
+}
+
+static bool IsVersionNewer(const std::wstring& candidate, const std::wstring& current) {
+    std::vector<int> a = ParseVersion(candidate);
+    std::vector<int> b = ParseVersion(current);
+    const size_t n = (a.size() > b.size()) ? a.size() : b.size();
+    a.resize(n, 0);
+    b.resize(n, 0);
+    for (size_t i = 0; i < n; ++i) {
+        if (a[i] > b[i]) return true;
+        if (a[i] < b[i]) return false;
+    }
+    return false;
+}
+
+static std::string HttpGetUtf8(const std::wstring& url) {
+    HINTERNET hInternet = InternetOpenW(L"MonkeySounds/1.0", INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
+    if (!hInternet) return "";
+
+    HINTERNET hUrl = InternetOpenUrlW(
+        hInternet, url.c_str(), nullptr, 0,
+        INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_SECURE, 0);
+    if (!hUrl) {
+        InternetCloseHandle(hInternet);
+        return "";
+    }
+
+    std::string bytes;
+    char buffer[4096];
+    DWORD read = 0;
+    while (InternetReadFile(hUrl, buffer, static_cast<DWORD>(sizeof(buffer)), &read) && read > 0) {
+        bytes.append(buffer, buffer + read);
+    }
+
+    InternetCloseHandle(hUrl);
+    InternetCloseHandle(hInternet);
+    return bytes;
+}
+
+static bool GetLatestGithubRelease(std::wstring& outTag, std::wstring& outUrl) {
+    outTag.clear();
+    outUrl.clear();
+
+    const std::string body = HttpGetUtf8(L"https://api.github.com/repos/NSTechBytes/MonkeySounds/releases/latest");
+    if (body.empty()) return false;
+
+    try {
+        nlohmann::json doc = nlohmann::json::parse(body);
+        if (doc.contains("tag_name") && doc["tag_name"].is_string()) {
+            outTag = Utf8ToWide(doc["tag_name"].get<std::string>());
+        }
+        if (doc.contains("html_url") && doc["html_url"].is_string()) {
+            outUrl = Utf8ToWide(doc["html_url"].get<std::string>());
+        }
+    } catch (...) {
+        return false;
+    }
+
+    if (outTag.empty()) return false;
+    if (outUrl.empty()) {
+        outUrl = L"https://github.com/NSTechBytes/MonkeySounds/releases/tag/" + outTag;
+    }
+    return true;
+}
+
+struct UpdateCheckResult {
+    HWND targetWnd = nullptr;
+    bool silent = false;
+    bool fetchOk = false;
+    bool updateAvailable = false;
+    std::wstring currentVersion;
+    std::wstring latestTag;
+    std::wstring releaseUrl;
+};
+
+static DWORD WINAPI CheckForUpdatesThreadProc(LPVOID lpParam) {
+    UpdateCheckResult* res = static_cast<UpdateCheckResult*>(lpParam);
+    if (!res) return 0;
+
+    res->currentVersion = Utils::GetAppVersion();
+    res->fetchOk = GetLatestGithubRelease(res->latestTag, res->releaseUrl);
+    if (res->fetchOk) {
+        res->updateAvailable = IsVersionNewer(res->latestTag, res->currentVersion);
+    }
+
+    HWND hTarget = res->targetWnd;
+    if (hTarget && IsWindow(hTarget)) {
+        PostMessageW(hTarget, WM_UPDATE_CHECK_RESULT, 0, reinterpret_cast<LPARAM>(res));
+    } else {
+        delete res;
+    }
+    g_isCheckingForUpdates = false;
+    return 0;
+}
+
+static void StartAsyncUpdateCheck(HWND hWnd, bool silent) {
+    if (!hWnd || !IsWindow(hWnd)) return;
+    if (g_isCheckingForUpdates.exchange(true)) return;
+
+    if (!silent && g_hCheckUpdatesBtn) {
+        SetWindowTextW(g_hCheckUpdatesBtn, L"Checking...");
+        EnableWindow(g_hCheckUpdatesBtn, FALSE);
+    }
+
+    UpdateCheckResult* params = new UpdateCheckResult();
+    params->targetWnd = hWnd;
+    params->silent = silent;
+
+    HANDLE hThread = CreateThread(nullptr, 0, CheckForUpdatesThreadProc, params, 0, nullptr);
+    if (hThread) {
+        CloseHandle(hThread);
+    } else {
+        delete params;
+        g_isCheckingForUpdates = false;
+        if (!silent && g_hCheckUpdatesBtn) {
+            SetWindowTextW(g_hCheckUpdatesBtn, L"Check for Updates");
+            EnableWindow(g_hCheckUpdatesBtn, TRUE);
+        }
+    }
+}
+
+static void ConfigureBackgroundUpdateTimer(HWND hWnd) {
+    if (!hWnd || !IsWindow(hWnd)) return;
+    KillTimer(hWnd, TIMER_UPDATE_ID);
+    if (AppSettings::GetInstance().GetConfig().checkUpdatesInBackground) {
+        SetTimer(hWnd, TIMER_UPDATE_ID, UPDATE_CHECK_INTERVAL_MS, NULL);
+    }
+}
+
 static void ShowMainWindow(HWND hWnd) {
     if (!hWnd || !IsWindow(hWnd)) return;
     if (!IsWindowVisible(hWnd)) {
@@ -1637,6 +1829,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         SetTimer(hWnd, TIMER_CPU_ID, 1000, NULL);
         SetTimer(hWnd, TIMER_VU_ID,    30, NULL);   // ~33 fps decay
         UpdateCpuUsage();
+        ConfigureBackgroundUpdateTimer(hWnd);
+        if (AppSettings::GetInstance().GetConfig().checkUpdatesOnStartup) {
+            StartAsyncUpdateCheck(hWnd, true);
+        }
         break;
 
     case WM_DRAWITEM: {
@@ -1703,8 +1899,61 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             UpdateCpuUsage();
         } else if (wParam == TIMER_VU_ID) {
             VuDecay();
+        } else if (wParam == TIMER_UPDATE_ID) {
+            if (AppSettings::GetInstance().GetConfig().checkUpdatesInBackground) {
+                StartAsyncUpdateCheck(hWnd, true);
+            }
         }
         break;
+
+    case WM_UPDATE_CHECK_RESULT: {
+        UpdateCheckResult* res = reinterpret_cast<UpdateCheckResult*>(lParam);
+        if (!res) break;
+
+        if (g_hCheckUpdatesBtn) {
+            SetWindowTextW(g_hCheckUpdatesBtn, L"Check for Updates");
+            EnableWindow(g_hCheckUpdatesBtn, TRUE);
+        }
+
+        if (!res->fetchOk) {
+            if (!res->silent) {
+                WindowsTheme::DialogHookScope themeScope;
+                MessageBoxW(hWnd,
+                    L"Unable to check for updates from GitHub.\nPlease check your internet connection and try again.",
+                    L"MonkeySounds Update", MB_OK | MB_ICONWARNING);
+            }
+        } else if (res->updateAvailable) {
+            if (g_hStatusBar) {
+                std::wstring sbMsg = L"  Update available: " + res->latestTag;
+                SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)sbMsg.c_str());
+            }
+            // Show at most one update dialog during the entire program run session
+            if (!g_updateDialogOpen.load() && !g_updateDialogShownThisSession.exchange(true)) {
+                g_updateDialogOpen = true;
+                std::wstring msg = L"A new version of MonkeySounds is available!\n\n"
+                                   L"Current version: " + res->currentVersion + L"\n"
+                                   L"Latest version: " + res->latestTag + L"\n\n"
+                                   L"Would you like to open the release page?";
+                WindowsTheme::DialogHookScope themeScope;
+                int rc = MessageBoxW(hWnd, msg.c_str(), L"MonkeySounds Update", MB_YESNO | MB_ICONINFORMATION);
+                g_updateDialogOpen = false;
+                if (rc == IDYES) {
+                    ShellExecuteW(hWnd, L"open", res->releaseUrl.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+                }
+            } else if (!res->silent) {
+                ShellExecuteW(hWnd, L"open", res->releaseUrl.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+            }
+        } else {
+            if (!res->silent) {
+                std::wstring msg = L"You are using the latest version (" + res->currentVersion + L").";
+                WindowsTheme::DialogHookScope themeScope;
+                MessageBoxW(hWnd, msg.c_str(), L"MonkeySounds Update", MB_OK | MB_ICONINFORMATION);
+            }
+        }
+
+        delete res;
+        break;
+    }
 
     case WM_TRAYICON:
         if (lParam == WM_LBUTTONDBLCLK || lParam == WM_LBUTTONUP) {
@@ -1861,9 +2110,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             break;
 
         case IDC_BTN_CHECK_UPDATES:
-            ShellExecuteW(hWnd, L"open",
-                L"https://github.com/NSTechBytes/MonkeySounds/releases/latest",
-                nullptr, nullptr, SW_SHOWNORMAL);
+            StartAsyncUpdateCheck(hWnd, false);
             break;
 
         case IDC_BTN_GITHUB:
@@ -1894,6 +2141,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
         case IDC_CHK_IGNORE_AUTOREPEAT:
             SaveCurrentSettings();
+            break;
+
+        case IDC_CHK_UPDATE_STARTUP:
+            SaveCurrentSettings();
+            break;
+
+        case IDC_CHK_UPDATE_BG:
+            SaveCurrentSettings();
+            ConfigureBackgroundUpdateTimer(hWnd);
+            if (AppSettings::GetInstance().GetConfig().checkUpdatesInBackground) {
+                StartAsyncUpdateCheck(hWnd, true);
+            }
             break;
 
         case IDC_COMBO_THEME:
@@ -1974,6 +2233,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         AudioEngine::GetInstance().Shutdown();
         KillTimer(hWnd, TIMER_CPU_ID);
         KillTimer(hWnd, TIMER_VU_ID);
+        KillTimer(hWnd, TIMER_UPDATE_ID);
         if (g_hVuBgBrush) { DeleteObject(g_hVuBgBrush); g_hVuBgBrush = NULL; }
         PostQuitMessage(0);
         ExitProcess(0);

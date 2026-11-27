@@ -55,6 +55,8 @@
 #define IDC_CHK_IGNORE_AUTOREPEAT   1306
 #define IDC_LBL_THEME               1307
 #define IDC_COMBO_THEME             1308
+#define IDC_CHK_UPDATE_STARTUP      1309
+#define IDC_CHK_UPDATE_BG           1318
 
 // About tab controls
 #define IDC_STATIC_ABOUT_LOGO       1310
@@ -69,3 +71,4 @@
 // Custom window messages
 #define WM_TRAYICON                 (WM_USER + 1)
 #define WM_VU_PULSE                 (WM_USER + 2)
+#define WM_UPDATE_CHECK_RESULT      (WM_USER + 3)

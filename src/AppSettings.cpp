@@ -45,6 +45,8 @@ void AppSettings::Load() {
         if (j.contains("mouseProfilePath")) m_config.mouseProfilePath = Utils::Utf8ToWide(j["mouseProfilePath"].get<std::string>());
         if (j.contains("showStartupNotification")) m_config.showStartupNotification = j["showStartupNotification"].get<bool>();
         if (j.contains("ignoreKeyAutorepeat")) m_config.ignoreKeyAutorepeat = j["ignoreKeyAutorepeat"].get<bool>();
+        if (j.contains("checkUpdatesOnStartup")) m_config.checkUpdatesOnStartup = j["checkUpdatesOnStartup"].get<bool>();
+        if (j.contains("checkUpdatesInBackground")) m_config.checkUpdatesInBackground = j["checkUpdatesInBackground"].get<bool>();
         if (j.contains("theme") && j["theme"].is_string()) {
             std::string t = j["theme"].get<std::string>();
             if (t == "system" || t == "dark" || t == "light")
@@ -79,6 +81,8 @@ void AppSettings::Save() {
         j["mouseProfilePath"] = Utils::WideToUtf8(m_config.mouseProfilePath);
         j["showStartupNotification"] = m_config.showStartupNotification;
         j["ignoreKeyAutorepeat"] = m_config.ignoreKeyAutorepeat;
+        j["checkUpdatesOnStartup"] = m_config.checkUpdatesOnStartup;
+        j["checkUpdatesInBackground"] = m_config.checkUpdatesInBackground;
         j["theme"] = m_config.theme;
 
         // Save favorites lists

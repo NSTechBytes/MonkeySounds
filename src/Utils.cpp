@@ -109,8 +109,13 @@ std::wstring GetAppVersion() {
         WORD major = HIWORD(pInfo->dwFileVersionMS);
         WORD minor = LOWORD(pInfo->dwFileVersionMS);
         WORD patch = HIWORD(pInfo->dwFileVersionLS);
+        WORD build = LOWORD(pInfo->dwFileVersionLS);
         WCHAR buf[32];
-        swprintf_s(buf, L"%u.%u.%u", major, minor, patch);
+        if (build > 0) {
+            swprintf_s(buf, L"%u.%u.%u.%u", major, minor, patch, build);
+        } else {
+            swprintf_s(buf, L"%u.%u.%u", major, minor, patch);
+        }
         return buf;
     }
 
