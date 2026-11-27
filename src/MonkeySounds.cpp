@@ -14,6 +14,11 @@
 #include <windowsx.h>
 #include <shlobj.h>
 #include <shellapi.h>
+#include <dwmapi.h>
+
+#ifndef DWMWA_CLOAK
+#define DWMWA_CLOAK 13
+#endif
 #include <filesystem>
 #include <vector>
 #include <string>
@@ -442,7 +447,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     wcex.hInstance = hInstance;
     wcex.hIcon = g_hAppIcon;
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground = g_hTabBgBrush;
+    wcex.hbrBackground = WindowsTheme::IsUsingDarkMode() ? WindowsTheme::GetDarkBackgroundBrush() : g_hTabBgBrush;
     wcex.lpszClassName = L"MonkeySoundsMainWindow";
     wcex.hIconSm = g_hAppIcon;
     RegisterClassExW(&wcex);
@@ -1556,8 +1561,7 @@ void ShowTrayMenu(HWND hWnd) {
         DestroyMenu(hMenu);
 
         if (cmd == IDM_TRAY_SHOW) {
-            ShowWindow(hWnd, SW_SHOW);
-            SetForegroundWindow(hWnd);
+            SendMessageW(hWnd, WM_COMMAND, IDM_TRAY_SHOW, 0);
         } else if (cmd == IDM_TRAY_MUTE_KB) {
             bool nextState = !AudioEngine::GetInstance().IsKeyboardEnabled();
             AudioEngine::GetInstance().SetKeyboardEnabled(nextState);
@@ -1574,9 +1578,27 @@ void ShowTrayMenu(HWND hWnd) {
     }
 }
 
+static void ShowMainWindow(HWND hWnd) {
+    if (!hWnd || !IsWindow(hWnd)) return;
+    if (!IsWindowVisible(hWnd)) {
+        // Cloak during initial show + synchronous repaint so DWM never presents an unpainted/white frame
+        BOOL cloak = TRUE;
+        DwmSetWindowAttribute(hWnd, DWMWA_CLOAK, &cloak, sizeof(cloak));
+        ShowWindow(hWnd, SW_SHOW);
+        RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+        cloak = FALSE;
+        DwmSetWindowAttribute(hWnd, DWMWA_CLOAK, &cloak, sizeof(cloak));
+    } else if (IsIconic(hWnd)) {
+        ShowWindow(hWnd, SW_RESTORE);
+    }
+    SetForegroundWindow(hWnd);
+}
+
 void ApplyThemeToMainWindow(HWND hWnd) {
     if (!hWnd || !IsWindow(hWnd)) return;
     WindowsTheme::Refresh();
+    SetClassLongPtrW(hWnd, GCLP_HBRBACKGROUND,
+        (LONG_PTR)(WindowsTheme::IsUsingDarkMode() ? WindowsTheme::GetDarkBackgroundBrush() : g_hTabBgBrush));
     WindowsTheme::ApplyToDialog(hWnd);
     FixControlZOrder();
     InvalidateRect(hWnd, NULL, TRUE);
@@ -1665,8 +1687,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
     case WM_TRAYICON:
         if (lParam == WM_LBUTTONDBLCLK || lParam == WM_LBUTTONUP) {
-            ShowWindow(hWnd, SW_SHOW);
-            SetForegroundWindow(hWnd);
+            ShowMainWindow(hWnd);
         } else if (lParam == WM_RBUTTONUP) {
             ShowTrayMenu(hWnd);
         }
@@ -1863,8 +1884,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
         // Tray menu commands
         case IDM_TRAY_SHOW:
-            ShowWindow(hWnd, SW_SHOW);
-            SetForegroundWindow(hWnd);
+            ShowMainWindow(hWnd);
             break;
 
         case IDM_TRAY_MUTE_KB: {
