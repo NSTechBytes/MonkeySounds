@@ -332,6 +332,17 @@ static void LayoutWizardControls(WizardDialogState* pWiz, UINT dpi) {
     SetWindowPos(pWiz->hChkActivate,  NULL, S(24),  S(325), S(360),  S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(pWiz->hChkExportZip, NULL, S(24),  S(348), S(360),  S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
 
+    // Keep GroupBoxes at HWND_BOTTOM so controls inside them are never clipped out by WS_CLIPSIBLINGS
+    HWND groups[] = {
+        pWiz->hGrpType, pWiz->hGrpDefPress, pWiz->hGrpDefRel,
+        pWiz->hGrpKeySelect, pWiz->hGrpKeySounds, pWiz->hGrpSummary, pWiz->hGrpTest
+    };
+    for (HWND grp : groups) {
+        if (grp) {
+            SetWindowPos(grp, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        }
+    }
+
     InvalidateRect(hWnd, NULL, TRUE);
 }
 
@@ -1227,6 +1238,7 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         LayoutWizardControls(pWiz, pWiz->dpi);
         ApplyWizardFonts(pWiz);
         WindowsTheme::ApplyToControlTree(hWnd);
+        LayoutWizardControls(pWiz, pWiz->dpi);
         break;
     }
 
