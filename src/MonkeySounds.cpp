@@ -240,8 +240,8 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
     SendMessageW(g_hStatusBar, SB_SETPARTS, 3, (LPARAM)statwidths);
     SendMessageW(g_hStatusBar, WM_SIZE, 0, 0);
 
-    // Tab Control
-    SetWindowPos(g_hTabCtrl, NULL, S(8), S(6), W - S(30), S(310), SWP_NOZORDER | SWP_NOACTIVATE);
+    // Tab Control (must stay at HWND_BOTTOM so child-area controls above it are not clipped out)
+    SetWindowPos(g_hTabCtrl, HWND_BOTTOM, S(8), S(6), W - S(30), S(310), SWP_NOACTIVATE);
 
     // --- Sounds Tab: Keyboard Group ---
     SetWindowPos(g_hKbGroup,       NULL, S(16), S(36), W-S(50),   S(130), SWP_NOZORDER | SWP_NOACTIVATE);
@@ -1553,6 +1553,9 @@ void ApplyThemeToMainWindow(HWND hWnd) {
     if (!hWnd || !IsWindow(hWnd)) return;
     WindowsTheme::Refresh();
     WindowsTheme::ApplyToDialog(hWnd);
+    if (g_hTabCtrl) {
+        SetWindowPos(g_hTabCtrl, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    }
     if (g_hVuWnd) {
         SetWindowPos(g_hVuWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     }
