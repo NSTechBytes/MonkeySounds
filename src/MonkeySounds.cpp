@@ -288,15 +288,20 @@ static void RepositionVuMeter(HWND hWnd) {
     if (!g_hVuWnd || !g_hStatusBar) return;
     RECT rcSb{};
     GetWindowRect(g_hStatusBar, &rcSb);
-    POINT pt{ rcSb.left, rcSb.top };
-    ScreenToClient(hWnd, &pt);
     int sbH = (int)(rcSb.bottom - rcSb.top);
+    MapWindowPoints(HWND_DESKTOP, hWnd, (LPPOINT)&rcSb, 2);
+    int sbLeft = std::min(rcSb.left, rcSb.right);
+    int sbTop  = std::min(rcSb.top, rcSb.bottom);
+
     RECT paneRect{};
     SendMessageW(g_hStatusBar, SB_GETRECT, 1, (LPARAM)&paneRect);
+    int paneW = paneRect.right - paneRect.left - 4;
+    if (paneW < 0) paneW = 0;
+
     SetWindowPos(g_hVuWnd, HWND_TOP,
-        pt.x + paneRect.left + 2,
-        pt.y + 2,
-        paneRect.right - paneRect.left - 4,
+        sbLeft + paneRect.left + 2,
+        sbTop + 2,
+        paneW,
         sbH - 4,
         SWP_NOZORDER);
 }
@@ -355,7 +360,7 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
     SetWindowPos(g_hThemeLbl,            NULL, S(28), S(246), S(55),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(g_hThemeCombo,          NULL, S(88), S(243), S(140),   S(100), SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(g_hLangLbl,             NULL, S(28), S(276), S(55),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hLangCombo,           NULL, S(88), S(273), S(190),   S(200), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hLangCombo,           NULL, S(88), S(273), S(240),   S(200), SWP_NOZORDER | SWP_NOACTIVATE);
 
     // --- About Tab ---
     SetWindowPos(g_hAboutLogo,  NULL, (W-S(88))/2, S(45),  S(88), S(88), SWP_NOZORDER | SWP_NOACTIVATE);
@@ -921,7 +926,7 @@ void CreateControls(HWND hWnd) {
     g_hLangCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
         WS_CHILD | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
-        88, 273, 190, 200,
+        88, 273, 240, 200,
         hWnd, (HMENU)IDC_COMBO_LANG, g_hInstance, NULL
     );
     SetControlFont(g_hLangCombo, g_hFontNormal);
