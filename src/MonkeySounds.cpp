@@ -213,6 +213,28 @@ static void ApplyFontsToControls() {
     sf(g_hStatusBar,            g_hFontMono);
 }
 
+static void FixControlZOrder() {
+    // Keep background containers at the bottom of the child Z-order:
+    //   top -> interactive/label controls -> groupboxes -> tab control (bottom)
+    // Also keep WS_CLIPSIBLINGS off g_hTabCtrl so it paints the page background under groupboxes.
+    HWND groups[] = { g_hKbGroup, g_hMouseGroup, g_hAppSettingsGroup };
+    for (HWND grp : groups) {
+        if (grp) {
+            SetWindowPos(grp, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        }
+    }
+    if (g_hTabCtrl) {
+        LONG_PTR tabStyle = GetWindowLongPtrW(g_hTabCtrl, GWL_STYLE);
+        if (tabStyle & WS_CLIPSIBLINGS) {
+            SetWindowLongPtrW(g_hTabCtrl, GWL_STYLE, tabStyle & ~WS_CLIPSIBLINGS);
+        }
+        SetWindowPos(g_hTabCtrl, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    }
+    if (g_hVuWnd) {
+        SetWindowPos(g_hVuWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    }
+}
+
 static void RepositionVuMeter(HWND hWnd) {
     if (!g_hVuWnd || !g_hStatusBar) return;
     RECT rcSb{};
@@ -299,6 +321,9 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
 
     // Reposition VU meter over the middle status bar pane
     RepositionVuMeter(hWnd);
+
+    // Ensure proper Z-order (controls above groupboxes above tab control)
+    FixControlZOrder();
 
     // Redraw everything at the new layout
     InvalidateRect(hWnd, NULL, TRUE);
@@ -1553,12 +1578,7 @@ void ApplyThemeToMainWindow(HWND hWnd) {
     if (!hWnd || !IsWindow(hWnd)) return;
     WindowsTheme::Refresh();
     WindowsTheme::ApplyToDialog(hWnd);
-    if (g_hTabCtrl) {
-        SetWindowPos(g_hTabCtrl, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-    }
-    if (g_hVuWnd) {
-        SetWindowPos(g_hVuWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-    }
+    FixControlZOrder();
     InvalidateRect(hWnd, NULL, TRUE);
     UpdateWindow(hWnd);
 }
