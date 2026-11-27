@@ -7,6 +7,8 @@
 #include "Utils.h"
 #include "ZipUtils.h"
 #include "ProfileWizard.h"
+#include "WindowsTheme.h"
+#include "DpiUtil.h"
 #include <commctrl.h>
 #include <gdiplus.h>
 #include <windowsx.h>
@@ -97,6 +99,8 @@ HWND g_hSeparator = NULL;
 HWND g_hAutoStartChk = NULL;
 HWND g_hStartupNotifChk = NULL;
 HWND g_hIgnoreAutorepeatChk = NULL;
+HWND g_hThemeLbl = NULL;
+HWND g_hThemeCombo = NULL;
 
 // Control HWNDs - About Tab
 HWND g_hAboutLogo = NULL;
@@ -137,7 +141,173 @@ void VuPulse();      // spike the VU on a keypress/click
 void VuDecay();      // called each timer tick to decay bar levels
 void VuDraw(HDC hdc, const RECT& rc); // paint the VU bars
 
+// ---------------------------------------------------------------------------
+// DPI-aware font and layout helpers
+// ---------------------------------------------------------------------------
+
+static void CreateScaledFonts(UINT dpi) {
+    if (g_hFontNormal) { DeleteObject(g_hFontNormal); g_hFontNormal = NULL; }
+    if (g_hFontBold)   { DeleteObject(g_hFontBold);   g_hFontBold   = NULL; }
+    if (g_hFontTitle)  { DeleteObject(g_hFontTitle);  g_hFontTitle  = NULL; }
+    if (g_hFontMono)   { DeleteObject(g_hFontMono);   g_hFontMono   = NULL; }
+    if (g_hFontIcon)   { DeleteObject(g_hFontIcon);   g_hFontIcon   = NULL; }
+
+    g_hFontNormal = CreateFontW(-DpiUtil::Scale(12, dpi), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+        DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
+    g_hFontBold = CreateFontW(-DpiUtil::Scale(12, dpi), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+        DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
+    g_hFontTitle = CreateFontW(-DpiUtil::Scale(14, dpi), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+        DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
+    g_hFontMono = CreateFontW(-DpiUtil::Scale(11, dpi), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+        FIXED_PITCH | FF_MODERN, L"Consolas");
+    // Segoe MDL2 Assets — used for icon-only buttons (play ▶ U+E102, info ⓘ U+E946)
+    g_hFontIcon = CreateFontW(-DpiUtil::Scale(14, dpi), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+        DEFAULT_PITCH | FF_DONTCARE, L"Segoe MDL2 Assets");
+}
+
+static void ApplyFontsToControls() {
+    auto sf = [](HWND h, HFONT f) { if (h && f) SendMessageW(h, WM_SETFONT, (WPARAM)f, TRUE); };
+    sf(g_hTabCtrl,              g_hFontNormal);
+    sf(g_hKbGroup,              g_hFontBold);
+    sf(g_hKbEnable,             g_hFontNormal);
+    sf(g_hKbNewBtn,             g_hFontNormal);
+    sf(g_hKbPresetLbl,          g_hFontNormal);
+    sf(g_hKbPresetCombo,        g_hFontNormal);
+    sf(g_hKbFavBtn,             g_hFontNormal);
+    sf(g_hKbInfoBtn,            g_hFontIcon);
+    sf(g_hKbTestBtn,            g_hFontNormal);
+    sf(g_hKbExportBtn,          g_hFontNormal);
+    sf(g_hKbCustomBtn,          g_hFontNormal);
+    sf(g_hKbVolLbl,             g_hFontNormal);
+    sf(g_hMouseGroup,           g_hFontBold);
+    sf(g_hMouseEnable,          g_hFontNormal);
+    sf(g_hMouseNewBtn,          g_hFontNormal);
+    sf(g_hMousePresetLbl,       g_hFontNormal);
+    sf(g_hMousePresetCombo,     g_hFontNormal);
+    sf(g_hMouseFavBtn,          g_hFontNormal);
+    sf(g_hMouseInfoBtn,         g_hFontIcon);
+    sf(g_hMouseTestBtn,         g_hFontNormal);
+    sf(g_hMouseExportBtn,       g_hFontNormal);
+    sf(g_hMouseCustomBtn,       g_hFontNormal);
+    sf(g_hMouseVolLbl,          g_hFontNormal);
+    sf(g_hAppSettingsGroup,     g_hFontBold);
+    sf(g_hVersionLbl,           g_hFontNormal);
+    sf(g_hCheckUpdatesBtn,      g_hFontNormal);
+    sf(g_hAutoStartChk,         g_hFontNormal);
+    sf(g_hStartupNotifChk,      g_hFontNormal);
+    sf(g_hIgnoreAutorepeatChk,  g_hFontNormal);
+    sf(g_hThemeLbl,             g_hFontNormal);
+    sf(g_hThemeCombo,           g_hFontNormal);
+    sf(g_hAboutTitle,           g_hFontTitle);
+    sf(g_hAboutDesc1,           g_hFontNormal);
+    sf(g_hAboutDesc2,           g_hFontNormal);
+    sf(g_hAboutCopy,            g_hFontMono);
+    sf(g_hAboutGithubBtn,       g_hFontNormal);
+    sf(g_hAboutDiscordBtn,      g_hFontNormal);
+    sf(g_hAboutPatreonBtn,      g_hFontNormal);
+    sf(g_hStatusBar,            g_hFontMono);
+}
+
+static void RepositionVuMeter(HWND hWnd) {
+    if (!g_hVuWnd || !g_hStatusBar) return;
+    RECT rcSb{};
+    GetWindowRect(g_hStatusBar, &rcSb);
+    POINT pt{ rcSb.left, rcSb.top };
+    ScreenToClient(hWnd, &pt);
+    int sbH = (int)(rcSb.bottom - rcSb.top);
+    RECT paneRect{};
+    SendMessageW(g_hStatusBar, SB_GETRECT, 1, (LPARAM)&paneRect);
+    SetWindowPos(g_hVuWnd, HWND_TOP,
+        pt.x + paneRect.left + 2,
+        pt.y + 2,
+        paneRect.right - paneRect.left - 4,
+        sbH - 4,
+        SWP_NOZORDER);
+}
+
+static void LayoutControls(HWND hWnd, UINT dpi) {
+    // Design baseline: 96 DPI → scale all pixel values to actual DPI
+    auto S = [dpi](int v) { return DpiUtil::Scale(v, dpi); };
+    const int W = S(WINDOW_WIDTH);  // scaled design-width reference
+
+    // Status bar: update part widths and trigger auto-resize
+    int statwidths[] = { S(160), W - S(92), -1 };
+    SendMessageW(g_hStatusBar, SB_SETPARTS, 3, (LPARAM)statwidths);
+    SendMessageW(g_hStatusBar, WM_SIZE, 0, 0);
+
+    // Tab Control
+    SetWindowPos(g_hTabCtrl, NULL, S(8), S(6), W - S(30), S(310), SWP_NOZORDER | SWP_NOACTIVATE);
+
+    // --- Sounds Tab: Keyboard Group ---
+    SetWindowPos(g_hKbGroup,       NULL, S(16), S(36), W-S(50),   S(130), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hKbEnable,      NULL, S(28), S(56), S(180),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hKbNewBtn,      NULL, W-S(145), S(53), S(104), S(23),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hKbPresetLbl,   NULL, S(28), S(83), S(44),     S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hKbPresetCombo, NULL, S(76), S(80), W-S(351),  S(160), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hKbFavBtn,      NULL, W-S(271), S(79), S(24),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hKbInfoBtn,     NULL, W-S(243), S(79), S(24),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hKbTestBtn,     NULL, W-S(215), S(79), S(28),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hKbExportBtn,   NULL, W-S(183), S(79), S(54),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hKbCustomBtn,   NULL, W-S(125), S(79), S(84),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hKbVolLbl,      NULL, S(28), S(116), S(50),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hKbVolSlider,   NULL, S(80), S(114), W-S(131), S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+
+    // --- Sounds Tab: Mouse Group ---
+    SetWindowPos(g_hMouseGroup,       NULL, S(16), S(173), W-S(50),   S(130), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hMouseEnable,      NULL, S(28), S(193), S(180),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hMouseNewBtn,      NULL, W-S(145), S(190), S(104), S(23),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hMousePresetLbl,   NULL, S(28), S(220), S(44),     S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hMousePresetCombo, NULL, S(76), S(217), W-S(351),  S(160), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hMouseFavBtn,      NULL, W-S(271), S(216), S(24),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hMouseInfoBtn,     NULL, W-S(243), S(216), S(24),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hMouseTestBtn,     NULL, W-S(215), S(216), S(28),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hMouseExportBtn,   NULL, W-S(183), S(216), S(54),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hMouseCustomBtn,   NULL, W-S(125), S(216), S(84),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hMouseVolLbl,      NULL, S(28), S(253), S(50),     S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hMouseVolSlider,   NULL, S(80), S(251), W-S(131),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+
+    // --- Settings Tab ---
+    SetWindowPos(g_hAppSettingsGroup,    NULL, S(16), S(36),  W-S(50),  S(237), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hVersionLbl,          NULL, S(28), S(60),  S(200),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hCheckUpdatesBtn,     NULL, S(28), S(86),  S(130),   S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hSeparator,           NULL, S(28), S(130), W-S(74),  S(2),   SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hAutoStartChk,        NULL, S(28), S(142), S(240),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hStartupNotifChk,     NULL, S(28), S(167), S(240),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hIgnoreAutorepeatChk, NULL, S(28), S(192), S(280),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hThemeLbl,            NULL, S(28), S(224), S(55),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hThemeCombo,          NULL, S(88), S(221), S(140),   S(100), SWP_NOZORDER | SWP_NOACTIVATE);
+
+    // --- About Tab ---
+    SetWindowPos(g_hAboutLogo,  NULL, (W-S(88))/2, S(45),  S(88), S(88), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hAboutTitle, NULL, S(20), S(140), W-S(40), S(22),     SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hAboutDesc1, NULL, S(20), S(165), W-S(40), S(18),     SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hAboutDesc2, NULL, S(20), S(183), W-S(40), S(18),     SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hAboutCopy,  NULL, S(20), S(215), W-S(40), S(18),     SWP_NOZORDER | SWP_NOACTIVATE);
+    {
+        int btnW = S(130), btnH = S(28), btnGap = S(8);
+        int btnY = S(243);
+        int btnStartX = (W - (3*btnW + 2*btnGap)) / 2;
+        SetWindowPos(g_hAboutGithubBtn,  NULL, btnStartX,                  btnY, btnW, btnH, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(g_hAboutDiscordBtn, NULL, btnStartX + btnW + btnGap,   btnY, btnW, btnH, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(g_hAboutPatreonBtn, NULL, btnStartX + (btnW+btnGap)*2, btnY, btnW, btnH, SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    // Reposition VU meter over the middle status bar pane
+    RepositionVuMeter(hWnd);
+
+    // Redraw everything at the new layout
+    InvalidateRect(hWnd, NULL, TRUE);
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow) {
+    // Enable Per-Monitor DPI Awareness V2 before any window operations
+    DpiUtil::EnablePerMonitorDpiAwareness();
+
     // Ensure only a single instance of the application runs
     HANDLE hSingleInstanceMutex = CreateMutexW(NULL, TRUE, L"Local\\MonkeySounds_SingleInstance_Mutex_9A8B");
     if (GetLastError() == ERROR_ALREADY_EXISTS || hSingleInstanceMutex == NULL) {
@@ -195,6 +365,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     AppSettings::GetInstance().Load();
     const auto& config = AppSettings::GetInstance().GetConfig();
 
+    WindowsTheme::SetSettingsHandlers(
+        []() -> std::string { return AppSettings::GetInstance().GetConfig().theme; },
+        [](const std::string& val) {
+            AppSettings::GetInstance().GetConfig().theme = val;
+            AppSettings::GetInstance().Save();
+        }
+    );
+    WindowsTheme::Initialize();
+
     AudioEngine::GetInstance().SetKeyboardEnabled(config.keyboardEnabled);
     AudioEngine::GetInstance().SetMouseEnabled(config.mouseEnabled);
     AudioEngine::GetInstance().SetKeyboardVolume(config.keyboardVolume);
@@ -226,18 +405,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
     // Install Input Hooks
     InputHook::GetInstance().InstallHooks(hInstance);
 
-    // Create Fonts (Segoe UI)
-    g_hFontNormal = CreateFontW(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
-    g_hFontBold = CreateFontW(-12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
-    g_hFontTitle = CreateFontW(-14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
-    g_hFontMono = CreateFontW(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, L"Consolas");
-    // Segoe MDL2 Assets — used for icon-only buttons (play ▶ U+E102, info ⓘ U+E946)
-    g_hFontIcon = CreateFontW(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe MDL2 Assets");
+    // Fonts are created in WM_CREATE after the window DPI is known
 
     g_hTabBgBrush = CreateSolidBrush(RGB(249, 249, 249));
 
@@ -262,15 +430,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
         rcWorkArea.right = GetSystemMetrics(SM_CXSCREEN);
         rcWorkArea.bottom = GetSystemMetrics(SM_CYSCREEN);
     }
-    int posX = rcWorkArea.right - WINDOW_WIDTH - 12;
-    int posY = rcWorkArea.bottom - WINDOW_HEIGHT - 12;
+    // Scale window size to the primary monitor DPI
+    UINT initDpi = GetDpiForSystem();
+    int scaledW = DpiUtil::Scale(WINDOW_WIDTH, initDpi);
+    int scaledH = DpiUtil::Scale(WINDOW_HEIGHT, initDpi);
+    int posX = rcWorkArea.right - scaledW - 12;
+    int posY = rcWorkArea.bottom - scaledH - 12;
 
     HWND hWnd = CreateWindowExW(
         WS_EX_APPWINDOW,
         L"MonkeySoundsMainWindow",
         L"MonkeySounds",
         WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN,
-        posX, posY, WINDOW_WIDTH, WINDOW_HEIGHT,
+        posX, posY, scaledW, scaledH,
         nullptr, nullptr, hInstance, nullptr
     );
 
@@ -625,6 +797,25 @@ void CreateControls(HWND hWnd) {
     );
     SetControlFont(g_hIgnoreAutorepeatChk, g_hFontNormal);
 
+    g_hThemeLbl = CreateWindowExW(
+        0, L"STATIC", L"Theme:",
+        WS_CHILD | SS_LEFT,
+        28, 224, 55, 20,
+        hWnd, (HMENU)IDC_LBL_THEME, g_hInstance, NULL
+    );
+    SetControlFont(g_hThemeLbl, g_hFontNormal);
+
+    g_hThemeCombo = CreateWindowExW(
+        0, L"COMBOBOX", L"",
+        WS_CHILD | CBS_DROPDOWNLIST | WS_VSCROLL,
+        88, 221, 140, 100,
+        hWnd, (HMENU)IDC_COMBO_THEME, g_hInstance, NULL
+    );
+    SetControlFont(g_hThemeCombo, g_hFontNormal);
+    SendMessageW(g_hThemeCombo, CB_ADDSTRING, 0, (LPARAM)L"System");
+    SendMessageW(g_hThemeCombo, CB_ADDSTRING, 0, (LPARAM)L"Light");
+    SendMessageW(g_hThemeCombo, CB_ADDSTRING, 0, (LPARAM)L"Dark");
+
     // --- TAB 3: ABOUT ---
     g_hAboutLogo = CreateWindowExW(
         0, L"STATIC", L"",
@@ -720,6 +911,9 @@ void CreateControls(HWND hWnd) {
         163, 0, WINDOW_WIDTH - 88 - 163, 20,   // positioned over middle pane; y/h adjusted after SB sizes
         hWnd, (HMENU)IDC_VU_METER, g_hInstance, NULL
     );
+
+    // Apply DPI-aware layout (positions, status bar widths, VU meter) for the actual window DPI
+    LayoutControls(hWnd, DpiUtil::GetWindowDpi(hWnd));
 }
 
 void UpdateTabVisibility(int tabIndex) {
@@ -762,6 +956,8 @@ void UpdateTabVisibility(int tabIndex) {
     ShowWindow(g_hAutoStartChk, showSettings);
     ShowWindow(g_hStartupNotifChk, showSettings);
     ShowWindow(g_hIgnoreAutorepeatChk, showSettings);
+    ShowWindow(g_hThemeLbl, showSettings);
+    ShowWindow(g_hThemeCombo, showSettings);
 
     // Tab 2: About
     int showAbout = (tabIndex == 2) ? SW_SHOW : SW_HIDE;
@@ -898,6 +1094,11 @@ void LoadSettingsToUI() {
     Button_SetCheck(g_hStartupNotifChk, config.showStartupNotification ? BST_CHECKED : BST_UNCHECKED);
     Button_SetCheck(g_hIgnoreAutorepeatChk, config.ignoreKeyAutorepeat ? BST_CHECKED : BST_UNCHECKED);
 
+    int themeIdx = 0; // System
+    if (config.theme == "light") themeIdx = 1;
+    else if (config.theme == "dark") themeIdx = 2;
+    SendMessageW(g_hThemeCombo, CB_SETCURSEL, themeIdx, 0);
+
     PopulatePresets(); // also calls UpdateFavoriteButton for both
 }
 
@@ -912,6 +1113,12 @@ void SaveCurrentSettings() {
     cfg.autoStart = (Button_GetCheck(g_hAutoStartChk) == BST_CHECKED);
     cfg.showStartupNotification = (Button_GetCheck(g_hStartupNotifChk) == BST_CHECKED);
     cfg.ignoreKeyAutorepeat = (Button_GetCheck(g_hIgnoreAutorepeatChk) == BST_CHECKED);
+
+    int themeIdx = (int)SendMessageW(g_hThemeCombo, CB_GETCURSEL, 0, 0);
+    if (themeIdx == 1) cfg.theme = "light";
+    else if (themeIdx == 2) cfg.theme = "dark";
+    else cfg.theme = "system";
+
     InputHook::GetInstance().SetIgnoreAutorepeat(cfg.ignoreKeyAutorepeat);
     AppSettings::GetInstance().Save();
 }
@@ -1212,8 +1419,9 @@ void VuDraw(HDC hdc, const RECT& rc) {
     int w = rc.right  - rc.left;
     int h = rc.bottom - rc.top;
 
-    // Background — dark panel matching the status bar
-    HBRUSH hBg = CreateSolidBrush(RGB(249, 249, 249));
+    // Background — matches status bar in both light and dark mode
+    COLORREF bgColor = WindowsTheme::IsUsingDarkMode() ? WindowsTheme::GetDarkBackgroundColor() : RGB(249, 249, 249);
+    HBRUSH hBg = CreateSolidBrush(bgColor);
     FillRect(hdc, &rc, hBg);
     DeleteObject(hBg);
 
@@ -1317,6 +1525,7 @@ void ShowTrayMenu(HWND hWnd) {
         CheckMenuItem(hSubMenu, IDM_TRAY_MUTE_KB, AudioEngine::GetInstance().IsKeyboardEnabled() ? MF_UNCHECKED : MF_CHECKED);
         CheckMenuItem(hSubMenu, IDM_TRAY_MUTE_MOUSE, AudioEngine::GetInstance().IsMouseEnabled() ? MF_UNCHECKED : MF_CHECKED);
 
+        WindowsTheme::PrepareMenu(hWnd);
         UINT cmd = TrackPopupMenu(hSubMenu, TPM_RIGHTBUTTON | TPM_LEFTALIGN | TPM_RETURNCMD, pt.x, pt.y, 0, hWnd, NULL);
         PostMessage(hWnd, WM_NULL, 0, 0);
         DestroyMenu(hMenu);
@@ -1340,31 +1549,28 @@ void ShowTrayMenu(HWND hWnd) {
     }
 }
 
+void ApplyThemeToMainWindow(HWND hWnd) {
+    if (!hWnd || !IsWindow(hWnd)) return;
+    WindowsTheme::Refresh();
+    WindowsTheme::ApplyToDialog(hWnd);
+    if (g_hVuWnd) {
+        SetWindowPos(g_hVuWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    }
+    InvalidateRect(hWnd, NULL, TRUE);
+    UpdateWindow(hWnd);
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
     case WM_CREATE:
+        CreateScaledFonts(DpiUtil::GetWindowDpi(hWnd));
         CreateControls(hWnd);
         LoadSettingsToUI();
         UpdateTabVisibility(0);
+        ApplyThemeToMainWindow(hWnd);
         SetTimer(hWnd, TIMER_CPU_ID, 1000, NULL);
         SetTimer(hWnd, TIMER_VU_ID,    30, NULL);   // ~33 fps decay
         UpdateCpuUsage();
-        // Reposition VU window to sit over the middle status bar pane
-        {
-            RECT rcSb{};
-            GetWindowRect(g_hStatusBar, &rcSb);
-            POINT pt{ rcSb.left, rcSb.top };
-            ScreenToClient(hWnd, &pt);
-            int sbH = (int)(rcSb.bottom - rcSb.top);
-            RECT paneRect{};
-            SendMessageW(g_hStatusBar, SB_GETRECT, 1, (LPARAM)&paneRect);
-            SetWindowPos(g_hVuWnd, HWND_TOP,
-                pt.x + paneRect.left + 2,
-                pt.y + 2,
-                paneRect.right - paneRect.left - 4,
-                sbH - 4,
-                SWP_NOZORDER);
-        }
         break;
 
     case WM_DRAWITEM: {
@@ -1380,10 +1586,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             int h = rc.bottom - rc.top;
 
             // Fill background with tab color
-            FillRect(hdc, &rc, g_hTabBgBrush);
+            HBRUSH hBg = WindowsTheme::IsUsingDarkMode() ? WindowsTheme::GetPageBackgroundBrush() : g_hTabBgBrush;
+            FillRect(hdc, &rc, hBg);
 
-            int badgeW = 76;
-            int badgeH = 76;
+            // Scale badge to current DPI
+            UINT logoDpi = DpiUtil::GetWindowDpi(hWnd);
+            int badgeW = DpiUtil::Scale(76, logoDpi);
+            int badgeH = DpiUtil::Scale(76, logoDpi);
             int badgeX = (w - badgeW) / 2;
             int badgeY = (h - badgeH) / 2;
 
@@ -1392,7 +1601,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                 graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
                 graphics.DrawImage(g_pMonkeySoundsImage, badgeX, badgeY, badgeW, badgeH);
             } else if (g_hAppIcon) {
-                DrawIconEx(hdc, badgeX + (badgeW - 48) / 2, badgeY + (badgeH - 48) / 2, g_hAppIcon, 48, 48, 0, NULL, DI_NORMAL);
+                int iconSz = DpiUtil::Scale(48, logoDpi);
+                DrawIconEx(hdc, badgeX + (badgeW - iconSz) / 2, badgeY + (badgeH - iconSz) / 2, g_hAppIcon, iconSz, iconSz, 0, NULL, DI_NORMAL);
             }
             return TRUE;
         }
@@ -1621,6 +1831,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             SaveCurrentSettings();
             break;
 
+        case IDC_COMBO_THEME:
+            if (wmEvent == CBN_SELCHANGE) {
+                SaveCurrentSettings();
+                ApplyThemeToMainWindow(hWnd);
+            }
+            break;
+
         // Tray menu commands
         case IDM_TRAY_SHOW:
             ShowWindow(hWnd, SW_SHOW);
@@ -1656,6 +1873,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     case WM_VU_PULSE:
         VuPulse();
         break;
+
+    case WM_SETTINGCHANGE:
+        ApplyThemeToMainWindow(hWnd);
+        break;
+
+    case WM_DPICHANGED: {
+        UINT newDpi = HIWORD(wParam);
+        const RECT* suggested = reinterpret_cast<const RECT*>(lParam);
+        SetWindowPos(hWnd, nullptr,
+            suggested->left, suggested->top,
+            suggested->right  - suggested->left,
+            suggested->bottom - suggested->top,
+            SWP_NOZORDER | SWP_NOACTIVATE);
+        CreateScaledFonts(newDpi);
+        LayoutControls(hWnd, newDpi);
+        ApplyFontsToControls();
+        ApplyThemeToMainWindow(hWnd);
+        return 0;
+    }
 
     case WM_PAINT: {
         PAINTSTRUCT ps;

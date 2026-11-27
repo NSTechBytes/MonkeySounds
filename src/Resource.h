@@ -53,6 +53,8 @@
 #define IDC_CHK_AUTOSTART           1304
 #define IDC_CHK_STARTUP_NOTIF       1305
 #define IDC_CHK_IGNORE_AUTOREPEAT   1306
+#define IDC_LBL_THEME               1307
+#define IDC_COMBO_THEME             1308
 
 // About tab controls
 #define IDC_STATIC_ABOUT_LOGO       1310

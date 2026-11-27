@@ -45,6 +45,11 @@ void AppSettings::Load() {
         if (j.contains("mouseProfilePath")) m_config.mouseProfilePath = Utils::Utf8ToWide(j["mouseProfilePath"].get<std::string>());
         if (j.contains("showStartupNotification")) m_config.showStartupNotification = j["showStartupNotification"].get<bool>();
         if (j.contains("ignoreKeyAutorepeat")) m_config.ignoreKeyAutorepeat = j["ignoreKeyAutorepeat"].get<bool>();
+        if (j.contains("theme") && j["theme"].is_string()) {
+            std::string t = j["theme"].get<std::string>();
+            if (t == "system" || t == "dark" || t == "light")
+                m_config.theme = t;
+        }
 
         // Load favorites lists
         if (j.contains("kbFavorites") && j["kbFavorites"].is_array()) {
@@ -74,6 +79,7 @@ void AppSettings::Save() {
         j["mouseProfilePath"] = Utils::WideToUtf8(m_config.mouseProfilePath);
         j["showStartupNotification"] = m_config.showStartupNotification;
         j["ignoreKeyAutorepeat"] = m_config.ignoreKeyAutorepeat;
+        j["theme"] = m_config.theme;
 
         // Save favorites lists
         auto kbFavArr = nlohmann::json::array();

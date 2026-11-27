@@ -3,6 +3,8 @@
 #include "Utils.h"
 #include "ZipUtils.h"
 #include "Resource.h"
+#include "WindowsTheme.h"
+#include "DpiUtil.h"
 #include "json.hpp"
 #include <commctrl.h>
 #include <shlobj.h>
@@ -85,6 +87,7 @@ struct WizardDialogState {
     bool success = false;
     bool isRunning = true;
     std::wstring createdProfilePath;
+    UINT dpi = 96;
 
     // Mini preview audio engine
     ma_engine previewEngine;
@@ -172,6 +175,165 @@ struct WizardDialogState {
 };
 
 static WizardDialogState* g_pWiz = nullptr;
+
+// ---------------------------------------------------------------------------
+// Wizard DPI-aware font and layout helpers
+// ---------------------------------------------------------------------------
+
+static void CreateWizardFonts(WizardDialogState* pWiz, UINT dpi) {
+    if (pWiz->hFontNormal) { DeleteObject(pWiz->hFontNormal); pWiz->hFontNormal = NULL; }
+    if (pWiz->hFontBold)   { DeleteObject(pWiz->hFontBold);   pWiz->hFontBold   = NULL; }
+    if (pWiz->hFontTitle)  { DeleteObject(pWiz->hFontTitle);  pWiz->hFontTitle  = NULL; }
+    if (pWiz->hFontHeader) { DeleteObject(pWiz->hFontHeader); pWiz->hFontHeader = NULL; }
+    pWiz->dpi = dpi;
+    pWiz->hFontNormal = CreateFontW(-DpiUtil::Scale(12, dpi), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
+    pWiz->hFontBold = CreateFontW(-DpiUtil::Scale(12, dpi), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
+    pWiz->hFontHeader = CreateFontW(-DpiUtil::Scale(15, dpi), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
+    pWiz->hFontTitle = CreateFontW(-DpiUtil::Scale(13, dpi), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
+}
+
+static void ApplyWizardFonts(WizardDialogState* pWiz) {
+    auto sf = [](HWND h, HFONT f) { if (h && f) SendMessageW(h, WM_SETFONT, (WPARAM)f, TRUE); };
+    sf(pWiz->hLblStepTitle,  pWiz->hFontHeader);
+    sf(pWiz->hLblStepSub,    pWiz->hFontTitle);
+    sf(pWiz->hBtnBack,       pWiz->hFontNormal);
+    sf(pWiz->hBtnNext,       pWiz->hFontBold);
+    sf(pWiz->hBtnCancel,     pWiz->hFontNormal);
+    // Step 1
+    sf(pWiz->hGrpType,       pWiz->hFontBold);
+    sf(pWiz->hRadKb,         pWiz->hFontNormal);
+    sf(pWiz->hRadMouse,      pWiz->hFontNormal);
+    sf(pWiz->hLblName,       pWiz->hFontBold);
+    sf(pWiz->hEditName,      pWiz->hFontNormal);
+    sf(pWiz->hLblAuthor,     pWiz->hFontNormal);
+    sf(pWiz->hEditAuthor,    pWiz->hFontNormal);
+    sf(pWiz->hLblDesc,       pWiz->hFontNormal);
+    sf(pWiz->hEditDesc,      pWiz->hFontNormal);
+    // Step 2
+    sf(pWiz->hGrpDefPress,   pWiz->hFontBold);
+    sf(pWiz->hListDefPress,  pWiz->hFontNormal);
+    sf(pWiz->hBtnAddPress,   pWiz->hFontNormal);
+    sf(pWiz->hBtnDelPress,   pWiz->hFontNormal);
+    sf(pWiz->hBtnPlayPress,  pWiz->hFontNormal);
+    sf(pWiz->hGrpDefRel,     pWiz->hFontBold);
+    sf(pWiz->hEditDefRel,    pWiz->hFontNormal);
+    sf(pWiz->hBtnBrowseRel,  pWiz->hFontNormal);
+    sf(pWiz->hBtnClearRel,   pWiz->hFontNormal);
+    sf(pWiz->hBtnPlayRel,    pWiz->hFontNormal);
+    sf(pWiz->hLblDefNote,    pWiz->hFontNormal);
+    // Step 3
+    sf(pWiz->hGrpKeySelect,  pWiz->hFontBold);
+    sf(pWiz->hLblQuickKey,   pWiz->hFontNormal);
+    sf(pWiz->hComboKeyList,  pWiz->hFontNormal);
+    sf(pWiz->hLblCustomKey,  pWiz->hFontNormal);
+    sf(pWiz->hEditCustomKey, pWiz->hFontNormal);
+    sf(pWiz->hBtnAddKey,     pWiz->hFontNormal);
+    sf(pWiz->hGrpKeySounds,  pWiz->hFontBold);
+    sf(pWiz->hLblKeyPress,   pWiz->hFontNormal);
+    sf(pWiz->hEditKeyPress,  pWiz->hFontNormal);
+    sf(pWiz->hBtnBrowseKP,   pWiz->hFontNormal);
+    sf(pWiz->hBtnClearKP,    pWiz->hFontNormal);
+    sf(pWiz->hBtnPlayKP,     pWiz->hFontNormal);
+    sf(pWiz->hLblKeyRel,     pWiz->hFontNormal);
+    sf(pWiz->hEditKeyRel,    pWiz->hFontNormal);
+    sf(pWiz->hBtnBrowseKR,   pWiz->hFontNormal);
+    sf(pWiz->hBtnClearKR,    pWiz->hFontNormal);
+    sf(pWiz->hBtnPlayKR,     pWiz->hFontNormal);
+    sf(pWiz->hLblAssigned,   pWiz->hFontBold);
+    sf(pWiz->hListAssigned,  pWiz->hFontNormal);
+    sf(pWiz->hBtnRemoveBind, pWiz->hFontNormal);
+    // Step 4
+    sf(pWiz->hGrpSummary,    pWiz->hFontBold);
+    sf(pWiz->hEditSummary,   pWiz->hFontNormal);
+    sf(pWiz->hGrpTest,       pWiz->hFontBold);
+    sf(pWiz->hLblTestNote,   pWiz->hFontNormal);
+    sf(pWiz->hEditTestPad,   pWiz->hFontTitle);
+    sf(pWiz->hBtnTestLeft,   pWiz->hFontNormal);
+    sf(pWiz->hBtnTestRight,  pWiz->hFontNormal);
+    sf(pWiz->hBtnTestMid,    pWiz->hFontNormal);
+    sf(pWiz->hChkActivate,   pWiz->hFontNormal);
+    sf(pWiz->hChkExportZip,  pWiz->hFontNormal);
+}
+
+static void LayoutWizardControls(WizardDialogState* pWiz, UINT dpi) {
+    HWND hWnd = pWiz->hWnd;
+    if (!hWnd || !IsWindow(hWnd)) return;
+    auto S = [dpi](int v) { return DpiUtil::Scale(v, dpi); };
+    const int W = S(WIZARD_WIDTH);
+    const int H = S(WIZARD_HEIGHT);
+    const int btnNavY = H - S(75);
+
+    // Navigation & header
+    SetWindowPos(pWiz->hLblStepTitle, NULL, S(20), S(12),  W-S(40), S(20), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hLblStepSub,   NULL, S(20), S(34),  W-S(40), S(20), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnBack,      NULL, W-S(300), btnNavY, S(80),  S(28), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnNext,      NULL, W-S(212), btnNavY, S(110), S(28), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnCancel,    NULL, W-S(94),  btnNavY, S(74),  S(28), SWP_NOZORDER | SWP_NOACTIVATE);
+
+    // Step 1
+    SetWindowPos(pWiz->hGrpType,    NULL, S(20), S(68), W-S(40), S(56), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hRadKb,      NULL, S(36), S(90), S(160),  S(20), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hRadMouse,   NULL, S(210),S(90), S(160),  S(20), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hLblName,    NULL, S(20), S(140), S(120), S(18), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hEditName,   NULL, S(20), S(160), W-S(40),S(24), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hLblAuthor,  NULL, S(20), S(195), S(180), S(18), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hEditAuthor, NULL, S(20), S(215), W-S(40),S(24), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hLblDesc,    NULL, S(20), S(250), S(200), S(18), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hEditDesc,   NULL, S(20), S(270), W-S(40),S(60), SWP_NOZORDER | SWP_NOACTIVATE);
+
+    // Step 2
+    SetWindowPos(pWiz->hGrpDefPress,  NULL, S(20),     S(65),  W-S(40),    S(175), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hListDefPress, NULL, S(36),     S(90),  W-S(170),   S(135), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnAddPress,  NULL, W-S(124),  S(90),  S(84),      S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnDelPress,  NULL, W-S(124),  S(122), S(84),      S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnPlayPress, NULL, W-S(124),  S(154), S(84),      S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hGrpDefRel,    NULL, S(20),     S(248), W-S(40),    S(75),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hEditDefRel,   NULL, S(36),     S(275), W-S(210),   S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnBrowseRel, NULL, W-S(165),  S(274), S(65),      S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnClearRel,  NULL, W-S(96),   S(274), S(26),      S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnPlayRel,   NULL, W-S(66),   S(274), S(26),      S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hLblDefNote,   NULL, S(20),     S(330), W-S(40),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+
+    // Step 3
+    SetWindowPos(pWiz->hGrpKeySelect,  NULL, S(20),   S(65),  W-S(40), S(70),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hLblQuickKey,   NULL, S(36),   S(92),  S(85),   S(18),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hComboKeyList,  NULL, S(125),  S(89),  S(180),  S(160), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hLblCustomKey,  NULL, S(315),  S(92),  S(65),   S(18),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hEditCustomKey, NULL, S(382),  S(89),  S(70),   S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnAddKey,     NULL, S(458),  S(88),  S(45),   S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hGrpKeySounds,  NULL, S(20),   S(140), W-S(40), S(115), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hLblKeyPress,   NULL, S(36),   S(166), S(85),   S(18),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hEditKeyPress,  NULL, S(125),  S(163), S(292),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnBrowseKP,   NULL, S(421),  S(162), S(65),   S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnClearKP,    NULL, S(490),  S(162), S(26),   S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnPlayKP,     NULL, S(520),  S(162), S(26),   S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hLblKeyRel,     NULL, S(36),   S(206), S(85),   S(18),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hEditKeyRel,    NULL, S(125),  S(203), S(292),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnBrowseKR,   NULL, S(421),  S(202), S(65),   S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnClearKR,    NULL, S(490),  S(202), S(26),   S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnPlayKR,     NULL, S(520),  S(202), S(26),   S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hLblAssigned,   NULL, S(20),   S(258), S(260),  S(18),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hListAssigned,  NULL, S(20),   S(278), W-S(140),S(80),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnRemoveBind, NULL, W-S(115),S(278), S(95),   S(28),  SWP_NOZORDER | SWP_NOACTIVATE);
+
+    // Step 4
+    SetWindowPos(pWiz->hGrpSummary,   NULL, S(20),  S(65),  W-S(40), S(140), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hEditSummary,  NULL, S(36),  S(88),  W-S(72), S(105), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hGrpTest,      NULL, S(20),  S(212), W-S(40), S(105), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hLblTestNote,  NULL, S(36),  S(232), W-S(72), S(18),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hEditTestPad,  NULL, S(36),  S(254), W-S(72), S(28),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnTestLeft,  NULL, S(36),  S(254), S(140),  S(32),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnTestRight, NULL, S(190), S(254), S(140),  S(32),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnTestMid,   NULL, S(345), S(254), S(140),  S(32),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hChkActivate,  NULL, S(24),  S(325), S(360),  S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hChkExportZip, NULL, S(24),  S(348), S(360),  S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+
+    InvalidateRect(hWnd, NULL, TRUE);
+}
 
 static void PlayAudioPreview(const std::wstring& filePath) {
     if (!g_pWiz || !g_pWiz->previewEngineReady || filePath.empty()) return;
@@ -806,19 +968,13 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
     case WM_CREATE: {
         pWiz->hWnd = hWnd;
 
-        // Fonts
-        pWiz->hFontNormal = CreateFontW(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
-        pWiz->hFontBold = CreateFontW(-12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
-        pWiz->hFontHeader = CreateFontW(-15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
-        pWiz->hFontTitle = CreateFontW(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
+        // Create DPI-aware fonts
+        CreateWizardFonts(pWiz, DpiUtil::GetWindowDpi(hWnd));
 
-        pWiz->hBgBrush = CreateSolidBrush(RGB(240, 240, 240));
-        pWiz->hHeaderBrush = CreateSolidBrush(RGB(240, 243, 246));
-        pWiz->hWhiteBrush = CreateSolidBrush(RGB(255, 255, 255));
+        bool dark = WindowsTheme::IsUsingDarkMode();
+        pWiz->hBgBrush = CreateSolidBrush(dark ? RGB(32, 32, 32) : RGB(240, 240, 240));
+        pWiz->hHeaderBrush = CreateSolidBrush(dark ? RGB(42, 42, 42) : RGB(240, 243, 246));
+        pWiz->hWhiteBrush = CreateSolidBrush(dark ? RGB(32, 32, 32) : RGB(255, 255, 255));
 
         // Header Labels
         pWiz->hLblStepTitle = CreateWindowExW(0, L"STATIC", L"Step Title", WS_CHILD | WS_VISIBLE | SS_LEFT,
@@ -1068,6 +1224,9 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         SendMessageW(pWiz->hChkExportZip, WM_SETFONT, (WPARAM)pWiz->hFontNormal, TRUE);
 
         ShowStep(pWiz, STEP_INFO);
+        LayoutWizardControls(pWiz, pWiz->dpi);
+        ApplyWizardFonts(pWiz);
+        WindowsTheme::ApplyToControlTree(hWnd);
         break;
     }
 
@@ -1334,17 +1493,18 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         FillRect(hdc, &rcClient, pWiz->hBgBrush);
 
         // Header Background
-        RECT rcHeader = { 0, 0, rcClient.right, 58 };
+        const int headerH = DpiUtil::Scale(58, pWiz->dpi);
+        RECT rcHeader = { 0, 0, rcClient.right, headerH };
         FillRect(hdc, &rcHeader, pWiz->hHeaderBrush);
 
         // Divider under header
-        HPEN hPen = CreatePen(PS_SOLID, 1, RGB(215, 220, 225));
+        HPEN hPen = CreatePen(PS_SOLID, 1, WindowsTheme::IsUsingDarkMode() ? RGB(75, 75, 75) : RGB(215, 220, 225));
         HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
-        MoveToEx(hdc, 0, 58, NULL);
-        LineTo(hdc, rcClient.right, 58);
+        MoveToEx(hdc, 0, headerH, NULL);
+        LineTo(hdc, rcClient.right, headerH);
 
         // Divider above footer
-        int footerY = rcClient.bottom - 78;
+        int footerY = rcClient.bottom - DpiUtil::Scale(78, pWiz->dpi);
         MoveToEx(hdc, 0, footerY, NULL);
         LineTo(hdc, rcClient.right, footerY);
 
@@ -1361,32 +1521,65 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
     case WM_CTLCOLORSTATIC: {
         HDC hdcStatic = (HDC)wParam;
         HWND hwndStatic = (HWND)lParam;
+        bool dark = WindowsTheme::IsUsingDarkMode();
 
         if (hwndStatic == pWiz->hLblStepTitle || hwndStatic == pWiz->hLblStepSub) {
             SetBkMode(hdcStatic, TRANSPARENT);
-            SetTextColor(hdcStatic, (hwndStatic == pWiz->hLblStepTitle) ? RGB(20, 30, 45) : RGB(80, 90, 100));
+            if (dark) {
+                SetTextColor(hdcStatic, (hwndStatic == pWiz->hLblStepTitle) ? RGB(224, 224, 224) : RGB(170, 170, 170));
+            } else {
+                SetTextColor(hdcStatic, (hwndStatic == pWiz->hLblStepTitle) ? RGB(20, 30, 45) : RGB(80, 90, 100));
+            }
             return (INT_PTR)pWiz->hHeaderBrush;
         }
 
-        SetBkColor(hdcStatic, RGB(240, 240, 240));
+        SetTextColor(hdcStatic, dark ? RGB(224, 224, 224) : GetSysColor(COLOR_WINDOWTEXT));
+        SetBkColor(hdcStatic, dark ? RGB(32, 32, 32) : RGB(240, 240, 240));
         SetBkMode(hdcStatic, TRANSPARENT);
         return (INT_PTR)pWiz->hBgBrush;
+    }
+
+    case WM_CTLCOLOREDIT:
+    case WM_CTLCOLORLISTBOX: {
+        if (WindowsTheme::IsUsingDarkMode()) {
+            HDC hdcCtrl = (HDC)wParam;
+            SetTextColor(hdcCtrl, RGB(224, 224, 224));
+            SetBkColor(hdcCtrl, RGB(32, 32, 32));
+            return (INT_PTR)pWiz->hBgBrush;
+        }
+        return DefWindowProcW(hWnd, uMsg, wParam, lParam);
     }
 
     case WM_CTLCOLORBTN:
     case WM_CTLCOLORDLG: {
         HDC hdcDlg = (HDC)wParam;
         HWND hwndDlg = (HWND)lParam;
+        bool dark = WindowsTheme::IsUsingDarkMode();
 
-        if (hwndDlg == pWiz->hRadKb || hwndDlg == pWiz->hRadMouse || hwndDlg == pWiz->hGrpType) {
+        if (!dark && (hwndDlg == pWiz->hRadKb || hwndDlg == pWiz->hRadMouse || hwndDlg == pWiz->hGrpType)) {
             SetBkColor(hdcDlg, RGB(255, 255, 255));
             SetBkMode(hdcDlg, TRANSPARENT);
             return (INT_PTR)pWiz->hWhiteBrush;
         }
 
-        SetBkColor(hdcDlg, RGB(240, 240, 240));
+        SetTextColor(hdcDlg, dark ? RGB(224, 224, 224) : GetSysColor(COLOR_WINDOWTEXT));
+        SetBkColor(hdcDlg, dark ? RGB(32, 32, 32) : RGB(240, 240, 240));
         SetBkMode(hdcDlg, TRANSPARENT);
         return (INT_PTR)pWiz->hBgBrush;
+    }
+
+    case WM_DPICHANGED: {
+        const RECT* suggested = reinterpret_cast<const RECT*>(lParam);
+        SetWindowPos(hWnd, nullptr,
+            suggested->left, suggested->top,
+            suggested->right  - suggested->left,
+            suggested->bottom - suggested->top,
+            SWP_NOZORDER | SWP_NOACTIVATE);
+        CreateWizardFonts(pWiz, HIWORD(wParam));
+        LayoutWizardControls(pWiz, pWiz->dpi);
+        ApplyWizardFonts(pWiz);
+        InvalidateRect(hWnd, NULL, TRUE);
+        return 0;
     }
 
     case WM_CLOSE:
@@ -1434,24 +1627,27 @@ bool ProfileWizard::Show(HWND hParentWnd, bool isKeyboard, std::wstring& outCrea
     wcex.hInstance = GetModuleHandle(NULL);
     wcex.hIcon = (HICON)GetClassLongPtrW(hParentWnd, GCLP_HICON);
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    HBRUSH hClassBgBrush = CreateSolidBrush(RGB(240, 240, 240));
+    HBRUSH hClassBgBrush = CreateSolidBrush(WindowsTheme::IsUsingDarkMode() ? RGB(32, 32, 32) : RGB(240, 240, 240));
     wcex.hbrBackground = hClassBgBrush;
     wcex.lpszClassName = L"MonkeySoundsProfileWizard";
 
     RegisterClassExW(&wcex);
 
-    // Calculate center relative to parent or screen
+    // Calculate center relative to parent or screen, scaled to parent's DPI
     RECT rcParent;
     GetWindowRect(hParentWnd ? hParentWnd : GetDesktopWindow(), &rcParent);
-    int x = rcParent.left + ((rcParent.right - rcParent.left) - WIZARD_WIDTH) / 2;
-    int y = rcParent.top + ((rcParent.bottom - rcParent.top) - WIZARD_HEIGHT) / 2;
+    UINT parentDpi = hParentWnd ? DpiUtil::GetWindowDpi(hParentWnd) : GetDpiForSystem();
+    int scaledWizW = DpiUtil::Scale(WIZARD_WIDTH,  parentDpi);
+    int scaledWizH = DpiUtil::Scale(WIZARD_HEIGHT, parentDpi);
+    int x = rcParent.left + ((rcParent.right - rcParent.left) - scaledWizW) / 2;
+    int y = rcParent.top  + ((rcParent.bottom - rcParent.top) - scaledWizH) / 2;
 
     HWND hWnd = CreateWindowExW(
         WS_EX_DLGMODALFRAME | WS_EX_TOPMOST,
         L"MonkeySoundsProfileWizard",
         L"Create Sound Profile Wizard",
         WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-        x, y, WIZARD_WIDTH, WIZARD_HEIGHT,
+        x, y, scaledWizW, scaledWizH,
         hParentWnd, NULL, GetModuleHandle(NULL), NULL
     );
 

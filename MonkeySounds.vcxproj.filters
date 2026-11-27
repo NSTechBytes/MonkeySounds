@@ -57,6 +57,12 @@
     <ClInclude Include="src\ZipUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\WindowsTheme.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DpiUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="src\third_party\miniaudio.h">
       <Filter>Header Files\third_party</Filter>
     </ClInclude>
@@ -96,6 +102,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsTheme.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ZipUtils.cpp">
