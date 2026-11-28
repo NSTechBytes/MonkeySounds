@@ -478,6 +478,18 @@ void PaintControlMessage(HWND w, UINT msg, WPARAM wParam, ControlType type) {
   if (buf) DeleteDC(buf);
   RestoreDC(dc, saved);
   if (msg == WM_PAINT) EndPaint(w, &ps);
+
+  if (type == ControlType::Tab) {
+    HWND parent = GetParent(w);
+    if (parent) {
+      for (HWND sibling = GetWindow(parent, GW_CHILD); sibling; sibling = GetWindow(sibling, GW_HWNDNEXT)) {
+        if (sibling == w || !IsWindowVisible(sibling)) continue;
+        if (HasClass(sibling, WC_BUTTON) && (GetWindowLongPtrW(sibling, GWL_STYLE) & BS_TYPEMASK) == BS_GROUPBOX) {
+          RedrawWindow(sibling, nullptr, nullptr, RDW_INVALIDATE | RDW_NOERASE | RDW_UPDATENOW);
+        }
+      }
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
