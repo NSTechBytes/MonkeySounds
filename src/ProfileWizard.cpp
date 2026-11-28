@@ -267,8 +267,11 @@ static void LayoutWizardControls(WizardDialogState* pWiz, UINT dpi) {
     HWND hWnd = pWiz->hWnd;
     if (!hWnd || !IsWindow(hWnd)) return;
     auto S = [dpi](int v) { return DpiUtil::Scale(v, dpi); };
-    const int W = S(WIZARD_WIDTH);
-    const int H = S(WIZARD_HEIGHT);
+    // Use actual client size so controls are always symmetric within the real client area.
+    RECT rcClient = {};
+    GetClientRect(hWnd, &rcClient);
+    const int W = rcClient.right;
+    const int H = rcClient.bottom;
     const int btnNavY = H - S(75);
 
     // Navigation & header
@@ -1599,14 +1602,23 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
     }
 
     case WM_DPICHANGED: {
+        // Update stored DPI and resize so client area stays WIZARD_WIDTH x WIZARD_HEIGHT.
+        UINT newDpi = HIWORD(wParam);
+        pWiz->dpi = newDpi;
+        int clientW = DpiUtil::Scale(WIZARD_WIDTH,  newDpi);
+        int clientH = DpiUtil::Scale(WIZARD_HEIGHT, newDpi);
+        DWORD wizStyle   = (DWORD)GetWindowLongW(hWnd, GWL_STYLE);
+        DWORD wizExStyle = (DWORD)GetWindowLongW(hWnd, GWL_EXSTYLE);
+        RECT rcAdj = { 0, 0, clientW, clientH };
+        AdjustWindowRectEx(&rcAdj, wizStyle, FALSE, wizExStyle);
         const RECT* suggested = reinterpret_cast<const RECT*>(lParam);
         SetWindowPos(hWnd, nullptr,
             suggested->left, suggested->top,
-            suggested->right  - suggested->left,
-            suggested->bottom - suggested->top,
+            rcAdj.right - rcAdj.left,
+            rcAdj.bottom - rcAdj.top,
             SWP_NOZORDER | SWP_NOACTIVATE);
-        CreateWizardFonts(pWiz, HIWORD(wParam));
-        LayoutWizardControls(pWiz, pWiz->dpi);
+        CreateWizardFonts(pWiz, newDpi);
+        LayoutWizardControls(pWiz, newDpi);
         ApplyWizardFonts(pWiz);
         InvalidateRect(hWnd, NULL, TRUE);
         return 0;
@@ -1663,20 +1675,29 @@ bool ProfileWizard::Show(HWND hParentWnd, bool isKeyboard, std::wstring& outCrea
 
     RegisterClassExW(&wcex);
 
-    // Calculate center relative to parent or screen, scaled to parent's DPI
+    // Calculate center relative to parent or screen, scaled to parent's DPI.
+    // Use AdjustWindowRectEx so the CLIENT area is exactly WIZARD_WIDTH x WIZARD_HEIGHT —
+    // without this the window frame (title bar + borders) eats into the client area and
+    // makes the right margin narrower than the left.
     RECT rcParent;
     GetWindowRect(hParentWnd ? hParentWnd : GetDesktopWindow(), &rcParent);
     UINT parentDpi = hParentWnd ? DpiUtil::GetWindowDpi(hParentWnd) : GetDpiForSystem();
-    int scaledWizW = DpiUtil::Scale(WIZARD_WIDTH,  parentDpi);
-    int scaledWizH = DpiUtil::Scale(WIZARD_HEIGHT, parentDpi);
+    int clientW = DpiUtil::Scale(WIZARD_WIDTH,  parentDpi);
+    int clientH = DpiUtil::Scale(WIZARD_HEIGHT, parentDpi);
+    DWORD wizStyle   = WS_POPUP | WS_CAPTION | WS_SYSMENU;
+    DWORD wizExStyle = WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | (Lang::IsRTL() ? WS_EX_LAYOUTRTL : 0);
+    RECT rcAdjust = { 0, 0, clientW, clientH };
+    AdjustWindowRectEx(&rcAdjust, wizStyle, FALSE, wizExStyle);
+    int scaledWizW = rcAdjust.right  - rcAdjust.left;
+    int scaledWizH = rcAdjust.bottom - rcAdjust.top;
     int x = rcParent.left + ((rcParent.right - rcParent.left) - scaledWizW) / 2;
     int y = rcParent.top  + ((rcParent.bottom - rcParent.top) - scaledWizH) / 2;
 
     HWND hWnd = CreateWindowExW(
-        WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | (Lang::IsRTL() ? WS_EX_LAYOUTRTL : 0),
+        wizExStyle,
         L"MonkeySoundsProfileWizard",
         TR("wizard.title"),
-        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+        wizStyle | WS_VISIBLE,
         x, y, scaledWizW, scaledWizH,
         hParentWnd, NULL, GetModuleHandle(NULL), NULL
     );
