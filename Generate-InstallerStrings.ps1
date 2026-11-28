@@ -11,21 +11,21 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $localeDirectory = Join-Path $root 'locales'
 $outputPath = Join-Path $root 'installer\InstallerStrings.nsh'
 
-# Keep this mapping aligned with the MUI_LANGUAGE entries in installer/setup.nsi.
+# Keep this mapping aligned with src/Lang.cpp (kSupportedLocales) and installer/setup.nsi.
 $languages = [ordered]@{
   'en'      = 'English';      'ar'      = 'Arabic';       'bg'      = 'Bulgarian'
-  'zh-Hans' = 'SimpChinese';  'zh-Hant' = 'TradChinese';  'hr'      = 'Croatian'
-  'cs'      = 'Czech';        'da'      = 'Danish';       'nl'      = 'Dutch'
-  'et'      = 'Estonian';     'fi'      = 'Finnish';      'fr'      = 'French'
-  'de'      = 'German';       'el'      = 'Greek';        'he'      = 'Hebrew'
-  'hu'      = 'Hungarian';    'id'      = 'Indonesian';   'it'      = 'Italian'
-  'ja'      = 'Japanese';     'ko'      = 'Korean';       'lv'      = 'Latvian'
-  'lt'      = 'Lithuanian';   'ms'      = 'Malay';        'nb'      = 'Norwegian'
-  'pl'      = 'Polish';       'pt-BR'   = 'PortugueseBR'; 'pt-PT'   = 'Portuguese'
-  'ro'      = 'Romanian';     'ru'      = 'Russian';      'sr-Cyrl' = 'Serbian'
-  'sr-Latn' = 'SerbianLatin'; 'sk'      = 'Slovak';       'sl'      = 'Slovenian'
-  'es'      = 'Spanish';      'sv'      = 'Swedish';      'th'      = 'Thai'
-  'tr'      = 'Turkish';      'uk'      = 'Ukrainian';    'vi'      = 'Vietnamese'
+  'cs'      = 'Czech';        'da'      = 'Danish';       'de'      = 'German'
+  'el'      = 'Greek';        'es'      = 'Spanish';      'et'      = 'Estonian'
+  'fi'      = 'Finnish';      'fr'      = 'French';       'he'      = 'Hebrew'
+  'hr'      = 'Croatian';     'hu'      = 'Hungarian';    'id'      = 'Indonesian'
+  'it'      = 'Italian';      'ja'      = 'Japanese';     'ko'      = 'Korean'
+  'lt'      = 'Lithuanian';   'lv'      = 'Latvian';      'ms'      = 'Malay'
+  'nb'      = 'Norwegian';    'nl'      = 'Dutch';        'pl'      = 'Polish'
+  'pt-BR'   = 'PortugueseBR'; 'pt-PT'   = 'Portuguese';   'ro'      = 'Romanian'
+  'ru'      = 'Russian';      'sk'      = 'Slovak';       'sl'      = 'Slovenian'
+  'sr-Cyrl' = 'Serbian';      'sr-Latn' = 'SerbianLatin'; 'sv'      = 'Swedish'
+  'th'      = 'Thai';         'tr'      = 'Turkish';      'uk'      = 'Ukrainian'
+  'vi'      = 'Vietnamese';   'zh-Hans' = 'SimpChinese';  'zh-Hant' = 'TradChinese'
 }
 
 $strings = [ordered]@{

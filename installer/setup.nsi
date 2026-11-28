@@ -95,47 +95,47 @@ UninstPage custom un.RemoveDataPageCreate un.RemoveDataPageLeave
 !insertmacro MUI_UNPAGE_INSTFILES
 
 ;---------------------------------------------------------
-; Languages — Keep aligned with locales/*.json & Generate-InstallerStrings.ps1
+; Languages — Keep aligned with src/Lang.cpp (kSupportedLocales) & Generate-InstallerStrings.ps1
 ;---------------------------------------------------------
 !insertmacro MUI_LANGUAGE "English"
 !insertmacro MUI_LANGUAGE "Arabic"
 !insertmacro MUI_LANGUAGE "Bulgarian"
-!insertmacro MUI_LANGUAGE "SimpChinese"
-!insertmacro MUI_LANGUAGE "TradChinese"
-!insertmacro MUI_LANGUAGE "Croatian"
 !insertmacro MUI_LANGUAGE "Czech"
 !insertmacro MUI_LANGUAGE "Danish"
-!insertmacro MUI_LANGUAGE "Dutch"
+!insertmacro MUI_LANGUAGE "German"
+!insertmacro MUI_LANGUAGE "Greek"
+!insertmacro MUI_LANGUAGE "Spanish"
 !insertmacro MUI_LANGUAGE "Estonian"
 !insertmacro MUI_LANGUAGE "Finnish"
 !insertmacro MUI_LANGUAGE "French"
-!insertmacro MUI_LANGUAGE "German"
-!insertmacro MUI_LANGUAGE "Greek"
 !insertmacro MUI_LANGUAGE "Hebrew"
+!insertmacro MUI_LANGUAGE "Croatian"
 !insertmacro MUI_LANGUAGE "Hungarian"
 !insertmacro MUI_LANGUAGE "Indonesian"
 !insertmacro MUI_LANGUAGE "Italian"
 !insertmacro MUI_LANGUAGE "Japanese"
 !insertmacro MUI_LANGUAGE "Korean"
-!insertmacro MUI_LANGUAGE "Latvian"
 !insertmacro MUI_LANGUAGE "Lithuanian"
+!insertmacro MUI_LANGUAGE "Latvian"
 !insertmacro MUI_LANGUAGE "Malay"
 !insertmacro MUI_LANGUAGE "Norwegian"
+!insertmacro MUI_LANGUAGE "Dutch"
 !insertmacro MUI_LANGUAGE "Polish"
 !insertmacro MUI_LANGUAGE "PortugueseBR"
 !insertmacro MUI_LANGUAGE "Portuguese"
 !insertmacro MUI_LANGUAGE "Romanian"
 !insertmacro MUI_LANGUAGE "Russian"
-!insertmacro MUI_LANGUAGE "Serbian"
-!insertmacro MUI_LANGUAGE "SerbianLatin"
 !insertmacro MUI_LANGUAGE "Slovak"
 !insertmacro MUI_LANGUAGE "Slovenian"
-!insertmacro MUI_LANGUAGE "Spanish"
+!insertmacro MUI_LANGUAGE "Serbian"
+!insertmacro MUI_LANGUAGE "SerbianLatin"
 !insertmacro MUI_LANGUAGE "Swedish"
 !insertmacro MUI_LANGUAGE "Thai"
 !insertmacro MUI_LANGUAGE "Turkish"
 !insertmacro MUI_LANGUAGE "Ukrainian"
 !insertmacro MUI_LANGUAGE "Vietnamese"
+!insertmacro MUI_LANGUAGE "SimpChinese"
+!insertmacro MUI_LANGUAGE "TradChinese"
 
 !include "InstallerStrings.nsh"
 
@@ -287,7 +287,54 @@ FunctionEnd
 ;---------------------------------------------------------
 Function .onInit
   ${IfNot} ${UAC_IsInnerInstance}
-    !insertmacro MUI_LANGDLL_DISPLAY
+    ${Unless} ${Silent}
+      ; Display the exact same language names & order as MonkeySounds Settings (Lang.cpp)
+      LangDLL::LangDialog "Installer Language" "Please select a language." A \
+        ${LANG_ENGLISH}      "English" \
+        ${LANG_ARABIC}       "العربية (Arabic)" \
+        ${LANG_BULGARIAN}    "Български (Bulgarian)" \
+        ${LANG_CZECH}        "Čeština (Czech)" \
+        ${LANG_DANISH}       "Dansk (Danish)" \
+        ${LANG_GERMAN}       "Deutsch (German)" \
+        ${LANG_GREEK}        "Ελληνικά (Greek)" \
+        ${LANG_SPANISH}      "Español (Spanish)" \
+        ${LANG_ESTONIAN}     "Eesti (Estonian)" \
+        ${LANG_FINNISH}      "Suomi (Finnish)" \
+        ${LANG_FRENCH}       "Français (French)" \
+        ${LANG_HEBREW}       "עברית (Hebrew)" \
+        ${LANG_CROATIAN}     "Hrvatski (Croatian)" \
+        ${LANG_HUNGARIAN}    "Magyar (Hungarian)" \
+        ${LANG_INDONESIAN}   "Indonesia (Indonesian)" \
+        ${LANG_ITALIAN}      "Italiano (Italian)" \
+        ${LANG_JAPANESE}     "日本語 (Japanese)" \
+        ${LANG_KOREAN}       "한국어 (Korean)" \
+        ${LANG_LITHUANIAN}   "Lietuvių (Lithuanian)" \
+        ${LANG_LATVIAN}      "Latviešu (Latvian)" \
+        ${LANG_MALAY}        "Melayu (Malay)" \
+        ${LANG_NORWEGIAN}    "Norsk (Norwegian)" \
+        ${LANG_DUTCH}        "Nederlands (Dutch)" \
+        ${LANG_POLISH}       "Polski (Polish)" \
+        ${LANG_PORTUGUESEBR} "Português (Brasil) (Portuguese Brazil)" \
+        ${LANG_PORTUGUESE}   "Português (Portugal) (Portuguese Portugal)" \
+        ${LANG_ROMANIAN}     "Română (Romanian)" \
+        ${LANG_RUSSIAN}      "Русский (Russian)" \
+        ${LANG_SLOVAK}       "Slovenčina (Slovak)" \
+        ${LANG_SLOVENIAN}    "Slovenščina (Slovenian)" \
+        ${LANG_SERBIAN}      "Српски (ћирилица) (Serbian Cyrillic)" \
+        ${LANG_SERBIANLATIN} "Српски (latinica) (Serbian Latin)" \
+        ${LANG_SWEDISH}      "Svenska (Swedish)" \
+        ${LANG_THAI}         "ไทย (Thai)" \
+        ${LANG_TURKISH}      "Türkçe (Turkish)" \
+        ${LANG_UKRAINIAN}    "Українська (Ukrainian)" \
+        ${LANG_VIETNAMESE}   "Tiếng Việt (Vietnamese)" \
+        ${LANG_SIMPCHINESE}  "简体中文 (Chinese Simplified)" \
+        ${LANG_TRADCHINESE}  "繁體中文 (Chinese Traditional)" \
+        ""
+      Pop $LANGUAGE
+      ${If} $LANGUAGE == "cancel"
+        Abort
+      ${EndIf}
+    ${EndUnless}
   ${EndIf}
   Call SetInstallerLocale
   SetShellVarContext current
@@ -327,6 +374,7 @@ Function InstallModePageCreate
   ${If} $0 == error
     Abort
   ${EndIf}
+  nsDialogs::SetRTL $(^RTL)
 
   ${NSD_CreateLabel} 0 0 100% 20u "$(INST_MODE_LABEL)"
   Pop $0
@@ -528,6 +576,7 @@ Function un.RemoveDataPageCreate
   ${If} $0 == error
     Abort
   ${EndIf}
+  nsDialogs::SetRTL $(^RTL)
 
   ${NSD_CreateLabel} 0 0 100% 24u "$(UNINST_OPTIONS_HEADER)"
   Pop $0
