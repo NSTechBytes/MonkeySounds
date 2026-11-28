@@ -272,14 +272,17 @@ static void LayoutWizardControls(WizardDialogState* pWiz, UINT dpi) {
     GetClientRect(hWnd, &rcClient);
     const int W = rcClient.right;
     const int H = rcClient.bottom;
-    const int btnNavY = H - S(75);
+    // Footer strip is 78px tall, buttons are 28px — centre vertically: (78-28)/2 = 25px from top of strip.
+    const int footerStripH = S(78);
+    const int btnH          = S(28);
+    const int btnNavY       = H - footerStripH + (footerStripH - btnH) / 2;
 
     // Navigation & header
     SetWindowPos(pWiz->hLblStepTitle, NULL, S(20), S(12),  W-S(40), S(20), SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(pWiz->hLblStepSub,   NULL, S(20), S(34),  W-S(40), S(20), SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(pWiz->hBtnBack,      NULL, W-S(300), btnNavY, S(80),  S(28), SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(pWiz->hBtnNext,      NULL, W-S(212), btnNavY, S(110), S(28), SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(pWiz->hBtnCancel,    NULL, W-S(94),  btnNavY, S(74),  S(28), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnBack,      NULL, W-S(300), btnNavY, S(80),  btnH, SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnNext,      NULL, W-S(212), btnNavY, S(110), btnH, SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(pWiz->hBtnCancel,    NULL, W-S(94),  btnNavY, S(74),  btnH, SWP_NOZORDER | SWP_NOACTIVATE);
 
     // Step 1
     SetWindowPos(pWiz->hGrpType,    NULL, S(20), S(68), W-S(40), S(56), SWP_NOZORDER | SWP_NOACTIVATE);
