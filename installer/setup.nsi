@@ -289,46 +289,47 @@ Function .onInit
   ${IfNot} ${UAC_IsInnerInstance}
     ${Unless} ${Silent}
       ; Display the exact same language names & order as MonkeySounds Settings (Lang.cpp)
+      ; LangDLL expects pairs of: "Display Name" "${LANG_ID}"
       LangDLL::LangDialog "Installer Language" "Please select a language." A \
-        ${LANG_ENGLISH}      "English" \
-        ${LANG_ARABIC}       "العربية (Arabic)" \
-        ${LANG_BULGARIAN}    "Български (Bulgarian)" \
-        ${LANG_CZECH}        "Čeština (Czech)" \
-        ${LANG_DANISH}       "Dansk (Danish)" \
-        ${LANG_GERMAN}       "Deutsch (German)" \
-        ${LANG_GREEK}        "Ελληνικά (Greek)" \
-        ${LANG_SPANISH}      "Español (Spanish)" \
-        ${LANG_ESTONIAN}     "Eesti (Estonian)" \
-        ${LANG_FINNISH}      "Suomi (Finnish)" \
-        ${LANG_FRENCH}       "Français (French)" \
-        ${LANG_HEBREW}       "עברית (Hebrew)" \
-        ${LANG_CROATIAN}     "Hrvatski (Croatian)" \
-        ${LANG_HUNGARIAN}    "Magyar (Hungarian)" \
-        ${LANG_INDONESIAN}   "Indonesia (Indonesian)" \
-        ${LANG_ITALIAN}      "Italiano (Italian)" \
-        ${LANG_JAPANESE}     "日本語 (Japanese)" \
-        ${LANG_KOREAN}       "한국어 (Korean)" \
-        ${LANG_LITHUANIAN}   "Lietuvių (Lithuanian)" \
-        ${LANG_LATVIAN}      "Latviešu (Latvian)" \
-        ${LANG_MALAY}        "Melayu (Malay)" \
-        ${LANG_NORWEGIAN}    "Norsk (Norwegian)" \
-        ${LANG_DUTCH}        "Nederlands (Dutch)" \
-        ${LANG_POLISH}       "Polski (Polish)" \
-        ${LANG_PORTUGUESEBR} "Português (Brasil) (Portuguese Brazil)" \
-        ${LANG_PORTUGUESE}   "Português (Portugal) (Portuguese Portugal)" \
-        ${LANG_ROMANIAN}     "Română (Romanian)" \
-        ${LANG_RUSSIAN}      "Русский (Russian)" \
-        ${LANG_SLOVAK}       "Slovenčina (Slovak)" \
-        ${LANG_SLOVENIAN}    "Slovenščina (Slovenian)" \
-        ${LANG_SERBIAN}      "Српски (ћирилица) (Serbian Cyrillic)" \
-        ${LANG_SERBIANLATIN} "Српски (latinica) (Serbian Latin)" \
-        ${LANG_SWEDISH}      "Svenska (Swedish)" \
-        ${LANG_THAI}         "ไทย (Thai)" \
-        ${LANG_TURKISH}      "Türkçe (Turkish)" \
-        ${LANG_UKRAINIAN}    "Українська (Ukrainian)" \
-        ${LANG_VIETNAMESE}   "Tiếng Việt (Vietnamese)" \
-        ${LANG_SIMPCHINESE}  "简体中文 (Chinese Simplified)" \
-        ${LANG_TRADCHINESE}  "繁體中文 (Chinese Traditional)" \
+        "English"                                    "${LANG_ENGLISH}" \
+        "العربية (Arabic)"                           "${LANG_ARABIC}" \
+        "Български (Bulgarian)"                      "${LANG_BULGARIAN}" \
+        "Čeština (Czech)"                            "${LANG_CZECH}" \
+        "Dansk (Danish)"                             "${LANG_DANISH}" \
+        "Deutsch (German)"                           "${LANG_GERMAN}" \
+        "Ελληνικά (Greek)"                           "${LANG_GREEK}" \
+        "Español (Spanish)"                          "${LANG_SPANISH}" \
+        "Eesti (Estonian)"                           "${LANG_ESTONIAN}" \
+        "Suomi (Finnish)"                            "${LANG_FINNISH}" \
+        "Français (French)"                          "${LANG_FRENCH}" \
+        "עברית (Hebrew)"                             "${LANG_HEBREW}" \
+        "Hrvatski (Croatian)"                        "${LANG_CROATIAN}" \
+        "Magyar (Hungarian)"                         "${LANG_HUNGARIAN}" \
+        "Indonesia (Indonesian)"                     "${LANG_INDONESIAN}" \
+        "Italiano (Italian)"                         "${LANG_ITALIAN}" \
+        "日本語 (Japanese)"                          "${LANG_JAPANESE}" \
+        "한국어 (Korean)"                            "${LANG_KOREAN}" \
+        "Lietuvių (Lithuanian)"                      "${LANG_LITHUANIAN}" \
+        "Latviešu (Latvian)"                         "${LANG_LATVIAN}" \
+        "Melayu (Malay)"                             "${LANG_MALAY}" \
+        "Norsk (Norwegian)"                          "${LANG_NORWEGIAN}" \
+        "Nederlands (Dutch)"                         "${LANG_DUTCH}" \
+        "Polski (Polish)"                            "${LANG_POLISH}" \
+        "Português (Brasil) (Portuguese Brazil)"     "${LANG_PORTUGUESEBR}" \
+        "Português (Portugal) (Portuguese Portugal)" "${LANG_PORTUGUESE}" \
+        "Română (Romanian)"                          "${LANG_ROMANIAN}" \
+        "Русский (Russian)"                          "${LANG_RUSSIAN}" \
+        "Slovenčina (Slovak)"                        "${LANG_SLOVAK}" \
+        "Slovenščina (Slovenian)"                    "${LANG_SLOVENIAN}" \
+        "Српски (ћирилица) (Serbian Cyrillic)"       "${LANG_SERBIAN}" \
+        "Српски (latinica) (Serbian Latin)"          "${LANG_SERBIANLATIN}" \
+        "Svenska (Swedish)"                          "${LANG_SWEDISH}" \
+        "ไทย (Thai)"                                 "${LANG_THAI}" \
+        "Türkçe (Turkish)"                           "${LANG_TURKISH}" \
+        "Українська (Ukrainian)"                     "${LANG_UKRAINIAN}" \
+        "Tiếng Việt (Vietnamese)"                    "${LANG_VIETNAMESE}" \
+        "简体中文 (Chinese Simplified)"              "${LANG_SIMPCHINESE}" \
+        "繁體中文 (Chinese Traditional)"             "${LANG_TRADCHINESE}" \
         ""
       Pop $LANGUAGE
       ${If} $LANGUAGE == "cancel"
