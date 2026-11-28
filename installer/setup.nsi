@@ -14,6 +14,7 @@
 
 Name "${APP_NAME}"
 OutFile "dist_output\MonkeySounds_Setup_v${VERSION}.exe"
+Unicode True
 SetCompressor /SOLID lzma
 
 ; Default install dir (overridden by portable mode at runtime)
@@ -157,7 +158,6 @@ LangString INST_WELCOME_TITLE ${LANG_THAI}         "ยินดีต้อน�
 LangString INST_WELCOME_TITLE ${LANG_SWEDISH}      "Välkommen till installationen av ${APP_NAME} ${VERSION}"
 LangString INST_WELCOME_TITLE ${LANG_NORWEGIAN}    "Velkommen til installasjon av ${APP_NAME} ${VERSION}"
 LangString INST_WELCOME_TITLE ${LANG_DANISH}       "Velkommen til installation af ${APP_NAME} ${VERSION}"
-LangString INST_WELCOME_TITLE ${LANG_FINNISH}      "Tervetuloa ${APP_NAME} ${VERSION} -asennukseen"
 
 LangString INST_WELCOME_TEXT ${LANG_ENGLISH}      "This will install ${APP_NAME} on your computer.$\r$\n$\r$\nMonkeySounds adds satisfying keyboard and mouse sounds to every click and keystroke.$\r$\n$\r$\nClick Next to continue."
 LangString INST_WELCOME_TEXT ${LANG_ARABIC}       "سيقوم هذا البرنامج بتثبيت ${APP_NAME} على جهازك.$\r$\n$\r$\nيضيف MonkeySounds أصواتاً ممتعة للوحة المفاتيح والفأرة.$\r$\n$\r$\nانقر التالي للمتابعة."
@@ -172,11 +172,10 @@ LangString INST_WELCOME_TEXT ${LANG_POLISH}       "Ten program zainstaluje ${APP
 LangString INST_WELCOME_TEXT ${LANG_PORTUGUESEBR} "Este programa instalará o ${APP_NAME} em seu computador.$\r$\n$\r$\nMonkeySounds adiciona sons de teclado e mouse a cada clique.$\r$\n$\r$\nClique em Avançar para continuar."
 LangString INST_WELCOME_TEXT ${LANG_PORTUGUESE}   "Este programa instalará o ${APP_NAME} no seu computador.$\r$\n$\r$\nMonkeySounds adiciona sons de teclado e rato a cada clique.$\r$\n$\r$\nClique em Seguinte para continuar."
 LangString INST_WELCOME_TEXT ${LANG_RUSSIAN}      "Этот установщик установит ${APP_NAME} на ваш компьютер.$\r$\n$\r$\nMonkeySounds добавляет звуки клавиатуры и мыши к каждому нажатию.$\r$\n$\r$\nНажмите Далее, чтобы продолжить."
-LangString INST_WELCOME_TEXT ${LANG_SIMPCHINESE}  "此程序将在您的计算机上安装 ${APP_NAME}。$\r$\n$\r$\nMonkeySounds 为每次点击和按键添加悦耳的声音。$\r$\n$\r$\n点击"下一步"继续。"
+LangString INST_WELCOME_TEXT ${LANG_SIMPCHINESE}  "此程序将在您的计算机上安装 ${APP_NAME}。$\r$\n$\r$\nMonkeySounds 为每次点击和按键添加悦耳的声音。$\r$\n$\r$\n点击“下一步”继续。"
 LangString INST_WELCOME_TEXT ${LANG_TRADCHINESE}  "此程式將在您的電腦上安裝 ${APP_NAME}。$\r$\n$\r$\nMonkeySounds 為每次點擊和按鍵加入悅耳的聲音。$\r$\n$\r$\n按一下「下一步」繼續。"
 LangString INST_WELCOME_TEXT ${LANG_TURKISH}      "Bu program ${APP_NAME} uygulamasını bilgisayarınıza kuracaktır.$\r$\n$\r$\nMonkeySounds her tuş ve tıklamaya klavye ve fare sesleri ekler.$\r$\n$\r$\nDevam etmek için İleri'ye tıklayın."
 LangString INST_WELCOME_TEXT ${LANG_UKRAINIAN}    "Ця програма встановить ${APP_NAME} на ваш комп'ютер.$\r$\n$\r$\nMonkeySounds додає звуки клавіатури та миші до кожного натискання.$\r$\n$\r$\nНатисніть Далі, щоб продовжити."
-LangString INST_WELCOME_TEXT ${LANG_RUSSIAN}      "Этот установщик установит ${APP_NAME} на ваш компьютер.$\r$\n$\r$\nMonkeySounds добавляет звуки клавиатуры и мыши к каждому нажатию.$\r$\n$\r$\nНажмите Далее, чтобы продолжить."
 LangString INST_WELCOME_TEXT ${LANG_CZECH}        "Tento program nainstaluje ${APP_NAME} na váš počítač.$\r$\n$\r$\nMonkeySounds přidává zvuky klávesnice a myši ke každému stisku.$\r$\n$\r$\nPokračujte kliknutím na Další."
 LangString INST_WELCOME_TEXT ${LANG_HUNGARIAN}    "Ez a program telepíti a ${APP_NAME} alkalmazást a számítógépére.$\r$\n$\r$\nA MonkeySounds billentyűzet- és egérhangokat ad minden kattintáshoz.$\r$\n$\r$\nA folytatáshoz kattintson a Tovább gombra."
 LangString INST_WELCOME_TEXT ${LANG_ROMANIAN}     "Acest program va instala ${APP_NAME} pe calculatorul dvs.$\r$\n$\r$\nMonkeySounds adaugă sunete de tastatură și mouse la fiecare apăsare.$\r$\n$\r$\nFaceți clic pe Următorul pentru a continua."
