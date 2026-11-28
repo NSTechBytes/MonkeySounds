@@ -1908,6 +1908,8 @@ static void ApplyLayoutDirection(HWND hWnd, bool rtl) {
 void ApplyLanguageToMainWindow(HWND hWnd) {
     if (!hWnd || !IsWindow(hWnd)) return;
 
+    SendMessageW(hWnd, WM_SETREDRAW, FALSE, 0);
+
     // Tab titles
     auto setTabText = [](int idx, const wchar_t* text) {
         TCITEMW tie = {};
@@ -1971,10 +1973,9 @@ void ApplyLanguageToMainWindow(HWND hWnd) {
     // Status bar
     SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.ready"));
 
-    // Apply RTL / LTR direction and relayout
+    // Apply RTL / LTR direction and relayout, then re-apply active tab visibility & redraw
     ApplyLayoutDirection(hWnd, Lang::IsRTL());
-    FixControlZOrder();
-    RedrawWindow(hWnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+    UpdateTabVisibility(g_activeTab);
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {

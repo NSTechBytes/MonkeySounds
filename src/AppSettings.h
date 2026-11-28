@@ -12,7 +12,7 @@ struct AppConfig {
     bool autoStart = false;
     bool showStartupNotification = true;
     bool ignoreKeyAutorepeat = false;
-    bool checkUpdatesOnStartup = false;
+    bool checkUpdatesOnStartup = true;
     bool checkUpdatesInBackground = false;
     std::string theme = "system"; // "system", "dark", "light"
     std::string language = "en";  // BCP-47 code, default "en"
