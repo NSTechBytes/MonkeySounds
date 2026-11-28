@@ -95,6 +95,9 @@ static const std::unordered_map<std::string, std::wstring> kFallback = {
     {"sounds.mouse.import",       L"Import ZIP..."},
     // Settings tab
     {"settings.group.app",          L"Application"},
+    {"settings.group.behavior",     L"Startup & Behavior"},
+    {"settings.group.appearance",   L"Appearance & Language"},
+    {"settings.group.updates",      L"Updates"},
     {"settings.version",            L"Current Version: "},
     {"settings.checkUpdates",       L"Check for Updates"},
     {"settings.autoStart",          L"Auto-start on Windows startup"},

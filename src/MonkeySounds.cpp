@@ -44,7 +44,7 @@ static std::wstring Utf8ToWide(const std::string& str) {
 }
 
 #define WINDOW_WIDTH  510
-#define WINDOW_HEIGHT 426
+#define WINDOW_HEIGHT 430
 #define TIMER_CPU_ID    1001
 #define TIMER_VU_ID     1002
 #define TIMER_UPDATE_ID 1003
@@ -106,10 +106,11 @@ HWND g_hMouseVolLbl = NULL;
 HWND g_hMouseVolSlider = NULL;
 
 // Control HWNDs - Settings Tab
-HWND g_hAppSettingsGroup = NULL;
+HWND g_hGroupBehavior = NULL;
+HWND g_hGroupAppearance = NULL;
+HWND g_hGroupUpdates = NULL;
 HWND g_hVersionLbl = NULL;
 HWND g_hCheckUpdatesBtn = NULL;
-HWND g_hSeparator = NULL;
 HWND g_hAutoStartChk = NULL;
 HWND g_hStartupNotifChk = NULL;
 HWND g_hIgnoreAutorepeatChk = NULL;
@@ -218,7 +219,9 @@ static void ApplyFontsToControls() {
     sf(g_hMouseExportBtn,       g_hFontNormal);
     sf(g_hMouseCustomBtn,       g_hFontNormal);
     sf(g_hMouseVolLbl,          g_hFontNormal);
-    sf(g_hAppSettingsGroup,     g_hFontBold);
+    sf(g_hGroupBehavior,        g_hFontBold);
+    sf(g_hGroupAppearance,      g_hFontBold);
+    sf(g_hGroupUpdates,         g_hFontBold);
     sf(g_hVersionLbl,           g_hFontNormal);
     sf(g_hCheckUpdatesBtn,      g_hFontNormal);
     sf(g_hAutoStartChk,         g_hFontNormal);
@@ -245,7 +248,7 @@ static void FixControlZOrder() {
         // Dark mode: keep background containers at the bottom of the child Z-order:
         //   top -> interactive/label controls -> groupboxes -> tab control (bottom)
         // Also keep WS_CLIPSIBLINGS off g_hTabCtrl so it paints the page background under groupboxes.
-        HWND groups[] = { g_hKbGroup, g_hMouseGroup, g_hAppSettingsGroup };
+        HWND groups[] = { g_hKbGroup, g_hMouseGroup, g_hGroupBehavior, g_hGroupAppearance, g_hGroupUpdates };
         for (HWND grp : groups) {
             if (grp) {
                 SetWindowPos(grp, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
@@ -317,7 +320,7 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
     SendMessageW(g_hStatusBar, WM_SIZE, 0, 0);
 
     // Tab Control (must stay at HWND_BOTTOM so child-area controls above it are not clipped out)
-    SetWindowPos(g_hTabCtrl, HWND_BOTTOM, S(8), S(6), W - S(30), S(326), SWP_NOACTIVATE);
+    SetWindowPos(g_hTabCtrl, HWND_BOTTOM, S(8), S(6), W - S(30), S(330), SWP_NOACTIVATE);
 
     // --- Sounds Tab: Keyboard Group ---
     SetWindowPos(g_hKbGroup,       NULL, S(16), S(36), W-S(50),   S(130), SWP_NOZORDER | SWP_NOACTIVATE);
@@ -348,19 +351,22 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
     SetWindowPos(g_hMouseVolSlider,   NULL, S(80), S(251), W-S(131),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
 
     // --- Settings Tab ---
-    SetWindowPos(g_hAppSettingsGroup,    NULL, S(16), S(36),  W-S(50),  S(268), SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hVersionLbl,          NULL, S(28), S(56),  S(200),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hCheckUpdatesBtn,     NULL, S(28), S(80),  S(130),   S(26),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hSeparator,           NULL, S(28), S(116), W-S(74),  S(2),   SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hAutoStartChk,        NULL, S(28), S(126), S(260),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hStartupNotifChk,     NULL, S(28), S(149), S(260),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hIgnoreAutorepeatChk, NULL, S(28), S(172), S(290),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hUpdateStartupChk,    NULL, S(28), S(195), S(280),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hUpdateBgChk,         NULL, S(28), S(218), S(280),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hThemeLbl,            NULL, S(28), S(246), S(55),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hThemeCombo,          NULL, S(88), S(243), S(140),   S(100), SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hLangLbl,             NULL, S(28), S(276), S(55),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hLangCombo,           NULL, S(88), S(273), S(240),   S(200), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hGroupBehavior,       NULL, S(16), S(36),  W-S(50),  S(92),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hAutoStartChk,        NULL, S(28), S(56),  S(280),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hStartupNotifChk,     NULL, S(28), S(78),  S(280),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hIgnoreAutorepeatChk, NULL, S(28), S(100), S(320),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+
+    SetWindowPos(g_hGroupAppearance,     NULL, S(16), S(136), W-S(50),  S(82),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hThemeLbl,            NULL, S(28), S(158), S(60),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hThemeCombo,          NULL, S(94), S(155), S(150),   S(100), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hLangLbl,             NULL, S(28), S(188), S(60),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hLangCombo,           NULL, S(94), S(185), S(240),   S(200), SWP_NOZORDER | SWP_NOACTIVATE);
+
+    SetWindowPos(g_hGroupUpdates,        NULL, S(16), S(226), W-S(50),  S(98),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hVersionLbl,          NULL, S(28), S(248), S(200),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hCheckUpdatesBtn,     NULL, W-S(190), S(244), S(142), S(25), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hUpdateStartupChk,    NULL, S(28), S(274), S(300),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hUpdateBgChk,         NULL, S(28), S(296), S(300),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
 
     // --- About Tab ---
     SetWindowPos(g_hAboutLogo,  NULL, (W-S(88))/2, S(45),  S(88), S(88), SWP_NOZORDER | SWP_NOACTIVATE);
@@ -825,41 +831,18 @@ void CreateControls(HWND hWnd) {
     SendMessageW(g_hMouseVolSlider, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
 
     // --- TAB 2: SETTINGS ---
-    g_hAppSettingsGroup = CreateWindowExW(
-        0, L"BUTTON", TR("settings.group.app"),
+    g_hGroupBehavior = CreateWindowExW(
+        0, L"BUTTON", TR("settings.group.behavior"),
         WS_CHILD | BS_GROUPBOX,
-        16, 36, WINDOW_WIDTH - 50, 268,
-        hWnd, (HMENU)IDC_GB_APPLICATION, g_hInstance, NULL
+        16, 36, WINDOW_WIDTH - 50, 92,
+        hWnd, (HMENU)IDC_GB_BEHAVIOR, g_hInstance, NULL
     );
-    SetControlFont(g_hAppSettingsGroup, g_hFontBold);
-
-    g_hVersionLbl = CreateWindowExW(
-        0, L"STATIC", (TRS("settings.version") + Utils::GetAppVersion()).c_str(),
-        WS_CHILD | SS_LEFT,
-        28, 60, 200, 20,
-        hWnd, (HMENU)IDC_LBL_VERSION, g_hInstance, NULL
-    );
-    SetControlFont(g_hVersionLbl, g_hFontNormal);
-
-    g_hCheckUpdatesBtn = CreateWindowExW(
-        0, L"BUTTON", TR("settings.checkUpdates"),
-        WS_CHILD | BS_PUSHBUTTON,
-        28, 86, 130, 26,
-        hWnd, (HMENU)IDC_BTN_CHECK_UPDATES, g_hInstance, NULL
-    );
-    SetControlFont(g_hCheckUpdatesBtn, g_hFontNormal);
-
-    g_hSeparator = CreateWindowExW(
-        0, L"STATIC", L"",
-        WS_CHILD | SS_ETCHEDHORZ,
-        28, 130, WINDOW_WIDTH - 74, 2,
-        hWnd, (HMENU)-1, g_hInstance, NULL
-    );
+    SetControlFont(g_hGroupBehavior, g_hFontBold);
 
     g_hAutoStartChk = CreateWindowExW(
         0, L"BUTTON", TR("settings.autoStart"),
         WS_CHILD | BS_AUTOCHECKBOX,
-        28, 142, 240, 20,
+        28, 56, 280, 20,
         hWnd, (HMENU)IDC_CHK_AUTOSTART, g_hInstance, NULL
     );
     SetControlFont(g_hAutoStartChk, g_hFontNormal);
@@ -867,7 +850,7 @@ void CreateControls(HWND hWnd) {
     g_hStartupNotifChk = CreateWindowExW(
         0, L"BUTTON", TR("settings.startupNotif"),
         WS_CHILD | BS_AUTOCHECKBOX,
-        28, 167, 240, 20,
+        28, 78, 280, 20,
         hWnd, (HMENU)IDC_CHK_STARTUP_NOTIF, g_hInstance, NULL
     );
     SetControlFont(g_hStartupNotifChk, g_hFontNormal);
@@ -875,31 +858,23 @@ void CreateControls(HWND hWnd) {
     g_hIgnoreAutorepeatChk = CreateWindowExW(
         0, L"BUTTON", TR("settings.ignoreAutorepeat"),
         WS_CHILD | BS_AUTOCHECKBOX,
-        28, 172, 290, 20,
+        28, 100, 320, 20,
         hWnd, (HMENU)IDC_CHK_IGNORE_AUTOREPEAT, g_hInstance, NULL
     );
     SetControlFont(g_hIgnoreAutorepeatChk, g_hFontNormal);
 
-    g_hUpdateStartupChk = CreateWindowExW(
-        0, L"BUTTON", TR("settings.updateOnStartup"),
-        WS_CHILD | BS_AUTOCHECKBOX,
-        28, 195, 280, 20,
-        hWnd, (HMENU)IDC_CHK_UPDATE_STARTUP, g_hInstance, NULL
+    g_hGroupAppearance = CreateWindowExW(
+        0, L"BUTTON", TR("settings.group.appearance"),
+        WS_CHILD | BS_GROUPBOX,
+        16, 136, WINDOW_WIDTH - 50, 82,
+        hWnd, (HMENU)IDC_GB_APPEARANCE, g_hInstance, NULL
     );
-    SetControlFont(g_hUpdateStartupChk, g_hFontNormal);
-
-    g_hUpdateBgChk = CreateWindowExW(
-        0, L"BUTTON", TR("settings.updateInBackground"),
-        WS_CHILD | BS_AUTOCHECKBOX,
-        28, 218, 280, 20,
-        hWnd, (HMENU)IDC_CHK_UPDATE_BG, g_hInstance, NULL
-    );
-    SetControlFont(g_hUpdateBgChk, g_hFontNormal);
+    SetControlFont(g_hGroupAppearance, g_hFontBold);
 
     g_hThemeLbl = CreateWindowExW(
         0, L"STATIC", TR("settings.theme"),
         WS_CHILD | SS_LEFT,
-        28, 246, 55, 20,
+        28, 158, 60, 20,
         hWnd, (HMENU)IDC_LBL_THEME, g_hInstance, NULL
     );
     SetControlFont(g_hThemeLbl, g_hFontNormal);
@@ -907,7 +882,7 @@ void CreateControls(HWND hWnd) {
     g_hThemeCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
         WS_CHILD | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
-        88, 243, 140, 100,
+        94, 155, 150, 100,
         hWnd, (HMENU)IDC_COMBO_THEME, g_hInstance, NULL
     );
     SetControlFont(g_hThemeCombo, g_hFontNormal);
@@ -918,7 +893,7 @@ void CreateControls(HWND hWnd) {
     g_hLangLbl = CreateWindowExW(
         0, L"STATIC", TR("settings.language"),
         WS_CHILD | SS_LEFT,
-        28, 276, 55, 20,
+        28, 188, 60, 20,
         hWnd, (HMENU)IDC_LBL_LANG, g_hInstance, NULL
     );
     SetControlFont(g_hLangLbl, g_hFontNormal);
@@ -926,13 +901,53 @@ void CreateControls(HWND hWnd) {
     g_hLangCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
         WS_CHILD | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
-        88, 273, 240, 200,
+        94, 185, 240, 200,
         hWnd, (HMENU)IDC_COMBO_LANG, g_hInstance, NULL
     );
     SetControlFont(g_hLangCombo, g_hFontNormal);
     for (int i = 0; i < Lang::kLocaleCount; ++i) {
         SendMessageW(g_hLangCombo, CB_ADDSTRING, 0, (LPARAM)Lang::kSupportedLocaleNames[i]);
     }
+
+    g_hGroupUpdates = CreateWindowExW(
+        0, L"BUTTON", TR("settings.group.updates"),
+        WS_CHILD | BS_GROUPBOX,
+        16, 226, WINDOW_WIDTH - 50, 98,
+        hWnd, (HMENU)IDC_GB_UPDATES, g_hInstance, NULL
+    );
+    SetControlFont(g_hGroupUpdates, g_hFontBold);
+
+    g_hVersionLbl = CreateWindowExW(
+        0, L"STATIC", (TRS("settings.version") + Utils::GetAppVersion()).c_str(),
+        WS_CHILD | SS_LEFT,
+        28, 248, 200, 20,
+        hWnd, (HMENU)IDC_LBL_VERSION, g_hInstance, NULL
+    );
+    SetControlFont(g_hVersionLbl, g_hFontNormal);
+
+    g_hCheckUpdatesBtn = CreateWindowExW(
+        0, L"BUTTON", TR("settings.checkUpdates"),
+        WS_CHILD | BS_PUSHBUTTON,
+        WINDOW_WIDTH - 190, 244, 142, 25,
+        hWnd, (HMENU)IDC_BTN_CHECK_UPDATES, g_hInstance, NULL
+    );
+    SetControlFont(g_hCheckUpdatesBtn, g_hFontNormal);
+
+    g_hUpdateStartupChk = CreateWindowExW(
+        0, L"BUTTON", TR("settings.updateOnStartup"),
+        WS_CHILD | BS_AUTOCHECKBOX,
+        28, 274, 300, 20,
+        hWnd, (HMENU)IDC_CHK_UPDATE_STARTUP, g_hInstance, NULL
+    );
+    SetControlFont(g_hUpdateStartupChk, g_hFontNormal);
+
+    g_hUpdateBgChk = CreateWindowExW(
+        0, L"BUTTON", TR("settings.updateInBackground"),
+        WS_CHILD | BS_AUTOCHECKBOX,
+        28, 296, 300, 20,
+        hWnd, (HMENU)IDC_CHK_UPDATE_BG, g_hInstance, NULL
+    );
+    SetControlFont(g_hUpdateBgChk, g_hFontNormal);
 
     // --- TAB 3: ABOUT ---
     g_hAboutLogo = CreateWindowExW(
@@ -1037,6 +1052,10 @@ void CreateControls(HWND hWnd) {
 void UpdateTabVisibility(int tabIndex) {
     g_activeTab = tabIndex;
 
+    if (g_hMainWnd) {
+        SendMessageW(g_hMainWnd, WM_SETREDRAW, FALSE, 0);
+    }
+
     // Tab 0: Sounds
     int showSounds = (tabIndex == 0) ? SW_SHOW : SW_HIDE;
     ShowWindow(g_hKbGroup, showSounds);
@@ -1067,19 +1086,20 @@ void UpdateTabVisibility(int tabIndex) {
 
     // Tab 1: Settings
     int showSettings = (tabIndex == 1) ? SW_SHOW : SW_HIDE;
-    ShowWindow(g_hAppSettingsGroup, showSettings);
-    ShowWindow(g_hVersionLbl, showSettings);
-    ShowWindow(g_hCheckUpdatesBtn, showSettings);
-    ShowWindow(g_hSeparator, showSettings);
+    ShowWindow(g_hGroupBehavior, showSettings);
     ShowWindow(g_hAutoStartChk, showSettings);
     ShowWindow(g_hStartupNotifChk, showSettings);
     ShowWindow(g_hIgnoreAutorepeatChk, showSettings);
-    ShowWindow(g_hUpdateStartupChk, showSettings);
-    ShowWindow(g_hUpdateBgChk, showSettings);
+    ShowWindow(g_hGroupAppearance, showSettings);
     ShowWindow(g_hThemeLbl, showSettings);
     ShowWindow(g_hThemeCombo, showSettings);
     ShowWindow(g_hLangLbl, showSettings);
     ShowWindow(g_hLangCombo, showSettings);
+    ShowWindow(g_hGroupUpdates, showSettings);
+    ShowWindow(g_hVersionLbl, showSettings);
+    ShowWindow(g_hCheckUpdatesBtn, showSettings);
+    ShowWindow(g_hUpdateStartupChk, showSettings);
+    ShowWindow(g_hUpdateBgChk, showSettings);
 
     // Tab 2: About
     int showAbout = (tabIndex == 2) ? SW_SHOW : SW_HIDE;
@@ -1092,24 +1112,12 @@ void UpdateTabVisibility(int tabIndex) {
     ShowWindow(g_hAboutDiscordBtn, showAbout);
     ShowWindow(g_hAboutPatreonBtn, showAbout);
 
-    if (showAbout == SW_SHOW) {
-        SetWindowPos(g_hAboutLogo, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-        SetWindowPos(g_hAboutTitle, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-        SetWindowPos(g_hAboutDesc1, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-        SetWindowPos(g_hAboutDesc2, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-        SetWindowPos(g_hAboutCopy, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-        SetWindowPos(g_hAboutGithubBtn, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-        SetWindowPos(g_hAboutDiscordBtn, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-        SetWindowPos(g_hAboutPatreonBtn, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-        InvalidateRect(g_hAboutLogo, NULL, TRUE);
-        InvalidateRect(g_hAboutTitle, NULL, TRUE);
-        InvalidateRect(g_hAboutDesc1, NULL, TRUE);
-        InvalidateRect(g_hAboutDesc2, NULL, TRUE);
-        InvalidateRect(g_hAboutCopy, NULL, TRUE);
-    }
+    FixControlZOrder();
 
-    // Trigger repaint
-    InvalidateRect(g_hMainWnd, NULL, TRUE);
+    if (g_hMainWnd) {
+        SendMessageW(g_hMainWnd, WM_SETREDRAW, TRUE, 0);
+        RedrawWindow(g_hMainWnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+    }
 }
 
 void PopulatePresets() {
@@ -1873,11 +1881,14 @@ static void SetWindowRtl(HWND h, bool rtl) {
     LONG_PTR next = rtl ? (ex | WS_EX_LAYOUTRTL) : (ex & ~WS_EX_LAYOUTRTL);
     if (next != ex) {
         SetWindowLongPtrW(h, GWL_EXSTYLE, next);
+        SetWindowPos(h, NULL, 0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
     }
 }
 
 static void ApplyLayoutDirection(HWND hWnd, bool rtl) {
     if (!hWnd || !IsWindow(hWnd)) return;
+    SendMessageW(hWnd, WM_SETREDRAW, FALSE, 0);
     SetWindowRtl(hWnd, rtl);
     EnumChildWindows(hWnd, [](HWND child, LPARAM lParam) -> BOOL {
         if (child == g_hAboutLogo || child == g_hVuWnd) {
@@ -1887,9 +1898,8 @@ static void ApplyLayoutDirection(HWND hWnd, bool rtl) {
         SetWindowRtl(child, lParam != 0);
         return TRUE;
     }, rtl ? 1 : 0);
-    SetWindowPos(hWnd, NULL, 0, 0, 0, 0,
-        SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
     LayoutControls(hWnd, DpiUtil::GetWindowDpi(hWnd));
+    SendMessageW(hWnd, WM_SETREDRAW, TRUE, 0);
 }
 
 void ApplyLanguageToMainWindow(HWND hWnd) {
@@ -1924,16 +1934,18 @@ void ApplyLanguageToMainWindow(HWND hWnd) {
     SetWindowTextW(g_hMouseVolLbl,    TR("sounds.mouse.volume"));
 
     // Settings tab
-    SetWindowTextW(g_hAppSettingsGroup,    TR("settings.group.app"));
-    SetWindowTextW(g_hVersionLbl,          (TRS("settings.version") + Utils::GetAppVersion()).c_str());
-    SetWindowTextW(g_hCheckUpdatesBtn,     g_isCheckingForUpdates.load() ? TR("update.checking") : TR("settings.checkUpdates"));
+    SetWindowTextW(g_hGroupBehavior,       TR("settings.group.behavior"));
     SetWindowTextW(g_hAutoStartChk,        TR("settings.autoStart"));
     SetWindowTextW(g_hStartupNotifChk,     TR("settings.startupNotif"));
     SetWindowTextW(g_hIgnoreAutorepeatChk, TR("settings.ignoreAutorepeat"));
-    SetWindowTextW(g_hUpdateStartupChk,    TR("settings.updateOnStartup"));
-    SetWindowTextW(g_hUpdateBgChk,         TR("settings.updateInBackground"));
+    SetWindowTextW(g_hGroupAppearance,     TR("settings.group.appearance"));
     SetWindowTextW(g_hThemeLbl,            TR("settings.theme"));
     SetWindowTextW(g_hLangLbl,             TR("settings.language"));
+    SetWindowTextW(g_hGroupUpdates,        TR("settings.group.updates"));
+    SetWindowTextW(g_hVersionLbl,          (TRS("settings.version") + Utils::GetAppVersion()).c_str());
+    SetWindowTextW(g_hCheckUpdatesBtn,     g_isCheckingForUpdates.load() ? TR("update.checking") : TR("settings.checkUpdates"));
+    SetWindowTextW(g_hUpdateStartupChk,    TR("settings.updateOnStartup"));
+    SetWindowTextW(g_hUpdateBgChk,         TR("settings.updateInBackground"));
 
     // Refresh Theme combo items while preserving selection
     int curTheme = (int)SendMessageW(g_hThemeCombo, CB_GETCURSEL, 0, 0);
@@ -1978,6 +1990,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             StartAsyncUpdateCheck(hWnd, true);
         }
         break;
+
+    case WM_ERASEBKGND: {
+        HDC hdc = (HDC)wParam;
+        RECT rc{};
+        GetClientRect(hWnd, &rc);
+        HBRUSH hBr = WindowsTheme::IsUsingDarkMode() ? WindowsTheme::GetDarkBackgroundBrush() : g_hTabBgBrush;
+        if (hBr) FillRect(hdc, &rc, hBr);
+        return TRUE;
+    }
 
     case WM_DRAWITEM: {
         LPDRAWITEMSTRUCT pDIS = (LPDRAWITEMSTRUCT)lParam;

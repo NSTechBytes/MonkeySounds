@@ -47,7 +47,7 @@
 #define IDC_BTN_MOUSE_NEW           1212
 
 // Settings tab controls
-#define IDC_GB_APPLICATION          1301
+#define IDC_GB_BEHAVIOR             1301
 #define IDC_LBL_VERSION             1302
 #define IDC_BTN_CHECK_UPDATES       1303
 #define IDC_CHK_AUTOSTART           1304
@@ -60,6 +60,8 @@
 #define IDC_LBL_LANG                1319
 #define IDC_COMBO_LANG              1320
 #define IDC_LBL_LANG_NOTE           1321
+#define IDC_GB_APPEARANCE           1322
+#define IDC_GB_UPDATES              1323
 
 // About tab controls
 #define IDC_STATIC_ABOUT_LOGO       1310

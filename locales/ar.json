@@ -147,5 +147,8 @@
   "wizard.sum.anon": "مجهول",
   "wizard.sum.header": "=== ملخص الملف الشخصي ===\r\n\r\n",
   "wizard.sum.press": "ضغط=",
-  "wizard.sum.release": "تحرير="
+  "wizard.sum.release": "تحرير=",
+  "settings.group.behavior": "بدء التشغيل والسلوك",
+  "settings.group.appearance": "المظهر واللغة",
+  "settings.group.updates": "التحديثات"
 }

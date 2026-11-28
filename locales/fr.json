@@ -147,5 +147,8 @@
   "wizard.sum.anon": "Anonymous",
   "wizard.sum.header": "=== Profile Summary ===\r\n\r\n",
   "wizard.sum.press": "press=",
-  "wizard.sum.release": "release="
+  "wizard.sum.release": "release=",
+  "settings.group.behavior": "Démarrage et comportement",
+  "settings.group.appearance": "Apparence et langue",
+  "settings.group.updates": "Mises à jour"
 }

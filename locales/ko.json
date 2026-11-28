@@ -147,5 +147,8 @@
   "wizard.sum.anon": "Anonymous",
   "wizard.sum.header": "=== Profile Summary ===\r\n\r\n",
   "wizard.sum.press": "press=",
-  "wizard.sum.release": "release="
+  "wizard.sum.release": "release=",
+  "settings.group.behavior": "시작 및 동작",
+  "settings.group.appearance": "모양 및 언어",
+  "settings.group.updates": "업데이트"
 }
