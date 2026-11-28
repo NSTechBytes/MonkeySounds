@@ -315,7 +315,10 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
     const int W = S(WINDOW_WIDTH);  // scaled design-width reference
 
     // Status bar: update part widths and trigger auto-resize
-    int statwidths[] = { S(160), W - S(92), -1 };
+    RECT rcClient{};
+    GetClientRect(hWnd, &rcClient);
+    int clientW = (rcClient.right > 0) ? rcClient.right : W;
+    int statwidths[] = { S(160), clientW - S(108), -1 };
     SendMessageW(g_hStatusBar, SB_SETPARTS, 3, (LPARAM)statwidths);
     SendMessageW(g_hStatusBar, WM_SIZE, 0, 0);
 
@@ -370,10 +373,10 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
 
     // --- About Tab ---
     SetWindowPos(g_hAboutLogo,  NULL, (W-S(88))/2, S(45),  S(88), S(88), SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hAboutTitle, NULL, S(20), S(140), W-S(40), S(22),     SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hAboutDesc1, NULL, S(20), S(165), W-S(40), S(18),     SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hAboutDesc2, NULL, S(20), S(183), W-S(40), S(18),     SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hAboutCopy,  NULL, S(20), S(215), W-S(40), S(18),     SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hAboutTitle, NULL, S(24), S(140), W-S(66), S(22),     SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hAboutDesc1, NULL, S(24), S(165), W-S(66), S(18),     SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hAboutDesc2, NULL, S(24), S(183), W-S(66), S(18),     SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hAboutCopy,  NULL, S(24), S(215), W-S(66), S(18),     SWP_NOZORDER | SWP_NOACTIVATE);
     {
         int btnW = S(130), btnH = S(28), btnGap = S(8);
         int btnY = S(243);
