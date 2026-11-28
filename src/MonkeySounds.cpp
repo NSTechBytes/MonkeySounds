@@ -1299,9 +1299,9 @@ void ChooseCustomProfile(bool isKeyboard) {
     // Extract
     SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.importing"));
     if (!ZipUtils::ExtractZip(szFile, destDir)) {
-        MessageBoxW(g_hMainWnd,
+        { WindowsTheme::DialogHookScope _darkScope; MessageBoxW(g_hMainWnd,
             TR("import.error.extract"),
-            TR("import.error.title"), MB_OK | MB_ICONERROR);
+            TR("import.error.title"), MB_OK | MB_ICONERROR); }
         SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.importFailed"));
         return;
     }
@@ -1319,9 +1319,9 @@ void ChooseCustomProfile(bool isKeyboard) {
     }
 
     if (!fs::exists(profileJson)) {
-        MessageBoxW(g_hMainWnd,
+        { WindowsTheme::DialogHookScope _darkScope; MessageBoxW(g_hMainWnd,
             TR("import.error.noJson"),
-            TR("import.error.title"), MB_OK | MB_ICONERROR);
+            TR("import.error.title"), MB_OK | MB_ICONERROR); }
         SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.importFailed"));
         return;
     }
@@ -1350,9 +1350,9 @@ void ChooseCustomProfile(bool isKeyboard) {
         SendMessageW(g_hStatusBar, SB_SETTEXTW, 0,
             (LPARAM)(std::wstring(L"  Imported: ") + zipName).c_str());
     } else {
-        MessageBoxW(g_hMainWnd,
+        { WindowsTheme::DialogHookScope _darkScope; MessageBoxW(g_hMainWnd,
             TR("import.error.badJson"),
-            TR("import.error.title"), MB_OK | MB_ICONERROR);
+            TR("import.error.title"), MB_OK | MB_ICONERROR); }
         SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.importBadProf"));
     }
 }
@@ -1363,8 +1363,8 @@ void ExportCurrentProfile(bool isKeyboard) {
         : AudioEngine::GetInstance().GetCurrentMouseProfilePath();
 
     if (profilePath.empty() || !fs::exists(profilePath)) {
-        MessageBoxW(g_hMainWnd, TR("export.error.noProfile"),
-                    TR("export.dialog.title"), MB_OK | MB_ICONWARNING);
+        { WindowsTheme::DialogHookScope _darkScope; MessageBoxW(g_hMainWnd, TR("export.error.noProfile"),
+                    TR("export.dialog.title"), MB_OK | MB_ICONWARNING); }
         return;
     }
 
@@ -1394,8 +1394,8 @@ void ExportCurrentProfile(bool isKeyboard) {
         SendMessageW(g_hStatusBar, SB_SETTEXTW, 0,
             (LPARAM)(std::wstring(L"  Exported: ") + fs::path(szFile).filename().wstring()).c_str());
     } else {
-        MessageBoxW(g_hMainWnd, TR("export.error.failed"),
-                    TR("export.error.title"), MB_OK | MB_ICONERROR);
+        { WindowsTheme::DialogHookScope _darkScope; MessageBoxW(g_hMainWnd, TR("export.error.failed"),
+                    TR("export.error.title"), MB_OK | MB_ICONERROR); }
         SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.exportFailed"));
     }
 }
@@ -1501,7 +1501,7 @@ void ShowProfileInfo(bool isKeyboard) {
     );
 
     const wchar_t* title = isKeyboard ? TR("profile.info.keyboard") : TR("profile.info.mouse");
-    MessageBoxW(g_hMainWnd, buf, title, MB_OK | MB_ICONINFORMATION);
+    { WindowsTheme::DialogHookScope _darkScope; MessageBoxW(g_hMainWnd, buf, title, MB_OK | MB_ICONINFORMATION); }
 }
 
 void TestCurrentProfile(bool isKeyboard) {

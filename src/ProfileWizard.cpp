@@ -712,7 +712,7 @@ static bool ValidateAndSaveStep(WizardDialogState* pWiz, int step) {
         // Trim
         size_t first = wName.find_first_not_of(L" \t\r\n");
         if (first == std::wstring::npos) {
-            MessageBoxW(pWiz->hWnd, TR("wizard.validate.nameEmpty"), TR("wizard.validate.nameTitle"), MB_OK | MB_ICONWARNING);
+            { WindowsTheme::DialogHookScope _darkScope; MessageBoxW(pWiz->hWnd, TR("wizard.validate.nameEmpty"), TR("wizard.validate.nameTitle"), MB_OK | MB_ICONWARNING); }
             SetFocus(pWiz->hEditName);
             return false;
         }
@@ -733,7 +733,7 @@ static bool ValidateAndSaveStep(WizardDialogState* pWiz, int step) {
         return true;
     } else if (step == STEP_DEFAULT_SOUNDS) {
         if (pWiz->data.defaultPressFiles.empty()) {
-            MessageBoxW(pWiz->hWnd, TR("wizard.validate.noPress"), TR("wizard.validate.noPressTtl"), MB_OK | MB_ICONWARNING);
+            { WindowsTheme::DialogHookScope _darkScope; MessageBoxW(pWiz->hWnd, TR("wizard.validate.noPress"), TR("wizard.validate.noPressTtl"), MB_OK | MB_ICONWARNING); }
             return false;
         }
         return true;
@@ -1280,10 +1280,10 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
                 // Finish & Create Profile
                 if (CreateAndWriteProfile(pWiz)) {
                     pWiz->success = true;
-                    MessageBoxW(hWnd, TR("wizard.created.msg"), TR("wizard.created.title"), MB_OK | MB_ICONINFORMATION);
+                    { WindowsTheme::DialogHookScope _darkScope; MessageBoxW(hWnd, TR("wizard.created.msg"), TR("wizard.created.title"), MB_OK | MB_ICONINFORMATION); }
                     DestroyWindow(hWnd);
                 } else {
-                    MessageBoxW(hWnd, TR("wizard.failed.msg"), TR("wizard.failed.title"), MB_OK | MB_ICONERROR);
+                    { WindowsTheme::DialogHookScope _darkScope; MessageBoxW(hWnd, TR("wizard.failed.msg"), TR("wizard.failed.title"), MB_OK | MB_ICONERROR); }
                 }
             }
             break;
