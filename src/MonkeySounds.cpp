@@ -1025,7 +1025,7 @@ void CreateControls(HWND hWnd) {
     // --- Status Bar ---
     g_hStatusBar = CreateWindowExW(
         0, STATUSCLASSNAME, L"",
-        WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP,
+        WS_CHILD | WS_VISIBLE,
         0, 0, 0, 0,
         hWnd, (HMENU)IDC_STATUSBAR, g_hInstance, NULL
     );

@@ -419,7 +419,7 @@ void DrawStatusBar(HWND w, HDC dc, RECT r) {
       RECT textRc = partRc;
       textRc.left += 4;
       textRc.right -= 4;
-      DrawTextW(dc, buf.data(), -1, &textRc, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
+      DrawTextW(dc, buf.data(), -1, &textRc, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
     }
   }
 }
