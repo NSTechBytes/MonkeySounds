@@ -31,17 +31,31 @@ function Find-Makensis {
 }
 
 $makensis = Find-Makensis
-Write-Host "[1/3] Located makensis: $makensis" -ForegroundColor Green
+Write-Host "[1/4] Located makensis: $makensis" -ForegroundColor Green
 
 # ---------------------------------------------------------------------------
-# 2. Run Build.ps1 (compiles solution + populates dist\)
+# 2. Generate installer/InstallerStrings.nsh from locales/*.json
+# ---------------------------------------------------------------------------
+$genStringsScript = Join-Path $RepoRoot "Generate-InstallerStrings.ps1"
+if (-not (Test-Path $genStringsScript)) {
+    throw "Generate-InstallerStrings.ps1 not found at: $genStringsScript"
+}
+
+Write-Host "[2/4] Generating installer translations from locales/*.json..." -ForegroundColor Yellow
+& powershell -ExecutionPolicy Bypass -File $genStringsScript
+if ($LASTEXITCODE -ne 0) {
+    throw "Generate-InstallerStrings.ps1 failed with exit code $LASTEXITCODE"
+}
+
+# ---------------------------------------------------------------------------
+# 3. Run Build.ps1 (compiles solution + populates dist\)
 # ---------------------------------------------------------------------------
 $buildScript = Join-Path $RepoRoot "Build.ps1"
 if (-not (Test-Path $buildScript)) {
     throw "Build.ps1 not found at: $buildScript"
 }
 
-Write-Host "[2/3] Running Build.ps1 ($Configuration|$Platform)..." -ForegroundColor Yellow
+Write-Host "[3/4] Running Build.ps1 ($Configuration|$Platform)..." -ForegroundColor Yellow
 
 & powershell -ExecutionPolicy Bypass -File $buildScript `
     -Configuration $Configuration `
@@ -90,7 +104,7 @@ if (-not (Test-Path $nsiScript)) {
     throw "NSIS script not found at: $nsiScript"
 }
 
-Write-Host "[3/3] Running NSIS compiler..." -ForegroundColor Yellow
+Write-Host "[4/4] Running NSIS compiler..." -ForegroundColor Yellow
 
 Push-Location (Join-Path $RepoRoot "installer")
 try {
