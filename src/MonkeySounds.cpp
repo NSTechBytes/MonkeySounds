@@ -318,7 +318,7 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
     RECT rcClient{};
     GetClientRect(hWnd, &rcClient);
     int clientW = (rcClient.right > 0) ? rcClient.right : W;
-    int statwidths[] = { S(160), clientW - S(108), -1 };
+    int statwidths[] = { S(160), clientW - S(80), -1 };
     SendMessageW(g_hStatusBar, SB_SETPARTS, 3, (LPARAM)statwidths);
     SendMessageW(g_hStatusBar, WM_SIZE, 0, 0);
 
@@ -1037,7 +1037,7 @@ void CreateControls(HWND hWnd) {
     int statwidths[] = { 160, WINDOW_WIDTH - 92, -1 };
     SendMessageW(g_hStatusBar, SB_SETPARTS, 3, (LPARAM)statwidths);
     SendMessageW(g_hStatusBar, SB_SETTEXTW, 0, (LPARAM)TR("status.ready"));
-    SendMessageW(g_hStatusBar, SB_SETTEXTW, 2, (LPARAM)L" CPU: 0%  ");
+    SendMessageW(g_hStatusBar, SB_SETTEXTW, 2, (LPARAM)L" CPU: 0%");
 
     // VU meter — owner-draw static that lives over the middle status bar pane
     g_hVuBgBrush = CreateSolidBrush(RGB(30,30,30));
@@ -1649,7 +1649,7 @@ void UpdateCpuUsage() {
                 if (cpuPercent > 100) cpuPercent = 100;
 
                 WCHAR buf[32];
-                swprintf_s(buf, L" CPU: %d%%  ", cpuPercent);
+                swprintf_s(buf, L" CPU: %d%%", cpuPercent);
                 SendMessageW(g_hStatusBar, SB_SETTEXTW, 2, (LPARAM)buf);
             }
         }
