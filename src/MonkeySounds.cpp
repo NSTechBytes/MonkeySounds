@@ -351,16 +351,16 @@ static void LayoutControls(HWND hWnd, UINT dpi) {
     SetWindowPos(g_hMouseVolSlider,   NULL, S(80), S(251), W-S(131),  S(24),  SWP_NOZORDER | SWP_NOACTIVATE);
 
     // --- Settings Tab ---
-    SetWindowPos(g_hGroupBehavior,       NULL, S(16), S(36),  W-S(50),  S(92),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hAutoStartChk,        NULL, S(28), S(56),  S(280),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hStartupNotifChk,     NULL, S(28), S(78),  S(280),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hIgnoreAutorepeatChk, NULL, S(28), S(100), S(320),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hGroupAppearance,     NULL, S(16), S(36),  W-S(50),  S(82),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hThemeLbl,            NULL, S(28), S(58),  S(60),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hThemeCombo,          NULL, S(94), S(55),  S(150),   S(100), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hLangLbl,             NULL, S(28), S(88),  S(60),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hLangCombo,           NULL, S(94), S(85),  S(240),   S(200), SWP_NOZORDER | SWP_NOACTIVATE);
 
-    SetWindowPos(g_hGroupAppearance,     NULL, S(16), S(136), W-S(50),  S(82),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hThemeLbl,            NULL, S(28), S(158), S(60),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hThemeCombo,          NULL, S(94), S(155), S(150),   S(100), SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hLangLbl,             NULL, S(28), S(188), S(60),    S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(g_hLangCombo,           NULL, S(94), S(185), S(240),   S(200), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hGroupBehavior,       NULL, S(16), S(126), W-S(50),  S(92),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hAutoStartChk,        NULL, S(28), S(146), S(280),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hStartupNotifChk,     NULL, S(28), S(168), S(280),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(g_hIgnoreAutorepeatChk, NULL, S(28), S(190), S(320),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
 
     SetWindowPos(g_hGroupUpdates,        NULL, S(16), S(226), W-S(50),  S(98),  SWP_NOZORDER | SWP_NOACTIVATE);
     SetWindowPos(g_hVersionLbl,          NULL, S(28), S(248), S(200),   S(20),  SWP_NOZORDER | SWP_NOACTIVATE);
@@ -628,7 +628,7 @@ void CreateControls(HWND hWnd) {
     // --- TAB 1: SOUNDS ---
     // Keyboard Group
     g_hKbGroup = CreateWindowExW(
-        0, L"BUTTON", TR("sounds.keyboard.group"),
+        WS_EX_TRANSPARENT, L"BUTTON", TR("sounds.keyboard.group"),
         WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
         16, 36, WINDOW_WIDTH - 50, 130,
         hWnd, (HMENU)IDC_GB_KEYBOARD, g_hInstance, NULL
@@ -730,7 +730,7 @@ void CreateControls(HWND hWnd) {
 
     // Mouse Group
     g_hMouseGroup = CreateWindowExW(
-        0, L"BUTTON", TR("sounds.mouse.group"),
+        WS_EX_TRANSPARENT, L"BUTTON", TR("sounds.mouse.group"),
         WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
         16, 173, WINDOW_WIDTH - 50, 130,
         hWnd, (HMENU)IDC_GB_MOUSE, g_hInstance, NULL
@@ -831,42 +831,10 @@ void CreateControls(HWND hWnd) {
     SendMessageW(g_hMouseVolSlider, TBM_SETRANGE, TRUE, MAKELONG(0, 100));
 
     // --- TAB 2: SETTINGS ---
-    g_hGroupBehavior = CreateWindowExW(
-        0, L"BUTTON", TR("settings.group.behavior"),
-        WS_CHILD | BS_GROUPBOX,
-        16, 36, WINDOW_WIDTH - 50, 92,
-        hWnd, (HMENU)IDC_GB_BEHAVIOR, g_hInstance, NULL
-    );
-    SetControlFont(g_hGroupBehavior, g_hFontBold);
-
-    g_hAutoStartChk = CreateWindowExW(
-        0, L"BUTTON", TR("settings.autoStart"),
-        WS_CHILD | BS_AUTOCHECKBOX,
-        28, 56, 280, 20,
-        hWnd, (HMENU)IDC_CHK_AUTOSTART, g_hInstance, NULL
-    );
-    SetControlFont(g_hAutoStartChk, g_hFontNormal);
-
-    g_hStartupNotifChk = CreateWindowExW(
-        0, L"BUTTON", TR("settings.startupNotif"),
-        WS_CHILD | BS_AUTOCHECKBOX,
-        28, 78, 280, 20,
-        hWnd, (HMENU)IDC_CHK_STARTUP_NOTIF, g_hInstance, NULL
-    );
-    SetControlFont(g_hStartupNotifChk, g_hFontNormal);
-
-    g_hIgnoreAutorepeatChk = CreateWindowExW(
-        0, L"BUTTON", TR("settings.ignoreAutorepeat"),
-        WS_CHILD | BS_AUTOCHECKBOX,
-        28, 100, 320, 20,
-        hWnd, (HMENU)IDC_CHK_IGNORE_AUTOREPEAT, g_hInstance, NULL
-    );
-    SetControlFont(g_hIgnoreAutorepeatChk, g_hFontNormal);
-
     g_hGroupAppearance = CreateWindowExW(
-        0, L"BUTTON", TR("settings.group.appearance"),
+        WS_EX_TRANSPARENT, L"BUTTON", TR("settings.group.appearance"),
         WS_CHILD | BS_GROUPBOX,
-        16, 136, WINDOW_WIDTH - 50, 82,
+        16, 36, WINDOW_WIDTH - 50, 82,
         hWnd, (HMENU)IDC_GB_APPEARANCE, g_hInstance, NULL
     );
     SetControlFont(g_hGroupAppearance, g_hFontBold);
@@ -874,7 +842,7 @@ void CreateControls(HWND hWnd) {
     g_hThemeLbl = CreateWindowExW(
         0, L"STATIC", TR("settings.theme"),
         WS_CHILD | SS_LEFT,
-        28, 158, 60, 20,
+        28, 58, 60, 20,
         hWnd, (HMENU)IDC_LBL_THEME, g_hInstance, NULL
     );
     SetControlFont(g_hThemeLbl, g_hFontNormal);
@@ -882,7 +850,7 @@ void CreateControls(HWND hWnd) {
     g_hThemeCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
         WS_CHILD | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
-        94, 155, 150, 100,
+        94, 55, 150, 100,
         hWnd, (HMENU)IDC_COMBO_THEME, g_hInstance, NULL
     );
     SetControlFont(g_hThemeCombo, g_hFontNormal);
@@ -893,7 +861,7 @@ void CreateControls(HWND hWnd) {
     g_hLangLbl = CreateWindowExW(
         0, L"STATIC", TR("settings.language"),
         WS_CHILD | SS_LEFT,
-        28, 188, 60, 20,
+        28, 88, 60, 20,
         hWnd, (HMENU)IDC_LBL_LANG, g_hInstance, NULL
     );
     SetControlFont(g_hLangLbl, g_hFontNormal);
@@ -901,7 +869,7 @@ void CreateControls(HWND hWnd) {
     g_hLangCombo = CreateWindowExW(
         0, L"COMBOBOX", L"",
         WS_CHILD | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
-        94, 185, 240, 200,
+        94, 85, 240, 200,
         hWnd, (HMENU)IDC_COMBO_LANG, g_hInstance, NULL
     );
     SetControlFont(g_hLangCombo, g_hFontNormal);
@@ -909,8 +877,40 @@ void CreateControls(HWND hWnd) {
         SendMessageW(g_hLangCombo, CB_ADDSTRING, 0, (LPARAM)Lang::kSupportedLocaleNames[i]);
     }
 
+    g_hGroupBehavior = CreateWindowExW(
+        WS_EX_TRANSPARENT, L"BUTTON", TR("settings.group.behavior"),
+        WS_CHILD | BS_GROUPBOX,
+        16, 126, WINDOW_WIDTH - 50, 92,
+        hWnd, (HMENU)IDC_GB_BEHAVIOR, g_hInstance, NULL
+    );
+    SetControlFont(g_hGroupBehavior, g_hFontBold);
+
+    g_hAutoStartChk = CreateWindowExW(
+        0, L"BUTTON", TR("settings.autoStart"),
+        WS_CHILD | BS_AUTOCHECKBOX,
+        28, 146, 280, 20,
+        hWnd, (HMENU)IDC_CHK_AUTOSTART, g_hInstance, NULL
+    );
+    SetControlFont(g_hAutoStartChk, g_hFontNormal);
+
+    g_hStartupNotifChk = CreateWindowExW(
+        0, L"BUTTON", TR("settings.startupNotif"),
+        WS_CHILD | BS_AUTOCHECKBOX,
+        28, 168, 280, 20,
+        hWnd, (HMENU)IDC_CHK_STARTUP_NOTIF, g_hInstance, NULL
+    );
+    SetControlFont(g_hStartupNotifChk, g_hFontNormal);
+
+    g_hIgnoreAutorepeatChk = CreateWindowExW(
+        0, L"BUTTON", TR("settings.ignoreAutorepeat"),
+        WS_CHILD | BS_AUTOCHECKBOX,
+        28, 190, 320, 20,
+        hWnd, (HMENU)IDC_CHK_IGNORE_AUTOREPEAT, g_hInstance, NULL
+    );
+    SetControlFont(g_hIgnoreAutorepeatChk, g_hFontNormal);
+
     g_hGroupUpdates = CreateWindowExW(
-        0, L"BUTTON", TR("settings.group.updates"),
+        WS_EX_TRANSPARENT, L"BUTTON", TR("settings.group.updates"),
         WS_CHILD | BS_GROUPBOX,
         16, 226, WINDOW_WIDTH - 50, 98,
         hWnd, (HMENU)IDC_GB_UPDATES, g_hInstance, NULL
