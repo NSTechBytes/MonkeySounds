@@ -126,6 +126,7 @@ void ClipSiblings(HWND window, HDC dc) {
   if (!parent) return;
   for (HWND sibling = GetWindow(parent, GW_CHILD); sibling; sibling = GetWindow(sibling, GW_HWNDNEXT)) {
     if (sibling == window || !IsWindowVisible(sibling)) continue;
+    if (HasClass(sibling, WC_TABCONTROLW)) continue;
     if (HasClass(sibling, WC_BUTTON) && (GetWindowLongPtrW(sibling, GWL_STYLE) & BS_TYPEMASK) == BS_GROUPBOX) continue;
 
     RECT rect;
