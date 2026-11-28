@@ -1,6 +1,7 @@
 ﻿;---------------------------------------------------------
 ; MonkeySounds Installer Script
 ; Supports Standard (recommended) and Portable modes
+; Multi-language: auto-detects Windows UI language
 ;---------------------------------------------------------
 
 !define APP_NAME       "MonkeySounds"
@@ -22,7 +23,7 @@ InstallDirRegKey HKLM "${REGKEY}" "Install_Dir"
 RequestExecutionLevel admin
 
 ;---------------------------------------------------------
-; Includes  — StrFunc MUST be included and initialized
+; Includes — StrFunc MUST be included and initialized
 ;             before any function that uses ${StrStr}
 ;---------------------------------------------------------
 !include "StrFunc.nsh"
@@ -44,12 +45,12 @@ ${StrStr}   ; initialize the StrStr function
 !define MUI_WELCOMEFINISHPAGE_BITMAP   "assets\banner.bmp"
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP "assets\banner.bmp"
 
-!define MUI_WELCOMEPAGE_TITLE "Welcome to ${APP_NAME} ${VERSION} Setup"
-!define MUI_WELCOMEPAGE_TEXT  "This will install ${APP_NAME} on your computer.$\r$\n$\r$\nMonkeySounds adds satisfying keyboard and mouse sounds to every click and keystroke.$\r$\n$\r$\nClick Next to continue."
+!define MUI_WELCOMEPAGE_TITLE "$(INST_WELCOME_TITLE)"
+!define MUI_WELCOMEPAGE_TEXT  "$(INST_WELCOME_TEXT)"
 
 !define MUI_FINISHPAGE_RUN          "$INSTDIR\${APP_EXE}"
-!define MUI_FINISHPAGE_RUN_TEXT     "Launch ${APP_NAME}"
-!define MUI_FINISHPAGE_LINK         "Visit GitHub"
+!define MUI_FINISHPAGE_RUN_TEXT     "$(INST_FINISH_LAUNCH)"
+!define MUI_FINISHPAGE_LINK         "$(INST_FINISH_LINK)"
 !define MUI_FINISHPAGE_LINK_LOCATION "${WEBSITE}"
 
 ;---------------------------------------------------------
@@ -73,7 +74,469 @@ Page custom InstallModePageCreate InstallModePageLeave
 UninstPage custom un.RemoveDataPageCreate un.RemoveDataPageLeave
 !insertmacro MUI_UNPAGE_INSTFILES
 
+;---------------------------------------------------------
+; Languages — NSIS picks the best match for the Windows UI
+; language at runtime.  English MUST be listed first so it
+; becomes the fallback when no better match is found.
+;---------------------------------------------------------
 !insertmacro MUI_LANGUAGE "English"
+!insertmacro MUI_LANGUAGE "Arabic"
+!insertmacro MUI_LANGUAGE "German"
+!insertmacro MUI_LANGUAGE "Spanish"
+!insertmacro MUI_LANGUAGE "French"
+!insertmacro MUI_LANGUAGE "Italian"
+!insertmacro MUI_LANGUAGE "Japanese"
+!insertmacro MUI_LANGUAGE "Korean"
+!insertmacro MUI_LANGUAGE "Dutch"
+!insertmacro MUI_LANGUAGE "Polish"
+!insertmacro MUI_LANGUAGE "PortugueseBR"
+!insertmacro MUI_LANGUAGE "Portuguese"
+!insertmacro MUI_LANGUAGE "Russian"
+!insertmacro MUI_LANGUAGE "SimpChinese"
+!insertmacro MUI_LANGUAGE "TradChinese"
+!insertmacro MUI_LANGUAGE "Turkish"
+!insertmacro MUI_LANGUAGE "Ukrainian"
+!insertmacro MUI_LANGUAGE "Czech"
+!insertmacro MUI_LANGUAGE "Slovak"
+!insertmacro MUI_LANGUAGE "Hungarian"
+!insertmacro MUI_LANGUAGE "Romanian"
+!insertmacro MUI_LANGUAGE "Bulgarian"
+!insertmacro MUI_LANGUAGE "Croatian"
+!insertmacro MUI_LANGUAGE "Finnish"
+!insertmacro MUI_LANGUAGE "Greek"
+!insertmacro MUI_LANGUAGE "Hebrew"
+!insertmacro MUI_LANGUAGE "Indonesian"
+!insertmacro MUI_LANGUAGE "Lithuanian"
+!insertmacro MUI_LANGUAGE "Latvian"
+!insertmacro MUI_LANGUAGE "Malay"
+!insertmacro MUI_LANGUAGE "Norwegian"
+!insertmacro MUI_LANGUAGE "Swedish"
+!insertmacro MUI_LANGUAGE "Thai"
+!insertmacro MUI_LANGUAGE "Vietnamese"
+!insertmacro MUI_LANGUAGE "Danish"
+!insertmacro MUI_LANGUAGE "Estonian"
+!insertmacro MUI_LANGUAGE "Slovenian"
+!insertmacro MUI_LANGUAGE "Serbian"
+
+;---------------------------------------------------------
+; Custom localizable strings
+; Each LangString defines a per-language value.
+; Strings not defined for a language fall back to English.
+;---------------------------------------------------------
+
+; ---- Welcome page ----
+LangString INST_WELCOME_TITLE ${LANG_ENGLISH}      "Welcome to ${APP_NAME} ${VERSION} Setup"
+LangString INST_WELCOME_TITLE ${LANG_ARABIC}       "مرحباً بك في إعداد ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_GERMAN}       "Willkommen beim Setup von ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_SPANISH}      "Bienvenido al instalador de ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_FRENCH}       "Bienvenue dans l'installation de ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_ITALIAN}      "Benvenuto nell'installazione di ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_JAPANESE}     "${APP_NAME} ${VERSION} セットアップへようこそ"
+LangString INST_WELCOME_TITLE ${LANG_KOREAN}       "${APP_NAME} ${VERSION} 설치 프로그램에 오신 것을 환영합니다"
+LangString INST_WELCOME_TITLE ${LANG_DUTCH}        "Welkom bij de installatie van ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_POLISH}       "Witamy w instalatorze ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_PORTUGUESEBR} "Bem-vindo ao instalador do ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_PORTUGUESE}   "Bem-vindo ao instalador do ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_RUSSIAN}      "Добро пожаловать в установщик ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_SIMPCHINESE}  "欢迎安装 ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_TRADCHINESE}  "歡迎安裝 ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_TURKISH}      "${APP_NAME} ${VERSION} Kurulum Sihirbazına Hoşgeldiniz"
+LangString INST_WELCOME_TITLE ${LANG_UKRAINIAN}    "Ласкаво просимо до встановлення ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_CZECH}        "Vítejte v instalačním průvodci ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_SLOVAK}       "Vitajte v inštalátore ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_HUNGARIAN}    "Üdvözli a ${APP_NAME} ${VERSION} telepítője"
+LangString INST_WELCOME_TITLE ${LANG_ROMANIAN}     "Bun venit la instalarea ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_BULGARIAN}    "Добре дошли в инсталатора на ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_CROATIAN}     "Dobrodošli u instalaciju ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_FINNISH}      "Tervetuloa ${APP_NAME} ${VERSION} -asennukseen"
+LangString INST_WELCOME_TITLE ${LANG_GREEK}        "Καλώς ήρθατε στην εγκατάσταση του ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_HEBREW}       "ברוך הבא להתקנת ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_INDONESIAN}   "Selamat datang di Penginstal ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_VIETNAMESE}   "Chào mừng đến với trình cài đặt ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_THAI}         "ยินดีต้อนรับสู่ตัวติดตั้ง ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_SWEDISH}      "Välkommen till installationen av ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_NORWEGIAN}    "Velkommen til installasjon av ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_DANISH}       "Velkommen til installation af ${APP_NAME} ${VERSION}"
+LangString INST_WELCOME_TITLE ${LANG_FINNISH}      "Tervetuloa ${APP_NAME} ${VERSION} -asennukseen"
+
+LangString INST_WELCOME_TEXT ${LANG_ENGLISH}      "This will install ${APP_NAME} on your computer.$\r$\n$\r$\nMonkeySounds adds satisfying keyboard and mouse sounds to every click and keystroke.$\r$\n$\r$\nClick Next to continue."
+LangString INST_WELCOME_TEXT ${LANG_ARABIC}       "سيقوم هذا البرنامج بتثبيت ${APP_NAME} على جهازك.$\r$\n$\r$\nيضيف MonkeySounds أصواتاً ممتعة للوحة المفاتيح والفأرة.$\r$\n$\r$\nانقر التالي للمتابعة."
+LangString INST_WELCOME_TEXT ${LANG_GERMAN}       "Dieses Programm installiert ${APP_NAME} auf Ihrem Computer.$\r$\n$\r$\nMonkeySounds fügt angenehme Tastatur- und Mausgeräusche hinzu.$\r$\n$\r$\nKlicken Sie auf Weiter, um fortzufahren."
+LangString INST_WELCOME_TEXT ${LANG_SPANISH}      "Este programa instalará ${APP_NAME} en su equipo.$\r$\n$\r$\nMonkeySounds añade sonidos de teclado y ratón a cada clic.$\r$\n$\r$\nHaga clic en Siguiente para continuar."
+LangString INST_WELCOME_TEXT ${LANG_FRENCH}       "Ce programme va installer ${APP_NAME} sur votre ordinateur.$\r$\n$\r$\nMonkeySounds ajoute des sons de clavier et de souris à chaque frappe.$\r$\n$\r$\nCliquez sur Suivant pour continuer."
+LangString INST_WELCOME_TEXT ${LANG_ITALIAN}      "Questo programma installerà ${APP_NAME} sul tuo computer.$\r$\n$\r$\nMonkeySounds aggiunge suoni di tastiera e mouse a ogni clic.$\r$\n$\r$\nFai clic su Avanti per continuare."
+LangString INST_WELCOME_TEXT ${LANG_JAPANESE}     "このプログラムはコンピューターに ${APP_NAME} をインストールします。$\r$\n$\r$\nMonkeySounds はキーボードとマウスの音を追加します。$\r$\n$\r$\n次へをクリックして続行してください。"
+LangString INST_WELCOME_TEXT ${LANG_KOREAN}       "이 프로그램은 ${APP_NAME}을(를) 컴퓨터에 설치합니다.$\r$\n$\r$\nMonkeySounds는 모든 클릭 및 키 입력에 소리를 추가합니다.$\r$\n$\r$\n다음을 클릭하여 계속하십시오."
+LangString INST_WELCOME_TEXT ${LANG_DUTCH}        "Dit programma installeert ${APP_NAME} op uw computer.$\r$\n$\r$\nMonkeySounds voegt toetsenbord- en muisgeluiden toe aan elke klik.$\r$\n$\r$\nKlik op Volgende om door te gaan."
+LangString INST_WELCOME_TEXT ${LANG_POLISH}       "Ten program zainstaluje ${APP_NAME} na Twoim komputerze.$\r$\n$\r$\nMonkeySounds dodaje dźwięki klawiatury i myszy do każdego kliknięcia.$\r$\n$\r$\nKliknij Dalej, aby kontynuować."
+LangString INST_WELCOME_TEXT ${LANG_PORTUGUESEBR} "Este programa instalará o ${APP_NAME} em seu computador.$\r$\n$\r$\nMonkeySounds adiciona sons de teclado e mouse a cada clique.$\r$\n$\r$\nClique em Avançar para continuar."
+LangString INST_WELCOME_TEXT ${LANG_PORTUGUESE}   "Este programa instalará o ${APP_NAME} no seu computador.$\r$\n$\r$\nMonkeySounds adiciona sons de teclado e rato a cada clique.$\r$\n$\r$\nClique em Seguinte para continuar."
+LangString INST_WELCOME_TEXT ${LANG_RUSSIAN}      "Этот установщик установит ${APP_NAME} на ваш компьютер.$\r$\n$\r$\nMonkeySounds добавляет звуки клавиатуры и мыши к каждому нажатию.$\r$\n$\r$\nНажмите Далее, чтобы продолжить."
+LangString INST_WELCOME_TEXT ${LANG_SIMPCHINESE}  "此程序将在您的计算机上安装 ${APP_NAME}。$\r$\n$\r$\nMonkeySounds 为每次点击和按键添加悦耳的声音。$\r$\n$\r$\n点击"下一步"继续。"
+LangString INST_WELCOME_TEXT ${LANG_TRADCHINESE}  "此程式將在您的電腦上安裝 ${APP_NAME}。$\r$\n$\r$\nMonkeySounds 為每次點擊和按鍵加入悅耳的聲音。$\r$\n$\r$\n按一下「下一步」繼續。"
+LangString INST_WELCOME_TEXT ${LANG_TURKISH}      "Bu program ${APP_NAME} uygulamasını bilgisayarınıza kuracaktır.$\r$\n$\r$\nMonkeySounds her tuş ve tıklamaya klavye ve fare sesleri ekler.$\r$\n$\r$\nDevam etmek için İleri'ye tıklayın."
+LangString INST_WELCOME_TEXT ${LANG_UKRAINIAN}    "Ця програма встановить ${APP_NAME} на ваш комп'ютер.$\r$\n$\r$\nMonkeySounds додає звуки клавіатури та миші до кожного натискання.$\r$\n$\r$\nНатисніть Далі, щоб продовжити."
+LangString INST_WELCOME_TEXT ${LANG_RUSSIAN}      "Этот установщик установит ${APP_NAME} на ваш компьютер.$\r$\n$\r$\nMonkeySounds добавляет звуки клавиатуры и мыши к каждому нажатию.$\r$\n$\r$\nНажмите Далее, чтобы продолжить."
+LangString INST_WELCOME_TEXT ${LANG_CZECH}        "Tento program nainstaluje ${APP_NAME} na váš počítač.$\r$\n$\r$\nMonkeySounds přidává zvuky klávesnice a myši ke každému stisku.$\r$\n$\r$\nPokračujte kliknutím na Další."
+LangString INST_WELCOME_TEXT ${LANG_HUNGARIAN}    "Ez a program telepíti a ${APP_NAME} alkalmazást a számítógépére.$\r$\n$\r$\nA MonkeySounds billentyűzet- és egérhangokat ad minden kattintáshoz.$\r$\n$\r$\nA folytatáshoz kattintson a Tovább gombra."
+LangString INST_WELCOME_TEXT ${LANG_ROMANIAN}     "Acest program va instala ${APP_NAME} pe calculatorul dvs.$\r$\n$\r$\nMonkeySounds adaugă sunete de tastatură și mouse la fiecare apăsare.$\r$\n$\r$\nFaceți clic pe Următorul pentru a continua."
+LangString INST_WELCOME_TEXT ${LANG_VIETNAMESE}   "Chương trình này sẽ cài đặt ${APP_NAME} trên máy tính của bạn.$\r$\n$\r$\nMonkeySounds thêm âm thanh bàn phím và chuột vào mỗi lần nhấp.$\r$\n$\r$\nNhấp Tiếp theo để tiếp tục."
+LangString INST_WELCOME_TEXT ${LANG_INDONESIAN}   "Program ini akan memasang ${APP_NAME} di komputer Anda.$\r$\n$\r$\nMonkeySounds menambahkan suara keyboard dan mouse pada setiap klik.$\r$\n$\r$\nKlik Lanjut untuk melanjutkan."
+LangString INST_WELCOME_TEXT ${LANG_THAI}         "โปรแกรมนี้จะติดตั้ง ${APP_NAME} บนคอมพิวเตอร์ของคุณ$\r$\n$\r$\nMonkeySounds เพิ่มเสียงคีย์บอร์ดและเมาส์ทุกครั้งที่กด$\r$\n$\r$\nคลิก ถัดไป เพื่อดำเนินการต่อ"
+
+; ---- Finish page ----
+LangString INST_FINISH_LAUNCH ${LANG_ENGLISH}      "Launch ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_ARABIC}       "تشغيل ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_GERMAN}       "${APP_NAME} starten"
+LangString INST_FINISH_LAUNCH ${LANG_SPANISH}      "Iniciar ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_FRENCH}       "Lancer ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_ITALIAN}      "Avvia ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_JAPANESE}     "${APP_NAME} を起動する"
+LangString INST_FINISH_LAUNCH ${LANG_KOREAN}       "${APP_NAME} 실행"
+LangString INST_FINISH_LAUNCH ${LANG_DUTCH}        "${APP_NAME} starten"
+LangString INST_FINISH_LAUNCH ${LANG_POLISH}       "Uruchom ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_PORTUGUESEBR} "Iniciar ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_PORTUGUESE}   "Iniciar ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_RUSSIAN}      "Запустить ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_SIMPCHINESE}  "启动 ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_TRADCHINESE}  "啟動 ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_TURKISH}      "${APP_NAME} Başlat"
+LangString INST_FINISH_LAUNCH ${LANG_UKRAINIAN}    "Запустити ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_CZECH}        "Spustit ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_HUNGARIAN}    "${APP_NAME} indítása"
+LangString INST_FINISH_LAUNCH ${LANG_ROMANIAN}     "Lansați ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_VIETNAMESE}   "Khởi động ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_INDONESIAN}   "Jalankan ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_THAI}         "เปิด ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_SWEDISH}      "Starta ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_NORWEGIAN}    "Start ${APP_NAME}"
+LangString INST_FINISH_LAUNCH ${LANG_DANISH}       "Start ${APP_NAME}"
+
+LangString INST_FINISH_LINK ${LANG_ENGLISH}      "Visit GitHub"
+LangString INST_FINISH_LINK ${LANG_ARABIC}       "زيارة GitHub"
+LangString INST_FINISH_LINK ${LANG_GERMAN}       "GitHub besuchen"
+LangString INST_FINISH_LINK ${LANG_SPANISH}      "Visitar GitHub"
+LangString INST_FINISH_LINK ${LANG_FRENCH}       "Visiter GitHub"
+LangString INST_FINISH_LINK ${LANG_ITALIAN}      "Visita GitHub"
+LangString INST_FINISH_LINK ${LANG_JAPANESE}     "GitHubを訪問する"
+LangString INST_FINISH_LINK ${LANG_KOREAN}       "GitHub 방문"
+LangString INST_FINISH_LINK ${LANG_DUTCH}        "GitHub bezoeken"
+LangString INST_FINISH_LINK ${LANG_POLISH}       "Odwiedź GitHub"
+LangString INST_FINISH_LINK ${LANG_PORTUGUESEBR} "Visitar GitHub"
+LangString INST_FINISH_LINK ${LANG_PORTUGUESE}   "Visitar GitHub"
+LangString INST_FINISH_LINK ${LANG_RUSSIAN}      "Посетить GitHub"
+LangString INST_FINISH_LINK ${LANG_SIMPCHINESE}  "访问 GitHub"
+LangString INST_FINISH_LINK ${LANG_TRADCHINESE}  "造訪 GitHub"
+LangString INST_FINISH_LINK ${LANG_TURKISH}      "GitHub'ı Ziyaret Et"
+LangString INST_FINISH_LINK ${LANG_UKRAINIAN}    "Відвідати GitHub"
+LangString INST_FINISH_LINK ${LANG_CZECH}        "Navštívit GitHub"
+LangString INST_FINISH_LINK ${LANG_HUNGARIAN}    "GitHub megtekintése"
+LangString INST_FINISH_LINK ${LANG_ROMANIAN}     "Vizitați GitHub"
+LangString INST_FINISH_LINK ${LANG_VIETNAMESE}   "Truy cập GitHub"
+LangString INST_FINISH_LINK ${LANG_INDONESIAN}   "Kunjungi GitHub"
+LangString INST_FINISH_LINK ${LANG_THAI}         "เยี่ยมชม GitHub"
+LangString INST_FINISH_LINK ${LANG_SWEDISH}      "Besök GitHub"
+
+; ---- Install Mode page ----
+LangString INST_MODE_HEADER ${LANG_ENGLISH}      "Choose Installation Mode"
+LangString INST_MODE_HEADER ${LANG_ARABIC}       "اختر وضع التثبيت"
+LangString INST_MODE_HEADER ${LANG_GERMAN}       "Installationsmodus wählen"
+LangString INST_MODE_HEADER ${LANG_SPANISH}      "Elegir modo de instalación"
+LangString INST_MODE_HEADER ${LANG_FRENCH}       "Choisir le mode d'installation"
+LangString INST_MODE_HEADER ${LANG_ITALIAN}      "Scegli la modalità di installazione"
+LangString INST_MODE_HEADER ${LANG_JAPANESE}     "インストールモードを選択"
+LangString INST_MODE_HEADER ${LANG_KOREAN}       "설치 모드 선택"
+LangString INST_MODE_HEADER ${LANG_DUTCH}        "Installatiemodus kiezen"
+LangString INST_MODE_HEADER ${LANG_POLISH}       "Wybierz tryb instalacji"
+LangString INST_MODE_HEADER ${LANG_PORTUGUESEBR} "Escolha o modo de instalação"
+LangString INST_MODE_HEADER ${LANG_PORTUGUESE}   "Escolha o modo de instalação"
+LangString INST_MODE_HEADER ${LANG_RUSSIAN}      "Выберите режим установки"
+LangString INST_MODE_HEADER ${LANG_SIMPCHINESE}  "选择安装模式"
+LangString INST_MODE_HEADER ${LANG_TRADCHINESE}  "選擇安裝模式"
+LangString INST_MODE_HEADER ${LANG_TURKISH}      "Kurulum Modunu Seçin"
+LangString INST_MODE_HEADER ${LANG_UKRAINIAN}    "Виберіть режим встановлення"
+LangString INST_MODE_HEADER ${LANG_CZECH}        "Vyberte režim instalace"
+LangString INST_MODE_HEADER ${LANG_HUNGARIAN}    "Válassza ki a telepítési módot"
+LangString INST_MODE_HEADER ${LANG_ROMANIAN}     "Alegeți modul de instalare"
+LangString INST_MODE_HEADER ${LANG_VIETNAMESE}   "Chọn chế độ cài đặt"
+LangString INST_MODE_HEADER ${LANG_INDONESIAN}   "Pilih Mode Instalasi"
+LangString INST_MODE_HEADER ${LANG_THAI}         "เลือกโหมดการติดตั้ง"
+LangString INST_MODE_HEADER ${LANG_SWEDISH}      "Välj installationsläge"
+LangString INST_MODE_HEADER ${LANG_NORWEGIAN}    "Velg installasjonsmodus"
+LangString INST_MODE_HEADER ${LANG_DANISH}       "Vælg installationstilstand"
+
+LangString INST_MODE_LABEL ${LANG_ENGLISH}      "Choose how to install ${APP_NAME}:"
+LangString INST_MODE_LABEL ${LANG_ARABIC}       "اختر طريقة تثبيت ${APP_NAME}:"
+LangString INST_MODE_LABEL ${LANG_GERMAN}       "Wählen Sie, wie ${APP_NAME} installiert werden soll:"
+LangString INST_MODE_LABEL ${LANG_SPANISH}      "Elija cómo instalar ${APP_NAME}:"
+LangString INST_MODE_LABEL ${LANG_FRENCH}       "Choisissez comment installer ${APP_NAME} :"
+LangString INST_MODE_LABEL ${LANG_ITALIAN}      "Scegli come installare ${APP_NAME}:"
+LangString INST_MODE_LABEL ${LANG_JAPANESE}     "${APP_NAME} のインストール方法を選択してください："
+LangString INST_MODE_LABEL ${LANG_KOREAN}       "${APP_NAME} 설치 방법을 선택하세요:"
+LangString INST_MODE_LABEL ${LANG_DUTCH}        "Kies hoe ${APP_NAME} geïnstalleerd moet worden:"
+LangString INST_MODE_LABEL ${LANG_POLISH}       "Wybierz sposób instalacji ${APP_NAME}:"
+LangString INST_MODE_LABEL ${LANG_PORTUGUESEBR} "Escolha como instalar o ${APP_NAME}:"
+LangString INST_MODE_LABEL ${LANG_PORTUGUESE}   "Escolha como instalar o ${APP_NAME}:"
+LangString INST_MODE_LABEL ${LANG_RUSSIAN}      "Выберите способ установки ${APP_NAME}:"
+LangString INST_MODE_LABEL ${LANG_SIMPCHINESE}  "选择安装 ${APP_NAME} 的方式："
+LangString INST_MODE_LABEL ${LANG_TRADCHINESE}  "選擇安裝 ${APP_NAME} 的方式："
+LangString INST_MODE_LABEL ${LANG_TURKISH}      "${APP_NAME} nasıl kurulsun:"
+LangString INST_MODE_LABEL ${LANG_UKRAINIAN}    "Виберіть спосіб встановлення ${APP_NAME}:"
+LangString INST_MODE_LABEL ${LANG_CZECH}        "Vyberte, jak nainstalovat ${APP_NAME}:"
+LangString INST_MODE_LABEL ${LANG_HUNGARIAN}    "Válassza ki a ${APP_NAME} telepítési módját:"
+LangString INST_MODE_LABEL ${LANG_ROMANIAN}     "Alegeți cum să instalați ${APP_NAME}:"
+LangString INST_MODE_LABEL ${LANG_VIETNAMESE}   "Chọn cách cài đặt ${APP_NAME}:"
+LangString INST_MODE_LABEL ${LANG_INDONESIAN}   "Pilih cara menginstal ${APP_NAME}:"
+LangString INST_MODE_LABEL ${LANG_THAI}         "เลือกวิธีติดตั้ง ${APP_NAME}:"
+LangString INST_MODE_LABEL ${LANG_SWEDISH}      "Välj hur ${APP_NAME} ska installeras:"
+LangString INST_MODE_LABEL ${LANG_NORWEGIAN}    "Velg hvordan ${APP_NAME} skal installeres:"
+LangString INST_MODE_LABEL ${LANG_DANISH}       "Vælg hvordan ${APP_NAME} skal installeres:"
+
+LangString INST_MODE_STD ${LANG_ENGLISH}      "Standard (recommended) — install with uninstaller, registry entries and shortcuts"
+LangString INST_MODE_STD ${LANG_ARABIC}       "قياسي (موصى به) — تثبيت مع برنامج إلغاء التثبيت وإدخالات التسجيل والاختصارات"
+LangString INST_MODE_STD ${LANG_GERMAN}       "Standard (empfohlen) — Installation mit Deinstallationsprogramm, Registrierungseinträgen und Verknüpfungen"
+LangString INST_MODE_STD ${LANG_SPANISH}      "Estándar (recomendado) — instalar con desinstalador, entradas de registro y accesos directos"
+LangString INST_MODE_STD ${LANG_FRENCH}       "Standard (recommandé) — installer avec désinstallateur, entrées de registre et raccourcis"
+LangString INST_MODE_STD ${LANG_ITALIAN}      "Standard (consigliato) — installa con disinstallatore, voci di registro e scorciatoie"
+LangString INST_MODE_STD ${LANG_JAPANESE}     "標準（推奨）— アンインストーラー、レジストリエントリ、ショートカット付きでインストール"
+LangString INST_MODE_STD ${LANG_KOREAN}       "표준 (권장) — 제거 프로그램, 레지스트리 항목 및 바로가기 포함 설치"
+LangString INST_MODE_STD ${LANG_DUTCH}        "Standaard (aanbevolen) — installeren met verwijderprogramma, registeritems en snelkoppelingen"
+LangString INST_MODE_STD ${LANG_POLISH}       "Standardowy (zalecany) — zainstaluj z dezinstalатором, wpisami rejestru i skrótami"
+LangString INST_MODE_STD ${LANG_PORTUGUESEBR} "Padrão (recomendado) — instalar com desinstalador, entradas de registro e atalhos"
+LangString INST_MODE_STD ${LANG_PORTUGUESE}   "Padrão (recomendado) — instalar com desinstalador, entradas de registo e atalhos"
+LangString INST_MODE_STD ${LANG_RUSSIAN}      "Стандартный (рекомендуется) — установить с деинсталлятором, записями реестра и ярлыками"
+LangString INST_MODE_STD ${LANG_SIMPCHINESE}  "标准（推荐）— 安装卸载程序、注册表项和快捷方式"
+LangString INST_MODE_STD ${LANG_TRADCHINESE}  "標準（建議）— 安裝解除安裝程式、登錄機碼和捷徑"
+LangString INST_MODE_STD ${LANG_TURKISH}      "Standart (önerilen) — kaldırıcı, kayıt defteri girişleri ve kısayollarla kur"
+LangString INST_MODE_STD ${LANG_UKRAINIAN}    "Стандартний (рекомендовано) — встановити з деінсталятором, записами реєстру та ярликами"
+LangString INST_MODE_STD ${LANG_CZECH}        "Standardní (doporučeno) — instalovat s odinstalátorem, záznamy registru a zástupci"
+LangString INST_MODE_STD ${LANG_HUNGARIAN}    "Normál (ajánlott) — telepítés eltávolítóval, beállításjegyzék-bejegyzésekkel és parancsikonokkal"
+LangString INST_MODE_STD ${LANG_ROMANIAN}     "Standard (recomandat) — instalare cu dezinstalator, intrări în registru și comenzi rapide"
+LangString INST_MODE_STD ${LANG_VIETNAMESE}   "Tiêu chuẩn (khuyến nghị) — cài đặt với trình gỡ cài đặt, mục đăng ký và lối tắt"
+LangString INST_MODE_STD ${LANG_INDONESIAN}   "Standar (disarankan) — instal dengan penghapus instalasi, entri registri, dan pintasan"
+LangString INST_MODE_STD ${LANG_THAI}         "มาตรฐาน (แนะนำ) — ติดตั้งพร้อมตัวถอนการติดตั้ง รายการรีจิสทรี และทางลัด"
+LangString INST_MODE_STD ${LANG_SWEDISH}      "Standard (rekommenderas) — installera med avinstallationsprogram, registerposter och genvägar"
+LangString INST_MODE_STD ${LANG_NORWEGIAN}    "Standard (anbefalt) — installer med avinstalleringsprogram, registeroppføringer og snarveier"
+LangString INST_MODE_STD ${LANG_DANISH}       "Standard (anbefalet) — installer med afinstallationsprogram, registerposter og genveje"
+
+LangString INST_MODE_STD_DESC ${LANG_ENGLISH}      "Installs to Program Files. Sounds saved in %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_ARABIC}       "يثبت في ملفات البرنامج. يتم حفظ الأصوات في %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_GERMAN}       "Wird in Programme installiert. Sounds gespeichert in %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_SPANISH}      "Se instala en Archivos de programa. Sonidos guardados en %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_FRENCH}       "Installe dans Fichiers programme. Sons enregistrés dans %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_ITALIAN}      "Installa in Programmi. Suoni salvati in %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_JAPANESE}     "Program Files にインストール。サウンドは %APPDATA%\MonkeySounds\Sounds に保存されます。"
+LangString INST_MODE_STD_DESC ${LANG_KOREAN}       "Program Files에 설치됩니다. 소리는 %APPDATA%\MonkeySounds\Sounds에 저장됩니다."
+LangString INST_MODE_STD_DESC ${LANG_DUTCH}        "Installeert in Program Files. Geluiden opgeslagen in %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_POLISH}       "Instaluje w Programy. Dźwięki zapisane w %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_PORTUGUESEBR} "Instala em Arquivos de Programas. Sons salvos em %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_PORTUGUESE}   "Instala em Ficheiros de Programa. Sons guardados em %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_RUSSIAN}      "Устанавливается в Program Files. Звуки сохраняются в %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_SIMPCHINESE}  "安装到 Program Files。声音保存在 %APPDATA%\MonkeySounds\Sounds。"
+LangString INST_MODE_STD_DESC ${LANG_TRADCHINESE}  "安裝到 Program Files。聲音儲存在 %APPDATA%\MonkeySounds\Sounds。"
+LangString INST_MODE_STD_DESC ${LANG_TURKISH}      "Program Files'a yükler. Sesler %APPDATA%\MonkeySounds\Sounds içine kaydedilir."
+LangString INST_MODE_STD_DESC ${LANG_UKRAINIAN}    "Встановлюється у Program Files. Звуки зберігаються в %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_CZECH}        "Instaluje do Program Files. Zvuky uloženy v %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_HUNGARIAN}    "A Program Files mappába települ. Hangok mentve itt: %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_ROMANIAN}     "Instalează în Program Files. Sunetele sunt salvate în %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_VIETNAMESE}   "Cài đặt vào Program Files. Âm thanh được lưu trong %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_INDONESIAN}   "Menginstal ke Program Files. Suara disimpan di %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_THAI}         "ติดตั้งใน Program Files เสียงถูกบันทึกใน %APPDATA%\MonkeySounds\Sounds"
+LangString INST_MODE_STD_DESC ${LANG_SWEDISH}      "Installerar i Program Files. Ljud sparas i %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_NORWEGIAN}    "Installerer i Program Files. Lyder lagres i %APPDATA%\MonkeySounds\Sounds."
+LangString INST_MODE_STD_DESC ${LANG_DANISH}       "Installerer i Program Files. Lyde gemmes i %APPDATA%\MonkeySounds\Sounds."
+
+LangString INST_MODE_PORT ${LANG_ENGLISH}      "Portable — no registry entries, no uninstaller, runs from any folder"
+LangString INST_MODE_PORT ${LANG_ARABIC}       "محمول — بدون إدخالات تسجيل، بدون برنامج إلغاء تثبيت، يعمل من أي مجلد"
+LangString INST_MODE_PORT ${LANG_GERMAN}       "Portabel — keine Registrierungseinträge, kein Deinstallationsprogramm, läuft aus jedem Ordner"
+LangString INST_MODE_PORT ${LANG_SPANISH}      "Portátil — sin entradas de registro, sin desinstalador, funciona desde cualquier carpeta"
+LangString INST_MODE_PORT ${LANG_FRENCH}       "Portable — aucune entrée de registre, pas de désinstallateur, fonctionne depuis n'importe quel dossier"
+LangString INST_MODE_PORT ${LANG_ITALIAN}      "Portabile — nessuna voce di registro, nessun disinstallatore, funziona da qualsiasi cartella"
+LangString INST_MODE_PORT ${LANG_JAPANESE}     "ポータブル — レジストリエントリなし、アンインストーラーなし、任意のフォルダーから実行可能"
+LangString INST_MODE_PORT ${LANG_KOREAN}       "포터블 — 레지스트리 항목 없음, 제거 프로그램 없음, 임의 폴더에서 실행 가능"
+LangString INST_MODE_PORT ${LANG_DUTCH}        "Portable — geen registeritems, geen verwijderprogramma, werkt vanuit elke map"
+LangString INST_MODE_PORT ${LANG_POLISH}       "Przenośny — bez wpisów rejestru, bez dezinstalатора, działa z dowolnego folderu"
+LangString INST_MODE_PORT ${LANG_PORTUGUESEBR} "Portátil — sem entradas de registro, sem desinstalador, funciona de qualquer pasta"
+LangString INST_MODE_PORT ${LANG_PORTUGUESE}   "Portátil — sem entradas de registo, sem desinstalador, funciona de qualquer pasta"
+LangString INST_MODE_PORT ${LANG_RUSSIAN}      "Портативный — без записей реестра, без деинсталлятора, запускается из любой папки"
+LangString INST_MODE_PORT ${LANG_SIMPCHINESE}  "便携版 — 无注册表项，无卸载程序，可从任意文件夹运行"
+LangString INST_MODE_PORT ${LANG_TRADCHINESE}  "便攜版 — 無登錄機碼，無解除安裝程式，可從任意資料夾執行"
+LangString INST_MODE_PORT ${LANG_TURKISH}      "Taşınabilir — kayıt defteri girişi yok, kaldırıcı yok, herhangi bir klasörden çalışır"
+LangString INST_MODE_PORT ${LANG_UKRAINIAN}    "Портативний — без записів реєстру, без деінсталятора, запускається з будь-якої папки"
+LangString INST_MODE_PORT ${LANG_CZECH}        "Přenosný — žádné záznamy registru, žádný odinstalátor, spouští se z libovolné složky"
+LangString INST_MODE_PORT ${LANG_HUNGARIAN}    "Hordozható — nincs beállításjegyzék-bejegyzés, nincs eltávolító, bármely mappából futtatható"
+LangString INST_MODE_PORT ${LANG_ROMANIAN}     "Portabil — fără intrări în registru, fără dezinstalator, rulează din orice folder"
+LangString INST_MODE_PORT ${LANG_VIETNAMESE}   "Di động — không có mục đăng ký, không có trình gỡ cài đặt, chạy từ bất kỳ thư mục nào"
+LangString INST_MODE_PORT ${LANG_INDONESIAN}   "Portabel — tidak ada entri registri, tidak ada penghapus instalasi, dapat dijalankan dari folder mana saja"
+LangString INST_MODE_PORT ${LANG_THAI}         "พกพาได้ — ไม่มีรายการรีจิสทรี ไม่มีตัวถอนการติดตั้ง ทำงานได้จากทุกโฟลเดอร์"
+LangString INST_MODE_PORT ${LANG_SWEDISH}      "Portabel — inga registerposter, inget avinstallationsprogram, körs från valfri mapp"
+LangString INST_MODE_PORT ${LANG_NORWEGIAN}    "Portabel — ingen registeroppføringer, ingen avinstalleringsprogram, kjører fra en hvilken som helst mappe"
+LangString INST_MODE_PORT ${LANG_DANISH}       "Portabel — ingen registerposter, inget afinstallationsprogram, kører fra en vilkårlig mappe"
+
+LangString INST_MODE_PORT_DESC ${LANG_ENGLISH}      "All files (EXE + Sounds) placed together. Move the folder freely."
+LangString INST_MODE_PORT_DESC ${LANG_ARABIC}       "جميع الملفات (EXE + الأصوات) موضوعة معاً. انقل المجلد بحرية."
+LangString INST_MODE_PORT_DESC ${LANG_GERMAN}       "Alle Dateien (EXE + Sounds) werden zusammen abgelegt. Verschieben Sie den Ordner frei."
+LangString INST_MODE_PORT_DESC ${LANG_SPANISH}      "Todos los archivos (EXE + sonidos) colocados juntos. Mueva la carpeta libremente."
+LangString INST_MODE_PORT_DESC ${LANG_FRENCH}       "Tous les fichiers (EXE + Sons) placés ensemble. Déplacez le dossier librement."
+LangString INST_MODE_PORT_DESC ${LANG_ITALIAN}      "Tutti i file (EXE + Suoni) posizionati insieme. Sposta la cartella liberamente."
+LangString INST_MODE_PORT_DESC ${LANG_JAPANESE}     "すべてのファイル（EXE + サウンド）を一緒に配置。フォルダーを自由に移動できます。"
+LangString INST_MODE_PORT_DESC ${LANG_KOREAN}       "모든 파일 (EXE + 소리)이 함께 배치됩니다. 폴더를 자유롭게 이동하세요."
+LangString INST_MODE_PORT_DESC ${LANG_DUTCH}        "Alle bestanden (EXE + Geluiden) samen geplaatst. Verplaats de map vrij."
+LangString INST_MODE_PORT_DESC ${LANG_POLISH}       "Wszystkie pliki (EXE + Dźwięki) umieszczone razem. Przenieś folder dowolnie."
+LangString INST_MODE_PORT_DESC ${LANG_PORTUGUESEBR} "Todos os arquivos (EXE + Sons) colocados juntos. Mova a pasta livremente."
+LangString INST_MODE_PORT_DESC ${LANG_PORTUGUESE}   "Todos os ficheiros (EXE + Sons) colocados juntos. Mova a pasta livremente."
+LangString INST_MODE_PORT_DESC ${LANG_RUSSIAN}      "Все файлы (EXE + Звуки) размещены вместе. Перемещайте папку свободно."
+LangString INST_MODE_PORT_DESC ${LANG_SIMPCHINESE}  "所有文件（EXE + 声音）放在一起。可自由移动文件夹。"
+LangString INST_MODE_PORT_DESC ${LANG_TRADCHINESE}  "所有檔案（EXE + 聲音）放在一起。可自由移動資料夾。"
+LangString INST_MODE_PORT_DESC ${LANG_TURKISH}      "Tüm dosyalar (EXE + Sesler) bir arada. Klasörü serbestçe taşıyın."
+LangString INST_MODE_PORT_DESC ${LANG_UKRAINIAN}    "Всі файли (EXE + Звуки) розміщені разом. Переміщайте папку вільно."
+LangString INST_MODE_PORT_DESC ${LANG_CZECH}        "Všechny soubory (EXE + Zvuky) umístěny společně. Složku přesuňte kamkoliv."
+LangString INST_MODE_PORT_DESC ${LANG_HUNGARIAN}    "Minden fájl (EXE + Hangok) együtt elhelyezve. A mappát szabadon áthelyezheti."
+LangString INST_MODE_PORT_DESC ${LANG_ROMANIAN}     "Toate fișierele (EXE + Sunete) plasate împreună. Mutați folderul liber."
+LangString INST_MODE_PORT_DESC ${LANG_VIETNAMESE}   "Tất cả tệp (EXE + Âm thanh) đặt cùng nhau. Di chuyển thư mục tự do."
+LangString INST_MODE_PORT_DESC ${LANG_INDONESIAN}   "Semua file (EXE + Suara) ditempatkan bersama. Pindahkan folder dengan bebas."
+LangString INST_MODE_PORT_DESC ${LANG_THAI}         "ไฟล์ทั้งหมด (EXE + เสียง) อยู่รวมกัน ย้ายโฟลเดอร์ได้อย่างอิสระ"
+LangString INST_MODE_PORT_DESC ${LANG_SWEDISH}      "Alla filer (EXE + Ljud) placeras tillsammans. Flytta mappen fritt."
+LangString INST_MODE_PORT_DESC ${LANG_NORWEGIAN}    "Alle filer (EXE + Lyder) plassert sammen. Flytt mappen fritt."
+LangString INST_MODE_PORT_DESC ${LANG_DANISH}       "Alle filer (EXE + Lyde) placeret sammen. Flyt mappen frit."
+
+; ---- Portable folder protection warning ----
+LangString INST_PORT_SYSDIR_WARN ${LANG_ENGLISH}      "Portable mode cannot install into system-protected folders (Program Files / Windows).$\r$\nGo back and choose Standard mode, or pick a different folder."
+LangString INST_PORT_SYSDIR_WARN ${LANG_ARABIC}       "لا يمكن للوضع المحمول التثبيت في المجلدات المحمية من النظام (ملفات البرنامج / Windows).$\r$\nارجع واختر الوضع القياسي أو اختر مجلداً مختلفاً."
+LangString INST_PORT_SYSDIR_WARN ${LANG_GERMAN}       "Der portable Modus kann nicht in systemgeschützte Ordner installieren (Programme / Windows).$\r$\nGehen Sie zurück und wählen Sie den Standardmodus oder einen anderen Ordner."
+LangString INST_PORT_SYSDIR_WARN ${LANG_SPANISH}      "El modo portátil no puede instalarse en carpetas protegidas del sistema (Archivos de programa / Windows).$\r$\nVuelva y elija el modo estándar o seleccione una carpeta diferente."
+LangString INST_PORT_SYSDIR_WARN ${LANG_FRENCH}       "Le mode portable ne peut pas s'installer dans des dossiers protégés par le système (Fichiers programme / Windows).$\r$\nRevenez en arrière et choisissez le mode Standard ou un autre dossier."
+LangString INST_PORT_SYSDIR_WARN ${LANG_ITALIAN}      "La modalità portabile non può essere installata in cartelle protette dal sistema (File di programma / Windows).$\r$\nTornare indietro e scegliere la modalità Standard o una cartella diversa."
+LangString INST_PORT_SYSDIR_WARN ${LANG_JAPANESE}     "ポータブルモードはシステム保護フォルダー（Program Files / Windows）にインストールできません。$\r$\n戻って標準モードを選択するか、別のフォルダーを選んでください。"
+LangString INST_PORT_SYSDIR_WARN ${LANG_KOREAN}       "포터블 모드는 시스템 보호 폴더 (Program Files / Windows)에 설치할 수 없습니다.$\r$\n뒤로 가서 표준 모드를 선택하거나 다른 폴더를 선택하세요."
+LangString INST_PORT_SYSDIR_WARN ${LANG_DUTCH}        "De portable modus kan niet worden geïnstalleerd in systeembeveiligde mappen (Program Files / Windows).$\r$\nGa terug en kies de standaardmodus of kies een andere map."
+LangString INST_PORT_SYSDIR_WARN ${LANG_POLISH}       "Tryb przenośny nie może być zainstalowany w folderach chronionych przez system (Program Files / Windows).$\r$\nWróć i wybierz tryb standardowy lub inny folder."
+LangString INST_PORT_SYSDIR_WARN ${LANG_PORTUGUESEBR} "O modo portátil não pode ser instalado em pastas protegidas do sistema (Program Files / Windows).$\r$\nVolte e escolha o modo Padrão ou uma pasta diferente."
+LangString INST_PORT_SYSDIR_WARN ${LANG_PORTUGUESE}   "O modo portátil não pode ser instalado em pastas protegidas pelo sistema (Program Files / Windows).$\r$\nVolte e escolha o modo Padrão ou uma pasta diferente."
+LangString INST_PORT_SYSDIR_WARN ${LANG_RUSSIAN}      "Портативный режим не может быть установлен в папки, защищённые системой (Program Files / Windows).$\r$\nВернитесь и выберите стандартный режим или другую папку."
+LangString INST_PORT_SYSDIR_WARN ${LANG_SIMPCHINESE}  "便携模式不能安装到受系统保护的文件夹（Program Files / Windows）。$\r$\n请返回选择标准模式或其他文件夹。"
+LangString INST_PORT_SYSDIR_WARN ${LANG_TRADCHINESE}  "便攜模式無法安裝至受系統保護的資料夾（Program Files / Windows）。$\r$\n請返回選擇標準模式或其他資料夾。"
+LangString INST_PORT_SYSDIR_WARN ${LANG_TURKISH}      "Taşınabilir mod, sistem korumalı klasörlere (Program Files / Windows) yüklenemez.$\r$\nGeri gidin ve Standart modu veya farklı bir klasör seçin."
+LangString INST_PORT_SYSDIR_WARN ${LANG_UKRAINIAN}    "Портативний режим не може бути встановлений в системно-захищені папки (Program Files / Windows).$\r$\nПоверніться і виберіть стандартний режим або іншу папку."
+LangString INST_PORT_SYSDIR_WARN ${LANG_CZECH}        "Přenosný režim nelze nainstalovat do systémem chráněných složek (Program Files / Windows).$\r$\nJděte zpět a zvolte standardní režim nebo jiná složku."
+LangString INST_PORT_SYSDIR_WARN ${LANG_HUNGARIAN}    "A hordozható mód nem telepíthető rendszer által védett mappákba (Program Files / Windows).$\r$\nMenjen vissza, és válassza a Normál módot, vagy válasszon másik mappát."
+LangString INST_PORT_SYSDIR_WARN ${LANG_ROMANIAN}     "Modul portabil nu se poate instala în foldere protejate de sistem (Program Files / Windows).$\r$\nMergeți înapoi și alegeți modul Standard sau alt folder."
+LangString INST_PORT_SYSDIR_WARN ${LANG_VIETNAMESE}   "Chế độ di động không thể cài đặt vào các thư mục được hệ thống bảo vệ (Program Files / Windows).$\r$\nQuay lại và chọn chế độ Tiêu chuẩn hoặc chọn thư mục khác."
+LangString INST_PORT_SYSDIR_WARN ${LANG_INDONESIAN}   "Mode portabel tidak dapat diinstal ke folder yang dilindungi sistem (Program Files / Windows).$\r$\nKembali dan pilih mode Standar, atau pilih folder lain."
+LangString INST_PORT_SYSDIR_WARN ${LANG_THAI}         "โหมดพกพาไม่สามารถติดตั้งลงในโฟลเดอร์ที่ระบบป้องกัน (Program Files / Windows)$\r$\nกลับไปเลือกโหมดมาตรฐาน หรือเลือกโฟลเดอร์อื่น"
+
+; ---- Uninstall data page ----
+LangString UNINST_OPTIONS_HEADER ${LANG_ENGLISH}      "Uninstall Options"
+LangString UNINST_OPTIONS_HEADER ${LANG_ARABIC}       "خيارات إلغاء التثبيت"
+LangString UNINST_OPTIONS_HEADER ${LANG_GERMAN}       "Deinstallationsoptionen"
+LangString UNINST_OPTIONS_HEADER ${LANG_SPANISH}      "Opciones de desinstalación"
+LangString UNINST_OPTIONS_HEADER ${LANG_FRENCH}       "Options de désinstallation"
+LangString UNINST_OPTIONS_HEADER ${LANG_ITALIAN}      "Opzioni di disinstallazione"
+LangString UNINST_OPTIONS_HEADER ${LANG_JAPANESE}     "アンインストールオプション"
+LangString UNINST_OPTIONS_HEADER ${LANG_KOREAN}       "제거 옵션"
+LangString UNINST_OPTIONS_HEADER ${LANG_DUTCH}        "Verwijderopties"
+LangString UNINST_OPTIONS_HEADER ${LANG_POLISH}       "Opcje dezinstalacji"
+LangString UNINST_OPTIONS_HEADER ${LANG_PORTUGUESEBR} "Opções de desinstalação"
+LangString UNINST_OPTIONS_HEADER ${LANG_PORTUGUESE}   "Opções de desinstalação"
+LangString UNINST_OPTIONS_HEADER ${LANG_RUSSIAN}      "Параметры удаления"
+LangString UNINST_OPTIONS_HEADER ${LANG_SIMPCHINESE}  "卸载选项"
+LangString UNINST_OPTIONS_HEADER ${LANG_TRADCHINESE}  "解除安裝選項"
+LangString UNINST_OPTIONS_HEADER ${LANG_TURKISH}      "Kaldırma Seçenekleri"
+LangString UNINST_OPTIONS_HEADER ${LANG_UKRAINIAN}    "Параметри видалення"
+LangString UNINST_OPTIONS_HEADER ${LANG_CZECH}        "Možnosti odinstalování"
+LangString UNINST_OPTIONS_HEADER ${LANG_HUNGARIAN}    "Eltávolítási beállítások"
+LangString UNINST_OPTIONS_HEADER ${LANG_ROMANIAN}     "Opțiuni de dezinstalare"
+LangString UNINST_OPTIONS_HEADER ${LANG_VIETNAMESE}   "Tùy chọn gỡ cài đặt"
+LangString UNINST_OPTIONS_HEADER ${LANG_INDONESIAN}   "Opsi Penghapusan Instalasi"
+LangString UNINST_OPTIONS_HEADER ${LANG_THAI}         "ตัวเลือกการถอนการติดตั้ง"
+LangString UNINST_OPTIONS_HEADER ${LANG_SWEDISH}      "Avinstallationsalternativ"
+LangString UNINST_OPTIONS_HEADER ${LANG_NORWEGIAN}    "Avinstalleringsalternativer"
+LangString UNINST_OPTIONS_HEADER ${LANG_DANISH}       "Afinstallationsindstillinger"
+
+LangString UNINST_REMOVE_DATA ${LANG_ENGLISH}      "Also remove all user data (settings, custom sound profiles) from %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_ARABIC}       "إزالة جميع بيانات المستخدم أيضاً (الإعدادات وملفات الصوت المخصصة) من %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_GERMAN}       "Auch alle Benutzerdaten (Einstellungen, benutzerdefinierte Soundprofile) aus %APPDATA%\MonkeySounds entfernen"
+LangString UNINST_REMOVE_DATA ${LANG_SPANISH}      "También eliminar todos los datos de usuario (configuraciones, perfiles de sonido personalizados) de %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_FRENCH}       "Supprimer également toutes les données utilisateur (paramètres, profils audio personnalisés) de %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_ITALIAN}      "Rimuovere anche tutti i dati utente (impostazioni, profili audio personalizzati) da %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_JAPANESE}     "%APPDATA%\MonkeySounds からすべてのユーザーデータ（設定、カスタムサウンドプロファイル）も削除する"
+LangString UNINST_REMOVE_DATA ${LANG_KOREAN}       "%APPDATA%\MonkeySounds에서 모든 사용자 데이터 (설정, 맞춤 사운드 프로필)도 제거"
+LangString UNINST_REMOVE_DATA ${LANG_DUTCH}        "Verwijder ook alle gebruikersgegevens (instellingen, aangepaste geluidsprofielen) uit %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_POLISH}       "Usuń również wszystkie dane użytkownika (ustawienia, niestandardowe profile dźwiękowe) z %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_PORTUGUESEBR} "Também remover todos os dados do usuário (configurações, perfis de som personalizados) de %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_PORTUGUESE}   "Remover também todos os dados do utilizador (definições, perfis de som personalizados) de %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_RUSSIAN}      "Также удалить все пользовательские данные (настройки, пользовательские звуковые профили) из %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_SIMPCHINESE}  "同时从 %APPDATA%\MonkeySounds 删除所有用户数据（设置、自定义声音配置文件）"
+LangString UNINST_REMOVE_DATA ${LANG_TRADCHINESE}  "同時從 %APPDATA%\MonkeySounds 刪除所有使用者資料（設定、自訂聲音設定檔）"
+LangString UNINST_REMOVE_DATA ${LANG_TURKISH}      "%APPDATA%\MonkeySounds klasöründeki tüm kullanıcı verilerini de kaldır (ayarlar, özel ses profilleri)"
+LangString UNINST_REMOVE_DATA ${LANG_UKRAINIAN}    "Також видалити всі дані користувача (налаштування, власні звукові профілі) з %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_CZECH}        "Také odstranit všechna uživatelská data (nastavení, vlastní zvukové profily) z %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_HUNGARIAN}    "Az összes felhasználói adat eltávolítása is (beállítások, egyéni hangprofilok) innen: %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_ROMANIAN}     "Eliminați și toate datele utilizatorului (setări, profiluri de sunet personalizate) din %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_VIETNAMESE}   "Cũng xóa tất cả dữ liệu người dùng (cài đặt, hồ sơ âm thanh tùy chỉnh) khỏi %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_INDONESIAN}   "Juga hapus semua data pengguna (pengaturan, profil suara kustom) dari %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_THAI}         "ลบข้อมูลผู้ใช้ทั้งหมด (การตั้งค่า โปรไฟล์เสียงที่กำหนดเอง) จาก %APPDATA%\MonkeySounds ด้วย"
+LangString UNINST_REMOVE_DATA ${LANG_SWEDISH}      "Ta även bort alla användardata (inställningar, anpassade ljudprofiler) från %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_NORWEGIAN}    "Fjern også alle brukerdata (innstillinger, egendefinerte lydprofiler) fra %APPDATA%\MonkeySounds"
+LangString UNINST_REMOVE_DATA ${LANG_DANISH}       "Fjern også alle brugerdata (indstillinger, brugerdefinerede lydprofiler) fra %APPDATA%\MonkeySounds"
+
+; ---- Detail print strings ----
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_ENGLISH}      "Portable mode: no registry entries, no uninstaller, no shortcuts."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_ARABIC}       "الوضع المحمول: بدون إدخالات تسجيل، بدون برنامج إلغاء تثبيت، بدون اختصارات."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_GERMAN}       "Portabler Modus: keine Registrierungseinträge, kein Deinstallationsprogramm, keine Verknüpfungen."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_SPANISH}      "Modo portátil: sin entradas de registro, sin desinstalador, sin accesos directos."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_FRENCH}       "Mode portable: aucune entrée de registre, pas de désinstallateur, pas de raccourcis."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_ITALIAN}      "Modalità portabile: nessuna voce di registro, nessun disinstallatore, nessun collegamento."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_JAPANESE}     "ポータブルモード：レジストリエントリなし、アンインストーラーなし、ショートカットなし。"
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_KOREAN}       "포터블 모드: 레지스트리 항목 없음, 제거 프로그램 없음, 바로 가기 없음."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_DUTCH}        "Portable modus: geen registeritems, geen verwijderprogramma, geen snelkoppelingen."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_POLISH}       "Tryb przenośny: bez wpisów rejestru, bez dezinstalatora, bez skrótów."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_PORTUGUESEBR} "Modo portátil: sem entradas de registro, sem desinstalador, sem atalhos."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_PORTUGUESE}   "Modo portátil: sem entradas de registo, sem desinstalador, sem atalhos."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_RUSSIAN}      "Портативный режим: без записей реестра, без деинсталлятора, без ярлыков."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_SIMPCHINESE}  "便携模式：无注册表项，无卸载程序，无快捷方式。"
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_TRADCHINESE}  "便攜模式：無登錄機碼，無解除安裝程式，無捷徑。"
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_TURKISH}      "Taşınabilir mod: kayıt defteri girişi yok, kaldırıcı yok, kısayol yok."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_UKRAINIAN}    "Портативний режим: без записів реєстру, без деінсталятора, без ярликів."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_CZECH}        "Přenosný režim: žádné záznamy registru, žádný odinstalátor, žádné zástupce."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_HUNGARIAN}    "Hordozható mód: nincs beállításjegyzék-bejegyzés, nincs eltávolító, nincs parancsikon."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_ROMANIAN}     "Mod portabil: fără intrări în registru, fără dezinstalator, fără comenzi rapide."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_VIETNAMESE}   "Chế độ di động: không có mục đăng ký, không có trình gỡ cài đặt, không có lối tắt."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_INDONESIAN}   "Mode portabel: tidak ada entri registri, tidak ada penghapus instalasi, tidak ada pintasan."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_THAI}         "โหมดพกพา: ไม่มีรายการรีจิสทรี ไม่มีตัวถอนการติดตั้ง ไม่มีทางลัด"
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_SWEDISH}      "Portabelt läge: inga registerposter, inget avinstallationsprogram, inga genvägar."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_NORWEGIAN}    "Portabelt modus: ingen registeroppføringer, ingen avinstalleringsprogram, ingen snarveier."
+LangString DETAIL_PORTABLE_NO_SHORTCUTS ${LANG_DANISH}       "Portabelt tilstand: ingen registerposter, inget afinstallationsprogram, ingen genveje."
+
+LangString DETAIL_DATA_REMOVED ${LANG_ENGLISH}      "Removed user data: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_REMOVED ${LANG_ARABIC}       "تم حذف بيانات المستخدم: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_REMOVED ${LANG_GERMAN}       "Benutzerdaten entfernt: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_REMOVED ${LANG_SPANISH}      "Datos de usuario eliminados: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_REMOVED ${LANG_FRENCH}       "Données utilisateur supprimées: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_REMOVED ${LANG_ITALIAN}      "Dati utente rimossi: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_REMOVED ${LANG_JAPANESE}     "ユーザーデータを削除しました: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_REMOVED ${LANG_KOREAN}       "사용자 데이터 제거됨: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_REMOVED ${LANG_RUSSIAN}      "Пользовательские данные удалены: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_REMOVED ${LANG_SIMPCHINESE}  "已删除用户数据: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_REMOVED ${LANG_TRADCHINESE}  "已刪除使用者資料: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_REMOVED ${LANG_TURKISH}      "Kullanıcı verileri kaldırıldı: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_REMOVED ${LANG_UKRAINIAN}    "Дані користувача видалено: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_REMOVED ${LANG_POLISH}       "Usunięto dane użytkownika: $APPDATA\${APP_NAME}"
+
+LangString DETAIL_DATA_PRESERVED ${LANG_ENGLISH}      "User data preserved: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_PRESERVED ${LANG_ARABIC}       "تم الاحتفاظ ببيانات المستخدم: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_PRESERVED ${LANG_GERMAN}       "Benutzerdaten beibehalten: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_PRESERVED ${LANG_SPANISH}      "Datos de usuario conservados: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_PRESERVED ${LANG_FRENCH}       "Données utilisateur préservées: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_PRESERVED ${LANG_ITALIAN}      "Dati utente preservati: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_PRESERVED ${LANG_JAPANESE}     "ユーザーデータを保持しました: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_PRESERVED ${LANG_KOREAN}       "사용자 데이터 보존됨: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_PRESERVED ${LANG_RUSSIAN}      "Пользовательские данные сохранены: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_PRESERVED ${LANG_SIMPCHINESE}  "已保留用户数据: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_PRESERVED ${LANG_TRADCHINESE}  "已保留使用者資料: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_PRESERVED ${LANG_TURKISH}      "Kullanıcı verileri korundu: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_PRESERVED ${LANG_UKRAINIAN}    "Дані користувача збережено: $APPDATA\${APP_NAME}"
+LangString DETAIL_DATA_PRESERVED ${LANG_POLISH}       "Dane użytkownika zachowane: $APPDATA\${APP_NAME}"
 
 ;---------------------------------------------------------
 ; Variables
@@ -101,23 +564,19 @@ Function InstallModePageCreate
     Abort
   ${EndIf}
 
-  ${NSD_CreateLabel} 0 0 100% 20u "Choose how to install ${APP_NAME}:"
+  ${NSD_CreateLabel} 0 0 100% 20u "$(INST_MODE_LABEL)"
   Pop $0
 
-  ${NSD_CreateRadioButton} 0 26u 100% 14u \
-    "Standard (recommended) — install with uninstaller, registry entries and shortcuts"
+  ${NSD_CreateRadioButton} 0 26u 100% 14u "$(INST_MODE_STD)"
   Pop $RadioStandard
 
-  ${NSD_CreateLabel} 12u 42u 100% 20u \
-    "Installs to Program Files. Sounds saved in %APPDATA%\MonkeySounds\Sounds."
+  ${NSD_CreateLabel} 12u 42u 100% 20u "$(INST_MODE_STD_DESC)"
   Pop $0
 
-  ${NSD_CreateRadioButton} 0 66u 100% 14u \
-    "Portable — no registry entries, no uninstaller, runs from any folder"
+  ${NSD_CreateRadioButton} 0 66u 100% 14u "$(INST_MODE_PORT)"
   Pop $RadioPortable
 
-  ${NSD_CreateLabel} 12u 82u 100% 20u \
-    "All files (EXE + Sounds) placed together. Move the folder freely."
+  ${NSD_CreateLabel} 12u 82u 100% 20u "$(INST_MODE_PORT_DESC)"
   Pop $0
 
   ; Check the correct radio based on current mode
@@ -166,10 +625,7 @@ Function DirectoryPageLeave
     ${EndIf}
 
     ${If} $0 == "1"
-      MessageBox MB_ICONEXCLAMATION|MB_OK \
-        "Portable mode cannot install into system-protected folders \
-(Program Files / Windows).$\r$\nGo back and choose Standard mode, \
-or pick a different folder."
+      MessageBox MB_ICONEXCLAMATION|MB_OK "$(INST_PORT_SYSDIR_WARN)"
       Abort
     ${EndIf}
   ${EndIf}
@@ -193,6 +649,11 @@ Section "MonkeySounds" SecMain
   ; --- Files common to both modes ---
   SetOutPath "$INSTDIR"
   File "..\dist\${APP_EXE}"
+
+  ; Locale JSON files (always installed next to EXE)
+  SetOutPath "$INSTDIR\locales"
+  File /r "..\dist\locales\*.*"
+  SetOutPath "$INSTDIR"
 
   ${If} $InstallMode == "standard"
     ;------------------------------------------------------
@@ -249,7 +710,7 @@ Section "MonkeySounds" SecMain
     FileWrite $0 "{}"
     FileClose $0
 
-    DetailPrint "Portable mode: no registry entries, no uninstaller, no shortcuts."
+    DetailPrint "$(DETAIL_PORTABLE_NO_SHORTCUTS)"
 
   ${EndIf}
 
@@ -265,11 +726,10 @@ Function un.RemoveDataPageCreate
     Abort
   ${EndIf}
 
-  ${NSD_CreateLabel} 0 0 100% 24u "Uninstall Options"
+  ${NSD_CreateLabel} 0 0 100% 24u "$(UNINST_OPTIONS_HEADER)"
   Pop $0
 
-  ${NSD_CreateCheckbox} 0 30u 100% 14u \
-    "Also remove all user data (settings, custom sound profiles) from %APPDATA%\MonkeySounds"
+  ${NSD_CreateCheckbox} 0 30u 100% 14u "$(UNINST_REMOVE_DATA)"
   Pop $UnRemoveCheckbox
 
   ; Default: unchecked — preserve user data by default
@@ -299,6 +759,9 @@ Section "Uninstall"
   Delete "$INSTDIR\${APP_EXE}"
   Delete "$INSTDIR\Uninstall.exe"
 
+  ; Remove locales
+  RMDir /r "$INSTDIR\locales"
+
   ; Remove install dir if now empty
   RMDir "$INSTDIR"
 
@@ -319,11 +782,9 @@ Section "Uninstall"
   ; Conditionally remove %APPDATA%\MonkeySounds based on the user's choice
   ${If} $RemoveUserData == ${BST_CHECKED}
     RMDir /r "$APPDATA\${APP_NAME}"
-    DetailPrint "Removed user data: $APPDATA\${APP_NAME}"
+    DetailPrint "$(DETAIL_DATA_REMOVED)"
   ${Else}
-    DetailPrint "User data preserved: $APPDATA\${APP_NAME}"
+    DetailPrint "$(DETAIL_DATA_PRESERVED)"
   ${EndIf}
 
 SectionEnd
-
-

@@ -54,9 +54,10 @@ if ($LASTEXITCODE -ne 0) {
 # ---------------------------------------------------------------------------
 # 3. Verify dist\ has what NSIS needs
 # ---------------------------------------------------------------------------
-$distDir    = Join-Path $RepoRoot "dist"
-$distExe    = Join-Path $distDir  "MonkeySounds.exe"
-$distSounds = Join-Path $distDir  "Sounds"
+$distDir      = Join-Path $RepoRoot "dist"
+$distExe      = Join-Path $distDir  "MonkeySounds.exe"
+$distSounds   = Join-Path $distDir  "Sounds"
+$distLocales  = Join-Path $distDir  "locales"
 
 if (-not (Test-Path $distExe)) {
     throw "dist\MonkeySounds.exe not found. Build may have failed."
@@ -64,6 +65,13 @@ if (-not (Test-Path $distExe)) {
 
 if (-not (Test-Path $distSounds)) {
     Write-Warning "dist\Sounds not found - installer will have no sound profiles."
+}
+
+if (-not (Test-Path $distLocales)) {
+    Write-Warning "dist\locales not found - installer will have no locale files (UI will be English only)."
+} else {
+    $localeCount = (Get-ChildItem $distLocales -Filter "*.json").Count
+    Write-Host "  Found $localeCount locale file(s) in dist\locales\" -ForegroundColor Green
 }
 
 # ---------------------------------------------------------------------------
