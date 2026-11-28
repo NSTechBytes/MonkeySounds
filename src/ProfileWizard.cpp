@@ -272,10 +272,9 @@ static void LayoutWizardControls(WizardDialogState* pWiz, UINT dpi) {
     GetClientRect(hWnd, &rcClient);
     const int W = rcClient.right;
     const int H = rcClient.bottom;
-    // Footer strip is 78px tall, buttons are 28px — centre vertically: (78-28)/2 = 25px from top of strip.
-    const int footerStripH = S(78);
-    const int btnH          = S(28);
-    const int btnNavY       = H - footerStripH + (footerStripH - btnH) / 2;
+    // Place nav buttons near the bottom (14px bottom margin) inside a 56px footer strip.
+    const int btnH    = S(28);
+    const int btnNavY = H - S(14) - btnH;
 
     // Navigation & header
     SetWindowPos(pWiz->hLblStepTitle, NULL, S(20), S(12),  W-S(40), S(20), SWP_NOZORDER | SWP_NOACTIVATE);
@@ -1539,8 +1538,8 @@ static LRESULT CALLBACK WizardWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         MoveToEx(hdc, 0, headerH, NULL);
         LineTo(hdc, rcClient.right, headerH);
 
-        // Divider above footer
-        int footerY = rcClient.bottom - DpiUtil::Scale(78, pWiz->dpi);
+        // Divider above footer (56px footer strip: 14px above + 28px buttons + 14px below)
+        int footerY = rcClient.bottom - DpiUtil::Scale(56, pWiz->dpi);
         MoveToEx(hdc, 0, footerY, NULL);
         LineTo(hdc, rcClient.right, footerY);
 
